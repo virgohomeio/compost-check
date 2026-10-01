@@ -480,7 +480,10 @@ function showTab(t) {
   if (t === "status") loadStatus();
   if (t === "charts") loadCharts();
 }
-document.querySelectorAll("#tabs button").forEach((b) => b.addEventListener("click", () => showTab(b.dataset.tab)));
+document.querySelectorAll("#tabs button").forEach((b) => b.addEventListener("click", () => {
+  showTab(b.dataset.tab);
+  history.replaceState(null, "", b.dataset.tab === "score" ? location.pathname : `#${b.dataset.tab}`);
+}));
 
 // ---- rows, as schema v2 columns
 const nowIso = () => new Date().toISOString().replace(/\.\d{3}Z$/, "Z");
@@ -939,6 +942,9 @@ showPending();
 loadRecent();
 flushQueue();
 window.addEventListener("online", flushQueue);
+// A link straight to a tab: .../score/#charts, #status, #feed and so on.
+const linked = location.hash.slice(1);
+if (document.querySelector(`#tabs button[data-tab="${CSS.escape(linked)}"]`)) showTab(linked);
 setInterval(() => {
   if (document.hidden) return;
   if (tab === "status") loadStatus();
