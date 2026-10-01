@@ -154,8 +154,7 @@ main:has([data-panel="charts"]:not([hidden])) { max-width: 980px; }
 .chart-bar { display: flex; flex-wrap: wrap; gap: 10px; align-items: center; justify-content: space-between; }
 .chart-bar .seg { flex: 0 1 auto; }
 .chart-bar .seg button { min-width: 56px; padding: 8px 10px; font-size: 14px; }
-.chart-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(420px, 1fr)); gap: 16px; }
-@media (max-width: 480px) { .chart-grid { grid-template-columns: 1fr; } }
+.chart-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 420px), 1fr)); gap: 16px; }
 .chart { border: 1px solid var(--line); border-radius: 8px; padding: 12px 12px 6px; display: grid; gap: 6px; min-width: 0; }
 .chart h3 { margin: 0; font-size: 14px; font-weight: 700; }
 .chart .unit { color: var(--muted); font-weight: 400; }
@@ -815,7 +814,7 @@ const PANELS = [
     { label: "Inner shell", src: "M", col: "ptc_ntc_c" }] },
   { title: "Blower PWM", unit: "%", step: true, series: [
     { label: "Blower", src: "M", col: "blower_pwm_pct" }] },
-  { title: "Lid", unit: "1 = closed, 0 = open", step: true, series: [
+  { title: "Lid", unit: "open or closed", step: true, binary: ["open", "closed"], series: [
     { label: "Lid", src: "M", col: "lid_closed" }] },
   { title: "Machine state", unit: "code", step: true, series: [
     { label: "State", src: "M", col: "machine_state", names: "machine_state_name" }] },
@@ -906,14 +905,15 @@ function drawCharts() {
     const stateName = names ? new Map(xs.map((t) => {
       const m = ticks.get(t).M; return [t, m ? m[names] : null];
     })) : null;
+    const bin = panel.binary;              // a two-state signal: label the states, not 0..1
+    const yAxis = { stroke: ink, grid: { stroke: grid, width: 1 }, ticks: { stroke: grid }, size: 52 };
+    if (bin) { yAxis.splits = () => [0, 1]; yAxis.values = (u, vals) => vals.map((v) => bin[v] ?? ""); }
+    else if (panel.series[0].names) yAxis.incrs = [1, 2, 5, 10];   // whole state codes
     const opts = {
-      width: Math.max(260, plotBox.clientWidth), height: 200,
+      width: Math.max(240, plotBox.clientWidth), height: 200,
       cursor: { drag: { x: true, y: false } },
-      scales: { x: { time: true } },
-      axes: [
-        { stroke: ink, grid: { stroke: grid, width: 1 }, ticks: { stroke: grid } },
-        { stroke: ink, grid: { stroke: grid, width: 1 }, ticks: { stroke: grid }, size: 46 },
-      ],
+      scales: { x: { time: true }, y: bin ? { range: [-0.15, 1.15] } : {} },
+      axes: [{ stroke: ink, grid: { stroke: grid, width: 1 }, ticks: { stroke: grid } }, yAxis],
       series: [{ label: "Time", value: (u, v) => v == null ? "–" : new Date(v * 1000).toLocaleString([],
         { month: "short", day: "numeric", hour: "2-digit", minute: "2-digit" }) }]
         .concat(panel.series.map((s, i) => ({
@@ -921,6 +921,7 @@ function drawCharts() {
           points: { show: false },
           paths: panel.step ? uPlot.paths.stepped({ align: 1 }) : undefined,
           value: (u, v, si, di) => v == null ? "–"
+            : bin ? bin[v] ?? String(v)
             : stateName ? `${v} ${stateName.get(xs[di]) || ""}` : `${+v.toFixed(2)}`,
         }))),
     };
