@@ -1,0 +1,485 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>P150 Quick Score</title>
+<meta name="robots" content="noindex">
+<style>
+/* Layout: one narrow column for a phone held in one hand: machine bar, big
+   squeeze buttons, one Save button pinned within thumb reach.
+   Palette follows the harness pages (RL/harness/api/static/common.css). */
+:root {
+  --bg: #f4f3ef;
+  --panel: #ffffff;
+  --ink: #1d1f1c;
+  --muted: #5d625a;
+  --line: #d9d8d0;
+  --accent: #2f5d3a;
+  --accent-ink: #ffffff;
+  --sel: #1d1f1c;
+  --sel-ink: #ffffff;
+  --dry: #9a5b00;
+  --dry-soft: #fbefd9;
+  --good: #2f7d4a;
+  --good-soft: #e3f1e6;
+  --wet: #1f5f9a;
+  --wet-soft: #dfeaf6;
+  --bad: #a3261f;
+  --bad-soft: #f8e1df;
+  --radius: 10px;
+  --sans: system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+  --mono: ui-monospace, "Cascadia Mono", Consolas, Menlo, monospace;
+  color-scheme: light;
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --bg: #151714; --panel: #1f221e; --ink: #ecede8; --muted: #a3a89f; --line: #353a33;
+    --accent: #6fb384; --accent-ink: #0f1a12; --sel: #ecede8; --sel-ink: #151714;
+    --dry: #e0a64a; --dry-soft: #3a2e19; --good: #7cc98f; --good-soft: #1f3325;
+    --wet: #7fb4e6; --wet-soft: #1b2a3a; --bad: #ef7d74; --bad-soft: #3d1f1d;
+    color-scheme: dark;
+  }
+}
+:root[data-theme="dark"] {
+  --bg: #151714; --panel: #1f221e; --ink: #ecede8; --muted: #a3a89f; --line: #353a33;
+  --accent: #6fb384; --accent-ink: #0f1a12; --sel: #ecede8; --sel-ink: #151714;
+  --dry: #e0a64a; --dry-soft: #3a2e19; --good: #7cc98f; --good-soft: #1f3325;
+  --wet: #7fb4e6; --wet-soft: #1b2a3a; --bad: #ef7d74; --bad-soft: #3d1f1d;
+  color-scheme: dark;
+}
+
+* { box-sizing: border-box; }
+html { -webkit-text-size-adjust: 100%; }
+body {
+  margin: 0; background: var(--bg); color: var(--ink);
+  font: 16px/1.45 var(--sans);
+  padding: env(safe-area-inset-top, 0px) 0 env(safe-area-inset-bottom, 0px);
+}
+main { max-width: 560px; margin: 0 auto; padding: 0 16px 120px; display: grid; gap: 18px; }
+
+header.top {
+  position: sticky; top: 0; z-index: 5;
+  background: var(--panel); border-bottom: 1px solid var(--line);
+  padding: calc(10px + env(safe-area-inset-top, 0px)) 16px 10px;
+}
+header.top .row { max-width: 560px; margin: 0 auto; display: flex; gap: 12px; align-items: center; flex-wrap: wrap; }
+header.top h1 { font-size: 18px; margin: 0; text-wrap: balance; }
+header.top .machine { margin-left: auto; display: flex; gap: 6px; align-items: center; font-size: 13px; color: var(--muted); }
+header.top select, header.top input { font: 13px var(--mono); }
+
+nav.tabs { display: grid; grid-template-columns: 1fr 1fr; gap: 6px; margin-top: 14px; }
+nav.tabs button { padding: 10px; border-radius: var(--radius); border: 1px solid var(--line);
+  background: var(--panel); color: var(--ink); font: 600 15px var(--sans); cursor: pointer; }
+nav.tabs button[aria-selected="true"] { background: var(--sel); color: var(--sel-ink); border-color: var(--sel); }
+
+section.card { background: var(--panel); border: 1px solid var(--line); border-radius: var(--radius);
+  padding: 16px; display: grid; gap: 16px; }
+.field { display: grid; gap: 8px; }
+.label { font-size: 12px; font-weight: 700; letter-spacing: .06em; text-transform: uppercase; color: var(--muted); }
+.hint { font-size: 13px; color: var(--muted); margin: 0; }
+input[type="text"], textarea { width: 100%; padding: 10px 12px; border-radius: 8px;
+  border: 1px solid var(--line); background: var(--bg); color: var(--ink); font: 16px var(--sans); }
+textarea { min-height: 64px; resize: vertical; }
+
+.seg { display: flex; flex-wrap: wrap; gap: 6px; }
+.seg button { flex: 1 1 auto; min-width: 64px; padding: 10px 12px; border-radius: 8px;
+  border: 1px solid var(--line); background: var(--bg); color: var(--ink); font: 15px var(--sans); cursor: pointer; }
+.seg.big button { font-size: 20px; font-weight: 700; padding: 14px; }
+.seg button[aria-pressed="true"] { background: var(--sel); color: var(--sel-ink); border-color: var(--sel); }
+
+/* The squeeze scale: the study's moisture score, 1 dry to 6 wet. */
+.squeeze { display: grid; gap: 6px; }
+.squeeze button { display: grid; grid-template-columns: 2.2em 1fr auto; align-items: center; gap: 10px;
+  text-align: left; padding: 10px 12px; border-radius: 8px; border: 1px solid var(--line);
+  background: var(--bg); color: var(--ink); font: 15px var(--sans); cursor: pointer; }
+.squeeze .n { font: 700 20px var(--mono); text-align: center; }
+.squeeze .band { font-size: 12px; font-weight: 700; letter-spacing: .05em; text-transform: uppercase;
+  padding: 2px 8px; border-radius: 999px; }
+.band.dry { background: var(--dry-soft); color: var(--dry); }
+.band.good { background: var(--good-soft); color: var(--good); }
+.band.wet { background: var(--wet-soft); color: var(--wet); }
+.squeeze button[aria-pressed="true"] { border-color: var(--sel); box-shadow: inset 0 0 0 2px var(--sel); }
+
+.checks { display: grid; gap: 10px; }
+.checks label { display: flex; gap: 10px; align-items: center; font-size: 15px; }
+.checks input { width: 20px; height: 20px; accent-color: var(--accent); }
+
+.save { position: fixed; left: 0; right: 0; bottom: 0; z-index: 6;
+  padding: 12px 16px calc(12px + env(safe-area-inset-bottom, 0px));
+  background: var(--panel); border-top: 1px solid var(--line); }
+.save .row { max-width: 560px; margin: 0 auto; display: flex; gap: 12px; align-items: center; }
+.save button { flex: 1; padding: 15px; border: 0; border-radius: var(--radius);
+  background: var(--accent); color: var(--accent-ink); font: 700 17px var(--sans); cursor: pointer; }
+.save button:disabled { opacity: .55; cursor: default; }
+.msg { font-size: 14px; min-height: 1.4em; }
+.msg.ok { color: var(--good); } .msg.err { color: var(--bad); }
+
+table.recent { width: 100%; border-collapse: collapse; font-size: 14px; font-variant-numeric: tabular-nums; }
+table.recent th, table.recent td { text-align: left; padding: 7px 6px; border-bottom: 1px solid var(--line); vertical-align: top; }
+table.recent th { font-size: 12px; color: var(--muted); font-weight: 700; letter-spacing: .04em; text-transform: uppercase; }
+.recent-wrap { overflow-x: auto; }
+.pending { font-size: 13px; color: var(--dry); }
+
+button:focus-visible, input:focus-visible, select:focus-visible, textarea:focus-visible {
+  outline: 3px solid var(--accent); outline-offset: 2px; }
+[hidden] { display: none !important; }
+@media (prefers-reduced-motion: reduce) { * { transition: none !important; } }
+</style>
+</head>
+<body>
+<header class="top">
+  <div class="row">
+    <h1>P150 Quick Score</h1>
+    <div class="machine">
+      <label for="serial">Machine</label>
+      <select id="serial"></select>
+      <input id="serial-other" type="text" placeholder="LL01-…" size="16" hidden>
+    </div>
+  </div>
+</header>
+
+<main>
+  <nav class="tabs" role="tablist">
+    <button id="tab-score" role="tab" aria-selected="true">Score a chamber</button>
+    <button id="tab-feed" role="tab" aria-selected="false">Record a feed</button>
+  </nav>
+
+  <!-- Score: one observations_v2 row -->
+  <section class="card" id="panel-score">
+    <div class="field">
+      <span class="label">Chamber</span>
+      <div class="seg big" id="chamber" data-group="chamber">
+        <button type="button" data-v="L">L</button><button type="button" data-v="R">R</button>
+      </div>
+    </div>
+    <div class="field">
+      <label class="label" for="observer">Your name</label>
+      <input id="observer" type="text" autocomplete="name" placeholder="e.g. Bassem">
+    </div>
+    <div class="checks">
+      <label><input type="checkbox" id="missed"> Could not score this chamber</label>
+    </div>
+    <div class="field" id="miss-box" hidden>
+      <label class="label" for="miss_reason">Why not?</label>
+      <input id="miss_reason" type="text" placeholder="e.g. lid jammed, chamber unloaded">
+    </div>
+
+    <div id="score-box" class="checks" style="gap:16px">
+      <div class="field">
+        <span class="label">Squeeze test</span>
+        <p class="hint">Take a handful from the middle of the chamber and squeeze hard.</p>
+        <div class="squeeze" id="squeeze">
+          <button type="button" data-v="1"><span class="n">1</span><span>Crumbles, dry</span><span class="band dry">dry</span></button>
+          <button type="button" data-v="2"><span class="n">2</span><span>Holds briefly, then crumbles</span><span class="band dry">dry</span></button>
+          <button type="button" data-v="3"><span class="n">3</span><span>Holds shape, no water</span><span class="band good">good</span></button>
+          <button type="button" data-v="4"><span class="n">4</span><span>A few drops</span><span class="band good">good</span></button>
+          <button type="button" data-v="5"><span class="n">5</span><span>Steady drips</span><span class="band good">good</span></button>
+          <button type="button" data-v="6"><span class="n">6</span><span>Water runs, slurry</span><span class="band wet">wet</span></button>
+        </div>
+      </div>
+      <div class="field">
+        <span class="label">Smell</span>
+        <div class="seg" id="smell_level" data-group="smell_level">
+          <button type="button" data-v="0">0 none</button><button type="button" data-v="1">1 detectable</button><button type="button" data-v="2">2 offensive</button>
+        </div>
+      </div>
+      <div class="field" id="smell-detail" hidden>
+        <span class="label">What kind of smell</span>
+        <div class="seg" id="smell_descriptor" data-group="smell_descriptor">
+          <button type="button" data-v="sour">sour</button><button type="button" data-v="garbage">garbage</button><button type="button" data-v="musty">musty</button><button type="button" data-v="ammonia">ammonia</button><button type="button" data-v="earthy">earthy</button>
+        </div>
+        <span class="label">Where you smelled it</span>
+        <div class="seg" id="smell_location" data-group="smell_location">
+          <button type="button" data-v="material">in the material</button><button type="button" data-v="room">in the room</button>
+        </div>
+      </div>
+      <div class="checks">
+        <label><input type="checkbox" id="after_mix"> Scored right after a mix</label>
+        <label><input type="checkbox" id="fresh_food_seen"> Fresh food visible on top</label>
+      </div>
+    </div>
+  </section>
+
+  <!-- Feed: one events_v2 feed_tap row -->
+  <section class="card" id="panel-feed" hidden>
+    <div class="field">
+      <span class="label">Chamber fed</span>
+      <div class="seg big" id="feed_chamber" data-group="feed_chamber">
+        <button type="button" data-v="L">L</button><button type="button" data-v="R">R</button>
+      </div>
+    </div>
+    <div class="field">
+      <span class="label">How much (optional)</span>
+      <div class="seg" id="size_guess" data-group="size_guess">
+        <button type="button" data-v="small">small</button><button type="button" data-v="medium">medium</button><button type="button" data-v="large">large</button>
+      </div>
+    </div>
+    <div class="field">
+      <span class="label">How wet (optional)</span>
+      <div class="seg" id="wetness_guess" data-group="wetness_guess">
+        <button type="button" data-v="dry">dry</button><button type="button" data-v="normal">normal</button><button type="button" data-v="wet">wet</button>
+      </div>
+    </div>
+    <div class="field">
+      <label class="label" for="feed_note">What went in (optional)</label>
+      <textarea id="feed_note" placeholder="e.g. ~1 kg vegetable scraps, coffee grounds"></textarea>
+    </div>
+  </section>
+
+  <section class="card">
+    <div class="field">
+      <span class="label">Latest scores on this machine</span>
+      <p class="hint">Need water, unload, service, photos or the machine status? Use the <a href="../score/">full compost check</a>.</p>
+      <p class="pending" id="pending" hidden></p>
+      <div class="recent-wrap">
+        <table class="recent">
+          <thead><tr><th>When</th><th>Ch</th><th>Squeeze</th><th>Smell</th><th>By</th></tr></thead>
+          <tbody id="recent"><tr><td colspan="5" class="hint">Loading the latest scores…</td></tr></tbody>
+        </table>
+      </div>
+    </div>
+  </section>
+</main>
+
+<div class="save">
+  <div class="row">
+    <span class="msg" id="msg" role="status" aria-live="polite"></span>
+    <button id="save" type="button">Save score</button>
+  </div>
+</div>
+
+<script>
+// Shared Supabase project and its publishable key, the same pair as
+// RL/harness/config/supabase.yaml. The key can only insert and read rows in
+// the study tables (supabase_schema.py --access); it cannot change or delete
+// anything, which is why it can sit in a public page.
+const SUPABASE_URL = "https://apmncybxykyvacpwccyx.supabase.co";
+const SUPABASE_KEY = "sb_publishable_A31poHKFHwYld6Fy2zjPRQ_-GfIeIWA";
+const SCHEMA = "v2";
+const MACHINES = ["LL01-00000000285"];
+const QUEUE_KEY = "p150-check-queue";
+
+const $ = (id) => document.getElementById(id);
+const state = {};
+
+function store(key, value) {
+  try { if (value === undefined) return localStorage.getItem(key); localStorage.setItem(key, value); }
+  catch (e) { return null; }
+}
+
+// ---- machine
+MACHINES.concat(["other"]).forEach((m) => {
+  const o = document.createElement("option");
+  o.value = m; o.textContent = m === "other" ? "Other…" : m;
+  $("serial").appendChild(o);
+});
+const savedSerial = store("p150-serial");
+if (savedSerial && MACHINES.includes(savedSerial)) $("serial").value = savedSerial;
+else if (savedSerial) { $("serial").value = "other"; $("serial-other").hidden = false; $("serial-other").value = savedSerial; }
+function serial() {
+  return $("serial").value === "other" ? $("serial-other").value.trim() : $("serial").value;
+}
+$("serial").addEventListener("change", () => {
+  $("serial-other").hidden = $("serial").value !== "other";
+  store("p150-serial", serial()); loadRecent();
+});
+$("serial-other").addEventListener("change", () => { store("p150-serial", serial()); loadRecent(); });
+
+// ---- button groups
+document.querySelectorAll("[data-group], #squeeze").forEach((group) => {
+  const name = group.dataset.group || "squeeze";
+  group.querySelectorAll("button").forEach((b) => {
+    b.setAttribute("aria-pressed", "false");
+    b.addEventListener("click", () => {
+      const again = state[name] === b.dataset.v;
+      group.querySelectorAll("button").forEach((x) => x.setAttribute("aria-pressed", "false"));
+      state[name] = again ? undefined : b.dataset.v;
+      if (!again) b.setAttribute("aria-pressed", "true");
+      if (name === "smell_level") $("smell-detail").hidden = !(state.smell_level > 0);
+    });
+  });
+});
+$("missed").addEventListener("change", () => {
+  $("miss-box").hidden = !$("missed").checked;
+  $("score-box").hidden = $("missed").checked;
+});
+$("observer").value = store("p150-observer") || "";
+
+// ---- tabs
+let tab = "score";
+function showTab(t) {
+  tab = t;
+  $("tab-score").setAttribute("aria-selected", t === "score");
+  $("tab-feed").setAttribute("aria-selected", t === "feed");
+  $("panel-score").hidden = t !== "score";
+  $("panel-feed").hidden = t !== "feed";
+  $("save").textContent = t === "score" ? "Save score" : "Save feed";
+  say("");
+}
+$("tab-score").addEventListener("click", () => showTab("score"));
+$("tab-feed").addEventListener("click", () => showTab("feed"));
+
+// ---- rows, as schema_v2 columns
+const nowIso = () => new Date().toISOString().replace(/\.\d{3}Z$/, "Z");
+const newId = (p) => p + "-" + (crypto.randomUUID ? crypto.randomUUID() : String(Math.random()).slice(2) + Date.now())
+  .replace(/-/g, "").slice(0, 12);
+const moistureClass = (s) => s <= 2 ? "dry" : s <= 5 ? "good" : "wet";
+
+function buildObservation() {
+  const s = serial();
+  if (!s) return "Choose the machine at the top.";
+  if (!state.chamber) return "Choose chamber L or R.";
+  const observer = $("observer").value.trim();
+  if (!observer) return "Enter your name.";
+  const missed = $("missed").checked;
+  const row = { obs_id: newId("O"), ts_utc: nowIso(), serial: s, chamber: state.chamber,
+    observer, squeeze: null, moisture_class: null, smell_level: null, smell_descriptor: null,
+    smell_location: null, after_mix: null, fresh_food_seen: null, photo_path: null,
+    missed, miss_reason: null, crosscal_pair_id: null };
+  if (missed) {
+    row.miss_reason = $("miss_reason").value.trim();
+    if (!row.miss_reason) return "Say why the chamber could not be scored.";
+    return row;
+  }
+  if (!state.squeeze) return "Pick a squeeze grade from 1 to 6.";
+  if (state.smell_level === undefined) return "Pick a smell level: 0, 1 or 2.";
+  row.squeeze = Number(state.squeeze);
+  row.moisture_class = moistureClass(row.squeeze);
+  row.smell_level = Number(state.smell_level);
+  if (row.smell_level === 0) { row.smell_descriptor = "none"; row.smell_location = "none"; }
+  else {
+    if (!state.smell_descriptor) return "Pick what kind of smell it is.";
+    if (!state.smell_location) return "Pick where you smelled it.";
+    row.smell_descriptor = state.smell_descriptor; row.smell_location = state.smell_location;
+  }
+  row.after_mix = $("after_mix").checked;
+  row.fresh_food_seen = $("fresh_food_seen").checked;
+  return row;
+}
+
+function buildFeed() {
+  const s = serial();
+  if (!s) return "Choose the machine at the top.";
+  if (!state.feed_chamber) return "Choose which chamber was fed.";
+  const observer = $("observer").value.trim();
+  return { event_id: newId("E"), ts_utc: nowIso(), serial: s, chamber: state.feed_chamber,
+    type: "feed_tap", value: null, size_guess: state.size_guess || null,
+    wetness_guess: state.wetness_guess || null, entered_by: observer ? "web:" + observer : "web",
+    corrects_event_id: null, note: $("feed_note").value.trim() || null };
+}
+
+// ---- sending, with an offline queue
+async function send(table, row) {
+  const key = table === "observations" ? "obs_id" : "event_id";
+  const res = await fetch(`${SUPABASE_URL}/rest/v1/${table}_${SCHEMA}?on_conflict=${key}`, {
+    method: "POST",
+    headers: { apikey: SUPABASE_KEY, Authorization: `Bearer ${SUPABASE_KEY}`,
+      "Content-Type": "application/json", Prefer: "resolution=ignore-duplicates,return=minimal" },
+    body: JSON.stringify([row]),
+  });
+  if (!res.ok) {
+    const text = await res.text();
+    const err = new Error(`${res.status}: ${text.slice(0, 200)}`);
+    err.permanent = res.status >= 400 && res.status < 500 && res.status !== 408 && res.status !== 429;
+    throw err;
+  }
+}
+function queue() { try { return JSON.parse(store(QUEUE_KEY) || "[]"); } catch (e) { return []; } }
+function setQueue(q) { store(QUEUE_KEY, JSON.stringify(q)); showPending(); }
+function showPending() {
+  const n = queue().length;
+  $("pending").hidden = n === 0;
+  $("pending").textContent = n === 1 ? "1 entry is waiting for a connection and will be sent automatically."
+    : `${n} entries are waiting for a connection and will be sent automatically.`;
+}
+async function flushQueue() {
+  const q = queue(); const left = [];
+  for (const item of q) {
+    try { await send(item.table, item.row); } catch (e) { if (!e.permanent) left.push(item); }
+  }
+  setQueue(left);
+  if (left.length < q.length) loadRecent();
+}
+
+function say(text, kind) { $("msg").textContent = text; $("msg").className = "msg" + (kind ? " " + kind : ""); }
+
+function resetScore() {
+  ["squeeze", "smell_level", "smell_descriptor", "smell_location"].forEach((k) => { state[k] = undefined; });
+  document.querySelectorAll("#squeeze button, #smell_level button, #smell_descriptor button, #smell_location button")
+    .forEach((b) => b.setAttribute("aria-pressed", "false"));
+  $("smell-detail").hidden = true;
+  ["after_mix", "fresh_food_seen", "missed"].forEach((id) => { $(id).checked = false; });
+  $("miss_reason").value = ""; $("miss-box").hidden = true; $("score-box").hidden = false;
+}
+function resetFeed() {
+  ["size_guess", "wetness_guess"].forEach((k) => { state[k] = undefined; });
+  document.querySelectorAll("#size_guess button, #wetness_guess button").forEach((b) => b.setAttribute("aria-pressed", "false"));
+  $("feed_note").value = "";
+}
+
+$("save").addEventListener("click", async () => {
+  const isScore = tab === "score";
+  const row = isScore ? buildObservation() : buildFeed();
+  if (typeof row === "string") { say(row, "err"); return; }
+  if ($("observer").value.trim()) store("p150-observer", $("observer").value.trim());
+  store("p150-serial", serial());
+  const table = isScore ? "observations" : "events";
+  $("save").disabled = true; say("Saving…");
+  try {
+    await send(table, row);
+    say(isScore ? `Saved: chamber ${row.chamber}` + (row.missed ? ", missed" : `, squeeze ${row.squeeze} (${row.moisture_class})`)
+      : `Saved: feed into chamber ${row.chamber}`, "ok");
+    isScore ? resetScore() : resetFeed();
+    loadRecent();
+  } catch (e) {
+    if (e.permanent) { say(`Not saved. The database refused it (${e.message}). Tell the study owner.`, "err"); }
+    else {
+      setQueue(queue().concat([{ table, row }]));
+      say("No connection. Kept on this phone; it will be sent automatically.", "err");
+      isScore ? resetScore() : resetFeed();
+    }
+  } finally { $("save").disabled = false; }
+});
+
+// ---- latest scores
+function fmtWhen(iso) {
+  const d = new Date(iso);
+  return d.toLocaleString([], { month: "short", day: "numeric", hour: "2-digit", minute: "2-digit" });
+}
+async function loadRecent() {
+  const s = serial(); const body = $("recent");
+  if (!s) { body.innerHTML = '<tr><td colspan="5" class="hint">Choose a machine to see its latest scores.</td></tr>'; return; }
+  try {
+    const q = `select=ts_utc,chamber,squeeze,moisture_class,smell_level,smell_descriptor,missed,observer` +
+      `&serial=eq.${encodeURIComponent(s)}&order=ts_utc.desc&limit=8`;
+    const res = await fetch(`${SUPABASE_URL}/rest/v1/observations_${SCHEMA}?${q}`,
+      { headers: { apikey: SUPABASE_KEY, Authorization: `Bearer ${SUPABASE_KEY}` } });
+    if (!res.ok) throw new Error(res.status);
+    const rows = await res.json();
+    body.textContent = "";
+    if (!rows.length) {
+      body.innerHTML = '<tr><td colspan="5" class="hint">No scores yet for this machine. The first one you save appears here.</td></tr>';
+      return;
+    }
+    rows.forEach((r) => {
+      const tr = document.createElement("tr");
+      const squeeze = r.missed ? "missed" : `${r.squeeze ?? "–"} ${r.moisture_class ? "· " + r.moisture_class : ""}`;
+      const smell = r.missed ? "" : `${r.smell_level ?? "–"}${r.smell_descriptor && r.smell_descriptor !== "none" ? " " + r.smell_descriptor : ""}`;
+      [fmtWhen(r.ts_utc), r.chamber, squeeze, smell, r.observer || ""].forEach((v) => {
+        const td = document.createElement("td"); td.textContent = v; tr.appendChild(td);
+      });
+      body.appendChild(tr);
+    });
+  } catch (e) {
+    body.innerHTML = '<tr><td colspan="5" class="hint">Could not load the latest scores. Check the connection; saving still works offline.</td></tr>';
+  }
+}
+
+showPending();
+loadRecent();
+flushQueue();
+window.addEventListener("online", flushQueue);
+</script>
+</body>
+</html>
