@@ -909,6 +909,7 @@ function drawCharts() {
     const yAxis = { stroke: ink, grid: { stroke: grid, width: 1 }, ticks: { stroke: grid }, size: 52 };
     if (bin) { yAxis.splits = () => [0, 1]; yAxis.values = (u, vals) => vals.map((v) => bin[v] ?? ""); }
     else if (panel.series[0].names) yAxis.incrs = [1, 2, 5, 10];   // whole state codes
+    else yAxis.values = (u, vals) => vals.map((v) => v == null ? "" : String(+v.toPrecision(3)));
     const opts = {
       width: Math.max(240, plotBox.clientWidth), height: 200,
       cursor: { drag: { x: true, y: false } },
