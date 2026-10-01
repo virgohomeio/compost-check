@@ -6,8 +6,9 @@
 <title>P150 Compost Check</title>
 <meta name="robots" content="noindex">
 <style>
-/* Layout: one narrow column for a phone held in one hand: machine bar, big
-   squeeze buttons, one Save button pinned within thumb reach.
+/* Layout: one narrow column for a phone held in one hand: machine bar, a
+   tab per kind of entry (the same set as the harness page), big buttons,
+   and one Save button pinned within thumb reach.
    Palette follows the harness pages (RL/harness/api/static/common.css). */
 :root {
   --bg: #f4f3ef;
@@ -54,32 +55,35 @@ html { -webkit-text-size-adjust: 100%; }
 body {
   margin: 0; background: var(--bg); color: var(--ink);
   font: 16px/1.45 var(--sans);
-  padding: env(safe-area-inset-top, 0px) 0 env(safe-area-inset-bottom, 0px);
+  padding-bottom: env(safe-area-inset-bottom, 0px);
 }
-main { max-width: 560px; margin: 0 auto; padding: 0 16px 120px; display: grid; gap: 18px; }
+main { max-width: 600px; margin: 0 auto; padding: 0 16px 128px; display: grid; gap: 16px; }
 
 header.top {
   position: sticky; top: 0; z-index: 5;
   background: var(--panel); border-bottom: 1px solid var(--line);
   padding: calc(10px + env(safe-area-inset-top, 0px)) 16px 10px;
 }
-header.top .row { max-width: 560px; margin: 0 auto; display: flex; gap: 12px; align-items: center; flex-wrap: wrap; }
+header.top .row { max-width: 600px; margin: 0 auto; display: flex; gap: 12px; align-items: center; flex-wrap: wrap; }
 header.top h1 { font-size: 18px; margin: 0; text-wrap: balance; }
 header.top .machine { margin-left: auto; display: flex; gap: 6px; align-items: center; font-size: 13px; color: var(--muted); }
 header.top select, header.top input { font: 13px var(--mono); }
 
-nav.tabs { display: grid; grid-template-columns: 1fr 1fr; gap: 6px; margin-top: 14px; }
-nav.tabs button { padding: 10px; border-radius: var(--radius); border: 1px solid var(--line);
-  background: var(--panel); color: var(--ink); font: 600 15px var(--sans); cursor: pointer; }
+nav.tabs { display: grid; grid-template-columns: repeat(3, 1fr); gap: 6px; margin-top: 14px; }
+nav.tabs button { padding: 10px 6px; border-radius: var(--radius); border: 1px solid var(--line);
+  background: var(--panel); color: var(--ink); font: 600 14px var(--sans); cursor: pointer; }
 nav.tabs button[aria-selected="true"] { background: var(--sel); color: var(--sel-ink); border-color: var(--sel); }
 
 section.card { background: var(--panel); border: 1px solid var(--line); border-radius: var(--radius);
   padding: 16px; display: grid; gap: 16px; }
+section.card h2 { margin: 0; font-size: 17px; text-wrap: balance; }
+.stack { display: grid; gap: 16px; }
 .field { display: grid; gap: 8px; }
 .label { font-size: 12px; font-weight: 700; letter-spacing: .06em; text-transform: uppercase; color: var(--muted); }
 .hint { font-size: 13px; color: var(--muted); margin: 0; }
-input[type="text"], textarea { width: 100%; padding: 10px 12px; border-radius: 8px;
+input[type="text"], input[type="number"], textarea { width: 100%; padding: 10px 12px; border-radius: 8px;
   border: 1px solid var(--line); background: var(--bg); color: var(--ink); font: 16px var(--sans); }
+input[type="file"] { font: 14px var(--sans); color: var(--muted); max-width: 100%; }
 textarea { min-height: 64px; resize: vertical; }
 
 .seg { display: flex; flex-wrap: wrap; gap: 6px; }
@@ -94,11 +98,12 @@ textarea { min-height: 64px; resize: vertical; }
   text-align: left; padding: 10px 12px; border-radius: 8px; border: 1px solid var(--line);
   background: var(--bg); color: var(--ink); font: 15px var(--sans); cursor: pointer; }
 .squeeze .n { font: 700 20px var(--mono); text-align: center; }
-.squeeze .band { font-size: 12px; font-weight: 700; letter-spacing: .05em; text-transform: uppercase;
-  padding: 2px 8px; border-radius: 999px; }
+.band { font-size: 12px; font-weight: 700; letter-spacing: .05em; text-transform: uppercase;
+  padding: 2px 8px; border-radius: 999px; white-space: nowrap; }
 .band.dry { background: var(--dry-soft); color: var(--dry); }
 .band.good { background: var(--good-soft); color: var(--good); }
 .band.wet { background: var(--wet-soft); color: var(--wet); }
+.band.bad { background: var(--bad-soft); color: var(--bad); }
 .squeeze button[aria-pressed="true"] { border-color: var(--sel); box-shadow: inset 0 0 0 2px var(--sel); }
 
 .checks { display: grid; gap: 10px; }
@@ -108,18 +113,31 @@ textarea { min-height: 64px; resize: vertical; }
 .save { position: fixed; left: 0; right: 0; bottom: 0; z-index: 6;
   padding: 12px 16px calc(12px + env(safe-area-inset-bottom, 0px));
   background: var(--panel); border-top: 1px solid var(--line); }
-.save .row { max-width: 560px; margin: 0 auto; display: flex; gap: 12px; align-items: center; }
-.save button { flex: 1; padding: 15px; border: 0; border-radius: var(--radius);
+.save .row { max-width: 600px; margin: 0 auto; display: flex; gap: 12px; align-items: center; }
+.save button { flex: 0 0 auto; min-width: 46%; padding: 15px; border: 0; border-radius: var(--radius);
   background: var(--accent); color: var(--accent-ink); font: 700 17px var(--sans); cursor: pointer; }
+.save button.danger { background: var(--bad); color: #ffffff; }
 .save button:disabled { opacity: .55; cursor: default; }
-.msg { font-size: 14px; min-height: 1.4em; }
+.msg { flex: 1; font-size: 14px; min-height: 1.4em; }
 .msg.ok { color: var(--good); } .msg.err { color: var(--bad); }
 
-table.recent { width: 100%; border-collapse: collapse; font-size: 14px; font-variant-numeric: tabular-nums; }
-table.recent th, table.recent td { text-align: left; padding: 7px 6px; border-bottom: 1px solid var(--line); vertical-align: top; }
-table.recent th { font-size: 12px; color: var(--muted); font-weight: 700; letter-spacing: .04em; text-transform: uppercase; }
-.recent-wrap { overflow-x: auto; }
-.pending { font-size: 13px; color: var(--dry); }
+/* Status */
+dl.kv { display: grid; grid-template-columns: max-content 1fr; gap: 6px 14px; margin: 0; font-size: 14px; }
+dl.kv dt { color: var(--muted); }
+dl.kv dd { margin: 0; font-variant-numeric: tabular-nums; overflow-wrap: anywhere; }
+.chambers { display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: 12px; }
+.chamber { border: 1px solid var(--line); border-radius: 8px; padding: 12px; display: grid; gap: 10px; }
+.chamber h3 { margin: 0; font-size: 16px; display: flex; gap: 8px; align-items: center; }
+.action { font: 700 14px var(--mono); padding: 2px 8px; border-radius: 6px; background: var(--sel); color: var(--sel-ink); }
+.fresh { display: flex; gap: 8px; align-items: center; font-size: 14px; }
+
+table.log { width: 100%; border-collapse: collapse; font-size: 14px; font-variant-numeric: tabular-nums; }
+table.log th, table.log td { text-align: left; padding: 7px 6px; border-bottom: 1px solid var(--line); vertical-align: top; }
+table.log th { font-size: 12px; color: var(--muted); font-weight: 700; letter-spacing: .04em; text-transform: uppercase; }
+.scroll { overflow-x: auto; }
+.linkish { background: none; border: 0; padding: 0; color: var(--accent); font: inherit; text-decoration: underline; cursor: pointer; }
+.pending { font-size: 13px; color: var(--dry); margin: 0; }
+.photo-view { max-width: 100%; border-radius: 8px; border: 1px solid var(--line); }
 
 button:focus-visible, input:focus-visible, select:focus-visible, textarea:focus-visible {
   outline: 3px solid var(--accent); outline-offset: 2px; }
@@ -140,36 +158,41 @@ button:focus-visible, input:focus-visible, select:focus-visible, textarea:focus-
 </header>
 
 <main>
-  <nav class="tabs" role="tablist">
-    <button id="tab-score" role="tab" aria-selected="true">Score a chamber</button>
-    <button id="tab-feed" role="tab" aria-selected="false">Record a feed</button>
+  <nav class="tabs" role="tablist" id="tabs">
+    <button role="tab" data-tab="score" aria-selected="true">Score</button>
+    <button role="tab" data-tab="feed" aria-selected="false">Feed</button>
+    <button role="tab" data-tab="water" aria-selected="false">Water</button>
+    <button role="tab" data-tab="unload" aria-selected="false">Unload</button>
+    <button role="tab" data-tab="service" aria-selected="false">Service</button>
+    <button role="tab" data-tab="status" aria-selected="false">Status</button>
   </nav>
 
-  <!-- Score: one observations_v2 row -->
-  <section class="card" id="panel-score">
+  <div class="field">
+    <label class="label" for="observer">Your name</label>
+    <input id="observer" type="text" autocomplete="name" maxlength="64" placeholder="e.g. Bassem">
+  </div>
+
+  <!-- Score: one observations_v2 row, as the harness POST /observations -->
+  <section class="card" data-panel="score">
+    <h2>Score a chamber</h2>
     <div class="field">
       <span class="label">Chamber</span>
-      <div class="seg big" id="chamber" data-group="chamber">
+      <div class="seg big" data-group="chamber">
         <button type="button" data-v="L">L</button><button type="button" data-v="R">R</button>
       </div>
     </div>
-    <div class="field">
-      <label class="label" for="observer">Your name</label>
-      <input id="observer" type="text" autocomplete="name" placeholder="e.g. Bassem">
-    </div>
     <div class="checks">
-      <label><input type="checkbox" id="missed"> Could not score this chamber</label>
+      <label><input type="checkbox" id="missed"> Could not score this chamber (missed)</label>
     </div>
     <div class="field" id="miss-box" hidden>
-      <label class="label" for="miss_reason">Why not?</label>
-      <input id="miss_reason" type="text" placeholder="e.g. lid jammed, chamber unloaded">
+      <label class="label" for="miss_reason">Why was it missed?</label>
+      <input id="miss_reason" type="text" maxlength="200" placeholder="e.g. nobody on site, lid jammed">
     </div>
-
-    <div id="score-box" class="checks" style="gap:16px">
+    <div id="score-box" class="stack">
       <div class="field">
         <span class="label">Squeeze test</span>
         <p class="hint">Take a handful from the middle of the chamber and squeeze hard.</p>
-        <div class="squeeze" id="squeeze">
+        <div class="squeeze" data-group="squeeze">
           <button type="button" data-v="1"><span class="n">1</span><span>Crumbles, dry</span><span class="band dry">dry</span></button>
           <button type="button" data-v="2"><span class="n">2</span><span>Holds briefly, then crumbles</span><span class="band dry">dry</span></button>
           <button type="button" data-v="3"><span class="n">3</span><span>Holds shape, no water</span><span class="band good">good</span></button>
@@ -179,69 +202,147 @@ button:focus-visible, input:focus-visible, select:focus-visible, textarea:focus-
         </div>
       </div>
       <div class="field">
-        <span class="label">Smell</span>
-        <div class="seg" id="smell_level" data-group="smell_level">
+        <span class="label">Smell level</span>
+        <div class="seg" data-group="smell_level">
           <button type="button" data-v="0">0 none</button><button type="button" data-v="1">1 detectable</button><button type="button" data-v="2">2 offensive</button>
         </div>
       </div>
       <div class="field" id="smell-detail" hidden>
-        <span class="label">What kind of smell</span>
-        <div class="seg" id="smell_descriptor" data-group="smell_descriptor">
+        <span class="label">Smell descriptor</span>
+        <div class="seg" data-group="smell_descriptor" id="smell_descriptor">
           <button type="button" data-v="sour">sour</button><button type="button" data-v="garbage">garbage</button><button type="button" data-v="musty">musty</button><button type="button" data-v="ammonia">ammonia</button><button type="button" data-v="earthy">earthy</button>
         </div>
-        <span class="label">Where you smelled it</span>
-        <div class="seg" id="smell_location" data-group="smell_location">
-          <button type="button" data-v="material">in the material</button><button type="button" data-v="room">in the room</button>
+        <span class="label">Where did you smell it?</span>
+        <div class="seg" data-group="smell_location" id="smell_location">
+          <button type="button" data-v="material">material</button><button type="button" data-v="room">room</button>
         </div>
       </div>
       <div class="checks">
         <label><input type="checkbox" id="after_mix"> Scored right after a mix</label>
         <label><input type="checkbox" id="fresh_food_seen"> Fresh food visible on top</label>
       </div>
+      <div class="field">
+        <label class="label" for="photo">Photo (optional)</label>
+        <input type="file" id="photo" accept="image/*" capture="environment">
+      </div>
+      <div class="field">
+        <label class="label" for="crosscal_pair_id">Cross-calibration pair ID</label>
+        <input id="crosscal_pair_id" type="text" maxlength="64" placeholder="only when two people score the same chamber">
+      </div>
     </div>
   </section>
 
-  <!-- Feed: one events_v2 feed_tap row -->
-  <section class="card" id="panel-feed" hidden>
+  <!-- Feed: events_v2 feed_tap, as POST /events/feed -->
+  <section class="card" data-panel="feed" hidden>
+    <h2>Feed</h2>
+    <p class="hint">Record it when food goes in. Size and wetness are optional guesses.</p>
     <div class="field">
       <span class="label">Chamber fed</span>
-      <div class="seg big" id="feed_chamber" data-group="feed_chamber">
+      <div class="seg big" data-group="feed_chamber">
         <button type="button" data-v="L">L</button><button type="button" data-v="R">R</button>
       </div>
     </div>
     <div class="field">
-      <span class="label">How much (optional)</span>
-      <div class="seg" id="size_guess" data-group="size_guess">
+      <span class="label">Size (optional)</span>
+      <div class="seg" data-group="size_guess" id="size_guess">
         <button type="button" data-v="small">small</button><button type="button" data-v="medium">medium</button><button type="button" data-v="large">large</button>
       </div>
     </div>
     <div class="field">
-      <span class="label">How wet (optional)</span>
-      <div class="seg" id="wetness_guess" data-group="wetness_guess">
+      <span class="label">Wetness (optional)</span>
+      <div class="seg" data-group="wetness_guess" id="wetness_guess">
         <button type="button" data-v="dry">dry</button><button type="button" data-v="normal">normal</button><button type="button" data-v="wet">wet</button>
       </div>
     </div>
     <div class="field">
-      <label class="label" for="feed_note">What went in (optional)</label>
-      <textarea id="feed_note" placeholder="e.g. ~1 kg vegetable scraps, coffee grounds"></textarea>
+      <label class="label" for="feed_note">Note (optional)</label>
+      <textarea id="feed_note" maxlength="500" placeholder="e.g. ~1 kg vegetable scraps, coffee grounds"></textarea>
+    </div>
+  </section>
+
+  <!-- Water: events_v2 water, value in mL, as POST /events/water -->
+  <section class="card" data-panel="water" hidden>
+    <h2>Water added</h2>
+    <div class="field">
+      <span class="label">Chamber</span>
+      <div class="seg big" data-group="water_chamber">
+        <button type="button" data-v="L">L</button><button type="button" data-v="R">R</button>
+      </div>
+    </div>
+    <div class="field">
+      <label class="label" for="water_ml">Amount (mL)</label>
+      <input id="water_ml" type="number" inputmode="numeric" min="1" max="50000" step="1" placeholder="e.g. 500">
+    </div>
+    <div class="field">
+      <label class="label" for="water_note">Note (optional)</label>
+      <input id="water_note" type="text" maxlength="500">
+    </div>
+  </section>
+
+  <!-- Unload: events_v2 unload + role_change, as POST /events/unload -->
+  <section class="card" data-panel="unload" hidden>
+    <h2>Unload</h2>
+    <p class="hint">Record it when a chamber is emptied. It marks the start of that chamber's next cycle.</p>
+    <div class="field">
+      <span class="label">Chamber emptied</span>
+      <div class="seg big" data-group="unload_chamber">
+        <button type="button" data-v="L">L</button><button type="button" data-v="R">R</button>
+      </div>
+    </div>
+    <div class="field">
+      <label class="label" for="unload_note">Note (optional)</label>
+      <input id="unload_note" type="text" maxlength="500" placeholder="e.g. about 80% removed">
+    </div>
+  </section>
+
+  <!-- Service: events_v2 service, as POST /events/service -->
+  <section class="card" data-panel="service" hidden>
+    <h2>Service done</h2>
+    <div class="field">
+      <span class="label">Chamber</span>
+      <div class="seg big" data-group="service_chamber">
+        <button type="button" data-v="L">L</button><button type="button" data-v="R">R</button>
+      </div>
+    </div>
+    <div class="field">
+      <label class="label" for="service_note">What was done</label>
+      <input id="service_note" type="text" maxlength="500" placeholder="e.g. cleared a jammed mixer">
+    </div>
+  </section>
+
+  <!-- Status: the latest rows in Supabase for this machine -->
+  <section class="card" data-panel="status" hidden>
+    <h2>Machine status</h2>
+    <div class="fresh" id="freshness"><span class="band">loading</span><span>Reading the latest data…</span></div>
+    <dl class="kv" id="machine-kv"></dl>
+    <div class="chambers" id="chamber-cards"></div>
+    <p class="hint">Decisions run at 01:45, 05:45, 09:45, 13:45, 17:45 and 21:45 Toronto time, one per chamber.</p>
+  </section>
+
+  <section class="card" data-panel="status" hidden>
+    <h2>Events, last 24 hours</h2>
+    <div class="scroll">
+      <table class="log">
+        <thead><tr><th>When</th><th>Ch</th><th>Event</th><th>Detail</th></tr></thead>
+        <tbody id="events"><tr><td colspan="4" class="hint">Loading events…</td></tr></tbody>
+      </table>
     </div>
   </section>
 
   <section class="card">
-    <div class="field">
-      <span class="label">Latest scores on this machine</span>
-      <p class="pending" id="pending" hidden></p>
-      <div class="recent-wrap">
-        <table class="recent">
-          <thead><tr><th>When</th><th>Ch</th><th>Squeeze</th><th>Smell</th><th>By</th></tr></thead>
-          <tbody id="recent"><tr><td colspan="5" class="hint">Loading the latest scores…</td></tr></tbody>
-        </table>
-      </div>
+    <h2>Latest scores on this machine</h2>
+    <p class="pending" id="pending" hidden></p>
+    <div class="scroll">
+      <table class="log">
+        <thead><tr><th>When</th><th>Ch</th><th>Squeeze</th><th>Smell</th><th>By</th><th>Photo</th></tr></thead>
+        <tbody id="recent"><tr><td colspan="6" class="hint">Loading the latest scores…</td></tr></tbody>
+      </table>
     </div>
+    <img id="photo-view" class="photo-view" alt="Photo attached to the score" hidden>
   </section>
 </main>
 
-<div class="save">
+<div class="save" id="save-bar">
   <div class="row">
     <span class="msg" id="msg" role="status" aria-live="polite"></span>
     <button id="save" type="button">Save score</button>
@@ -251,13 +352,20 @@ button:focus-visible, input:focus-visible, select:focus-visible, textarea:focus-
 <script>
 // Shared Supabase project and its publishable key, the same pair as
 // RL/harness/config/supabase.yaml. The key can only insert and read rows in
-// the study tables (supabase_schema.py --access); it cannot change or delete
-// anything, which is why it can sit in a public page.
+// the study tables (supabase_schema.py --access) and upload and read photos
+// (supabase_photos.sql); it cannot change or delete anything, which is why it
+// can sit in a public page. Rows match what the harness API writes.
 const SUPABASE_URL = "https://apmncybxykyvacpwccyx.supabase.co";
 const SUPABASE_KEY = "sb_publishable_A31poHKFHwYld6Fy2zjPRQ_-GfIeIWA";
 const SCHEMA = "v2";
+const PHOTO_BUCKET = "study-photos";
+const MAX_PHOTO_BYTES = 15 * 1024 * 1024;
+const PHOTO_TYPES = { "image/jpeg": ".jpg", "image/png": ".png", "image/webp": ".webp",
+  "image/gif": ".gif", "image/heic": ".heic", "image/heif": ".heif" };
+const WATER_MAX_ML = 50000;
 const MACHINES = ["LL01-00000000285"];
 const QUEUE_KEY = "p150-check-queue";
+const HEADERS = { apikey: SUPABASE_KEY, Authorization: `Bearer ${SUPABASE_KEY}` };
 
 const $ = (id) => document.getElementById(id);
 const state = {};
@@ -276,18 +384,14 @@ MACHINES.concat(["other"]).forEach((m) => {
 const savedSerial = store("p150-serial");
 if (savedSerial && MACHINES.includes(savedSerial)) $("serial").value = savedSerial;
 else if (savedSerial) { $("serial").value = "other"; $("serial-other").hidden = false; $("serial-other").value = savedSerial; }
-function serial() {
-  return $("serial").value === "other" ? $("serial-other").value.trim() : $("serial").value;
-}
-$("serial").addEventListener("change", () => {
-  $("serial-other").hidden = $("serial").value !== "other";
-  store("p150-serial", serial()); loadRecent();
-});
-$("serial-other").addEventListener("change", () => { store("p150-serial", serial()); loadRecent(); });
+function serial() { return $("serial").value === "other" ? $("serial-other").value.trim() : $("serial").value; }
+function machineChanged() { store("p150-serial", serial()); loadRecent(); if (tab === "status") loadStatus(); }
+$("serial").addEventListener("change", () => { $("serial-other").hidden = $("serial").value !== "other"; machineChanged(); });
+$("serial-other").addEventListener("change", machineChanged);
 
-// ---- button groups
-document.querySelectorAll("[data-group], #squeeze").forEach((group) => {
-  const name = group.dataset.group || "squeeze";
+// ---- button groups (tap again to clear)
+document.querySelectorAll("[data-group]").forEach((group) => {
+  const name = group.dataset.group;
   group.querySelectorAll("button").forEach((b) => {
     b.setAttribute("aria-pressed", "false");
     b.addEventListener("click", () => {
@@ -295,10 +399,16 @@ document.querySelectorAll("[data-group], #squeeze").forEach((group) => {
       group.querySelectorAll("button").forEach((x) => x.setAttribute("aria-pressed", "false"));
       state[name] = again ? undefined : b.dataset.v;
       if (!again) b.setAttribute("aria-pressed", "true");
-      if (name === "smell_level") $("smell-detail").hidden = !(state.smell_level > 0);
+      if (name === "smell_level") $("smell-detail").hidden = !(Number(state.smell_level) > 0);
     });
   });
 });
+function clearGroups(names) {
+  names.forEach((n) => {
+    state[n] = undefined;
+    document.querySelectorAll(`[data-group="${n}"] button`).forEach((b) => b.setAttribute("aria-pressed", "false"));
+  });
+}
 $("missed").addEventListener("change", () => {
   $("miss-box").hidden = !$("missed").checked;
   $("score-box").hidden = $("missed").checked;
@@ -306,83 +416,122 @@ $("missed").addEventListener("change", () => {
 $("observer").value = store("p150-observer") || "";
 
 // ---- tabs
+const SAVE_LABEL = { score: "Save score", feed: "Log feed", water: "Log water", unload: "Log unload", service: "Log service" };
 let tab = "score";
 function showTab(t) {
   tab = t;
-  $("tab-score").setAttribute("aria-selected", t === "score");
-  $("tab-feed").setAttribute("aria-selected", t === "feed");
-  $("panel-score").hidden = t !== "score";
-  $("panel-feed").hidden = t !== "feed";
-  $("save").textContent = t === "score" ? "Save score" : "Save feed";
+  document.querySelectorAll("#tabs button").forEach((b) => b.setAttribute("aria-selected", b.dataset.tab === t));
+  document.querySelectorAll("[data-panel]").forEach((p) => { p.hidden = p.dataset.panel !== t; });
+  $("save-bar").hidden = t === "status";
+  $("observer").parentElement.hidden = t === "status";
+  $("save").textContent = SAVE_LABEL[t] || "";
+  $("save").className = t === "unload" ? "danger" : "";
   say("");
+  if (t === "status") loadStatus();
 }
-$("tab-score").addEventListener("click", () => showTab("score"));
-$("tab-feed").addEventListener("click", () => showTab("feed"));
+document.querySelectorAll("#tabs button").forEach((b) => b.addEventListener("click", () => showTab(b.dataset.tab)));
 
-// ---- rows, as schema_v2 columns
+// ---- rows, as schema v2 columns
 const nowIso = () => new Date().toISOString().replace(/\.\d{3}Z$/, "Z");
-const newId = (p) => p + "-" + (crypto.randomUUID ? crypto.randomUUID() : String(Math.random()).slice(2) + Date.now())
-  .replace(/-/g, "").slice(0, 12);
-const moistureClass = (s) => s <= 2 ? "dry" : s <= 5 ? "good" : "wet";
+const newId = (p) => p + "-" + (crypto.randomUUID ? crypto.randomUUID().replace(/-/g, "")
+  : (Date.now().toString(16) + Math.random().toString(16).slice(2))).slice(0, 12);
+const moistureClass = (s) => s == null ? null : s <= 2 ? "dry" : s <= 5 ? "good" : "wet";
 
-function buildObservation() {
+function common() {
   const s = serial();
   if (!s) return "Choose the machine at the top.";
+  const name = $("observer").value.trim();
+  if (!name) return "Enter your name.";
+  return { s, name };
+}
+function event(c, type, chamber, extra) {
+  return Object.assign({ event_id: newId("E"), ts_utc: nowIso(), serial: c.s, chamber, type,
+    value: null, size_guess: null, wetness_guess: null, entered_by: c.name, corrects_event_id: null, note: null }, extra);
+}
+
+function buildScore() {
+  const c = common(); if (typeof c === "string") return c;
   if (!state.chamber) return "Choose chamber L or R.";
-  const observer = $("observer").value.trim();
-  if (!observer) return "Enter your name.";
   const missed = $("missed").checked;
-  const row = { obs_id: newId("O"), ts_utc: nowIso(), serial: s, chamber: state.chamber,
-    observer, squeeze: null, moisture_class: null, smell_level: null, smell_descriptor: null,
-    smell_location: null, after_mix: null, fresh_food_seen: null, photo_path: null,
-    missed, miss_reason: null, crosscal_pair_id: null };
+  const row = { obs_id: newId("O"), ts_utc: nowIso(), serial: c.s, chamber: state.chamber, observer: c.name,
+    squeeze: null, moisture_class: null, smell_level: null, smell_descriptor: null, smell_location: null,
+    after_mix: null, fresh_food_seen: null, photo_path: null, missed, miss_reason: null,
+    crosscal_pair_id: $("crosscal_pair_id").value.trim() || null };
   if (missed) {
     row.miss_reason = $("miss_reason").value.trim();
-    if (!row.miss_reason) return "Say why the chamber could not be scored.";
-    return row;
+    if (!row.miss_reason) return "Say why the chamber was missed.";
+    return { observations: [row] };
   }
   if (!state.squeeze) return "Pick a squeeze grade from 1 to 6.";
-  if (state.smell_level === undefined) return "Pick a smell level: 0, 1 or 2.";
   row.squeeze = Number(state.squeeze);
   row.moisture_class = moistureClass(row.squeeze);
-  row.smell_level = Number(state.smell_level);
-  if (row.smell_level === 0) { row.smell_descriptor = "none"; row.smell_location = "none"; }
-  else {
-    if (!state.smell_descriptor) return "Pick what kind of smell it is.";
-    if (!state.smell_location) return "Pick where you smelled it.";
-    row.smell_descriptor = state.smell_descriptor; row.smell_location = state.smell_location;
-  }
+  if (state.smell_level !== undefined) row.smell_level = Number(state.smell_level);
+  row.smell_descriptor = state.smell_descriptor || (row.smell_level === 0 ? "none" : null);
+  row.smell_location = state.smell_location || (row.smell_level === 0 ? "none" : null);
   row.after_mix = $("after_mix").checked;
   row.fresh_food_seen = $("fresh_food_seen").checked;
-  return row;
+  const file = $("photo").files[0];
+  if (file) {
+    const type = (file.type || "").toLowerCase();
+    if (!PHOTO_TYPES[type]) return `The photo must be an image (JPEG, PNG, WebP, GIF or HEIC); this one is ${type || "of unknown type"}.`;
+    if (file.size > MAX_PHOTO_BYTES) return "The photo is larger than 15 MB. Take a smaller one.";
+  }
+  return { observations: [row], photo: file || null };
 }
-
 function buildFeed() {
-  const s = serial();
-  if (!s) return "Choose the machine at the top.";
+  const c = common(); if (typeof c === "string") return c;
   if (!state.feed_chamber) return "Choose which chamber was fed.";
-  const observer = $("observer").value.trim();
-  return { event_id: newId("E"), ts_utc: nowIso(), serial: s, chamber: state.feed_chamber,
-    type: "feed_tap", value: null, size_guess: state.size_guess || null,
-    wetness_guess: state.wetness_guess || null, entered_by: observer ? "web:" + observer : "web",
-    corrects_event_id: null, note: $("feed_note").value.trim() || null };
+  return { events: [event(c, "feed_tap", state.feed_chamber, { size_guess: state.size_guess || null,
+    wetness_guess: state.wetness_guess || null, note: $("feed_note").value.trim() || null })] };
 }
+function buildWater() {
+  const c = common(); if (typeof c === "string") return c;
+  if (!state.water_chamber) return "Choose the chamber the water went into.";
+  const ml = Number($("water_ml").value);
+  if (!(ml > 0) || ml > WATER_MAX_ML) return `Enter the amount in mL, from 1 to ${WATER_MAX_ML}.`;
+  return { events: [event(c, "water", state.water_chamber, { value: ml, note: $("water_note").value.trim() || null })] };
+}
+function buildUnload() {
+  const c = common(); if (typeof c === "string") return c;
+  if (!state.unload_chamber) return "Choose the chamber that was emptied.";
+  const first = event(c, "unload", state.unload_chamber, { note: $("unload_note").value.trim() || null });
+  const second = event(c, "role_change", state.unload_chamber, { note: `unload ${first.event_id}` });
+  return { events: [first, second] };
+}
+function buildService() {
+  const c = common(); if (typeof c === "string") return c;
+  if (!state.service_chamber) return "Choose the chamber that was serviced.";
+  const note = $("service_note").value.trim();
+  if (!note) return "Say what was done.";
+  return { events: [event(c, "service", state.service_chamber, { note })] };
+}
+const BUILD = { score: buildScore, feed: buildFeed, water: buildWater, unload: buildUnload, service: buildService };
 
 // ---- sending, with an offline queue
-async function send(table, row) {
+async function insert(table, rows) {
   const key = table === "observations" ? "obs_id" : "event_id";
   const res = await fetch(`${SUPABASE_URL}/rest/v1/${table}_${SCHEMA}?on_conflict=${key}`, {
     method: "POST",
-    headers: { apikey: SUPABASE_KEY, Authorization: `Bearer ${SUPABASE_KEY}`,
-      "Content-Type": "application/json", Prefer: "resolution=ignore-duplicates,return=minimal" },
-    body: JSON.stringify([row]),
+    headers: Object.assign({ "Content-Type": "application/json",
+      Prefer: "resolution=ignore-duplicates,return=minimal" }, HEADERS),
+    body: JSON.stringify(rows),
   });
-  if (!res.ok) {
-    const text = await res.text();
-    const err = new Error(`${res.status}: ${text.slice(0, 200)}`);
-    err.permanent = res.status >= 400 && res.status < 500 && res.status !== 408 && res.status !== 429;
-    throw err;
-  }
+  if (!res.ok) throw failure(res.status, await res.text());
+}
+async function uploadPhoto(file, row) {
+  const ext = PHOTO_TYPES[(file.type || "").toLowerCase()];
+  const stamp = row.ts_utc.replace(/[-:]/g, "");
+  const path = `${encodeURIComponent(row.serial)}/${stamp}_${row.chamber}_${row.obs_id}${ext}`;
+  const res = await fetch(`${SUPABASE_URL}/storage/v1/object/${PHOTO_BUCKET}/${path}`, {
+    method: "POST", headers: Object.assign({ "Content-Type": file.type, "x-upsert": "false" }, HEADERS), body: file,
+  });
+  if (!res.ok) throw failure(res.status, await res.text());
+  return `supabase:${PHOTO_BUCKET}/${decodeURIComponent(path)}`;
+}
+function failure(status, text) {
+  const err = new Error(`${status}: ${text.slice(0, 200)}`);
+  err.permanent = status >= 400 && status < 500 && status !== 408 && status !== 429;
+  return err;
 }
 function queue() { try { return JSON.parse(store(QUEUE_KEY) || "[]"); } catch (e) { return []; } }
 function setQueue(q) { store(QUEUE_KEY, JSON.stringify(q)); showPending(); }
@@ -395,83 +544,202 @@ function showPending() {
 async function flushQueue() {
   const q = queue(); const left = [];
   for (const item of q) {
-    try { await send(item.table, item.row); } catch (e) { if (!e.permanent) left.push(item); }
+    try { await insert(item.table, item.rows); } catch (e) { if (!e.permanent) left.push(item); }
   }
   setQueue(left);
   if (left.length < q.length) loadRecent();
 }
-
 function say(text, kind) { $("msg").textContent = text; $("msg").className = "msg" + (kind ? " " + kind : ""); }
 
-function resetScore() {
-  ["squeeze", "smell_level", "smell_descriptor", "smell_location"].forEach((k) => { state[k] = undefined; });
-  document.querySelectorAll("#squeeze button, #smell_level button, #smell_descriptor button, #smell_location button")
-    .forEach((b) => b.setAttribute("aria-pressed", "false"));
-  $("smell-detail").hidden = true;
-  ["after_mix", "fresh_food_seen", "missed"].forEach((id) => { $(id).checked = false; });
-  $("miss_reason").value = ""; $("miss-box").hidden = true; $("score-box").hidden = false;
+function reset(t) {
+  if (t === "score") {
+    clearGroups(["squeeze", "smell_level", "smell_descriptor", "smell_location"]);
+    $("smell-detail").hidden = true;
+    ["after_mix", "fresh_food_seen", "missed"].forEach((id) => { $(id).checked = false; });
+    ["miss_reason", "crosscal_pair_id", "photo"].forEach((id) => { $(id).value = ""; });
+    $("miss-box").hidden = true; $("score-box").hidden = false;
+  } else if (t === "feed") { clearGroups(["size_guess", "wetness_guess"]); $("feed_note").value = ""; }
+  else if (t === "water") { $("water_ml").value = ""; $("water_note").value = ""; }
+  else if (t === "unload") { clearGroups(["unload_chamber"]); $("unload_note").value = ""; }
+  else if (t === "service") { $("service_note").value = ""; }
 }
-function resetFeed() {
-  ["size_guess", "wetness_guess"].forEach((k) => { state[k] = undefined; });
-  document.querySelectorAll("#size_guess button, #wetness_guess button").forEach((b) => b.setAttribute("aria-pressed", "false"));
-  $("feed_note").value = "";
+function done(t, built) {
+  if (t === "score") {
+    const r = built.observations[0];
+    return `Saved: chamber ${r.chamber}` + (r.missed ? ", missed" : `, squeeze ${r.squeeze} (${r.moisture_class})`)
+      + (r.photo_path ? ", with photo" : "");
+  }
+  const e = built.events[0];
+  return { feed: `Logged: feed into chamber ${e.chamber}`, water: `Logged: ${e.value} mL into chamber ${e.chamber}`,
+    unload: `Logged: chamber ${e.chamber} emptied`, service: `Logged: service on chamber ${e.chamber}` }[t];
 }
 
 $("save").addEventListener("click", async () => {
-  const isScore = tab === "score";
-  const row = isScore ? buildObservation() : buildFeed();
-  if (typeof row === "string") { say(row, "err"); return; }
-  if ($("observer").value.trim()) store("p150-observer", $("observer").value.trim());
+  const t = tab;
+  const built = BUILD[t]();
+  if (typeof built === "string") { say(built, "err"); return; }
+  store("p150-observer", $("observer").value.trim());
   store("p150-serial", serial());
-  const table = isScore ? "observations" : "events";
+  const table = built.observations ? "observations" : "events";
+  const rows = built.observations || built.events;
   $("save").disabled = true; say("Saving…");
+  let photoNote = "";
   try {
-    await send(table, row);
-    say(isScore ? `Saved: chamber ${row.chamber}` + (row.missed ? ", missed" : `, squeeze ${row.squeeze} (${row.moisture_class})`)
-      : `Saved: feed into chamber ${row.chamber}`, "ok");
-    isScore ? resetScore() : resetFeed();
-    loadRecent();
+    if (built.photo) {
+      try { rows[0].photo_path = await uploadPhoto(built.photo, rows[0]); }
+      catch (e) { photoNote = " The photo could not be uploaded, so the score was saved without it."; }
+    }
+    await insert(table, rows);
+    say(done(t, built) + photoNote, photoNote ? "err" : "ok");
+    reset(t); loadRecent(); if (tab === "status") loadStatus();
   } catch (e) {
-    if (e.permanent) { say(`Not saved. The database refused it (${e.message}). Tell the study owner.`, "err"); }
+    if (e.permanent) say(`Not saved. The database refused it (${e.message}). Tell the study owner.`, "err");
     else {
-      setQueue(queue().concat([{ table, row }]));
-      say("No connection. Kept on this phone; it will be sent automatically.", "err");
-      isScore ? resetScore() : resetFeed();
+      setQueue(queue().concat([{ table, rows }]));
+      say("No connection. Kept on this phone; it will be sent automatically." +
+        (built.photo ? " The photo could not be kept." : ""), "err");
+      reset(t);
     }
   } finally { $("save").disabled = false; }
 });
 
-// ---- latest scores
-function fmtWhen(iso) {
-  const d = new Date(iso);
-  return d.toLocaleString([], { month: "short", day: "numeric", hour: "2-digit", minute: "2-digit" });
+// ---- reading back
+async function get(path) {
+  const res = await fetch(`${SUPABASE_URL}/rest/v1/${path}`, { headers: HEADERS });
+  if (!res.ok) throw new Error(String(res.status));
+  return res.json();
 }
-async function loadRecent() {
-  const s = serial(); const body = $("recent");
-  if (!s) { body.innerHTML = '<tr><td colspan="5" class="hint">Choose a machine to see its latest scores.</td></tr>'; return; }
+const when = (iso) => new Date(iso).toLocaleString([], { month: "short", day: "numeric", hour: "2-digit", minute: "2-digit" });
+const ago = (iso) => {
+  const s = Math.max(0, (Date.now() - new Date(iso).getTime()) / 1000);
+  return s < 90 ? `${Math.round(s)} s ago` : s < 5400 ? `${Math.round(s / 60)} min ago` : `${(s / 3600).toFixed(1)} h ago`;
+};
+const fmt = (v, unit) => v == null ? "–" : (typeof v === "boolean" ? (v ? "yes" : "no") : `${v}${unit || ""}`);
+function cells(tr, values) {
+  values.forEach((v) => {
+    const td = document.createElement("td");
+    if (v instanceof Node) td.appendChild(v); else td.textContent = v;
+    tr.appendChild(td);
+  });
+}
+function kv(dl, pairs) {
+  dl.textContent = "";
+  pairs.forEach(([k, v]) => {
+    const dt = document.createElement("dt"); dt.textContent = k;
+    const dd = document.createElement("dd");
+    if (v instanceof Node) dd.appendChild(v); else dd.textContent = v;
+    dl.append(dt, dd);
+  });
+}
+function pill(text, kind) { const s = document.createElement("span"); s.className = `band ${kind}`; s.textContent = text; return s; }
+const S = () => `serial=eq.${encodeURIComponent(serial())}`;
+
+async function showPhoto(path) {
+  const key = path.replace(/^supabase:[^/]+\//, "");
   try {
-    const q = `select=ts_utc,chamber,squeeze,moisture_class,smell_level,smell_descriptor,missed,observer` +
-      `&serial=eq.${encodeURIComponent(s)}&order=ts_utc.desc&limit=8`;
-    const res = await fetch(`${SUPABASE_URL}/rest/v1/observations_${SCHEMA}?${q}`,
-      { headers: { apikey: SUPABASE_KEY, Authorization: `Bearer ${SUPABASE_KEY}` } });
+    const res = await fetch(`${SUPABASE_URL}/storage/v1/object/authenticated/${PHOTO_BUCKET}/${key}`, { headers: HEADERS });
     if (!res.ok) throw new Error(res.status);
-    const rows = await res.json();
+    const img = $("photo-view");
+    img.src = URL.createObjectURL(await res.blob()); img.hidden = false;
+    img.scrollIntoView({ block: "nearest" });
+  } catch (e) { say("Could not load that photo.", "err"); }
+}
+
+async function loadRecent() {
+  const body = $("recent");
+  if (!serial()) { body.innerHTML = '<tr><td colspan="6" class="hint">Choose a machine to see its latest scores.</td></tr>'; return; }
+  try {
+    const rows = await get(`observations_${SCHEMA}?select=ts_utc,chamber,squeeze,moisture_class,smell_level,` +
+      `smell_descriptor,missed,observer,photo_path&${S()}&order=ts_utc.desc&limit=10`);
     body.textContent = "";
     if (!rows.length) {
-      body.innerHTML = '<tr><td colspan="5" class="hint">No scores yet for this machine. The first one you save appears here.</td></tr>';
+      body.innerHTML = '<tr><td colspan="6" class="hint">No scores yet for this machine. The first one you save appears here.</td></tr>';
       return;
     }
     rows.forEach((r) => {
       const tr = document.createElement("tr");
-      const squeeze = r.missed ? "missed" : `${r.squeeze ?? "–"} ${r.moisture_class ? "· " + r.moisture_class : ""}`;
+      const sq = r.missed ? pill("missed", "bad")
+        : (() => { const f = document.createDocumentFragment(); f.append(`${r.squeeze ?? "–"} `);
+            if (r.moisture_class) f.append(pill(r.moisture_class, r.moisture_class)); return f; })();
       const smell = r.missed ? "" : `${r.smell_level ?? "–"}${r.smell_descriptor && r.smell_descriptor !== "none" ? " " + r.smell_descriptor : ""}`;
-      [fmtWhen(r.ts_utc), r.chamber, squeeze, smell, r.observer || ""].forEach((v) => {
-        const td = document.createElement("td"); td.textContent = v; tr.appendChild(td);
-      });
+      let photo = "";
+      if (r.photo_path && r.photo_path.startsWith("supabase:")) {
+        photo = document.createElement("button"); photo.className = "linkish"; photo.textContent = "view";
+        photo.addEventListener("click", () => showPhoto(r.photo_path));
+      } else if (r.photo_path) photo = "on laptop";
+      cells(tr, [when(r.ts_utc), r.chamber, sq, smell, r.observer || "", photo]);
       body.appendChild(tr);
     });
   } catch (e) {
-    body.innerHTML = '<tr><td colspan="5" class="hint">Could not load the latest scores. Check the connection; saving still works offline.</td></tr>';
+    body.innerHTML = '<tr><td colspan="6" class="hint">Could not load the latest scores. Check the connection; saving still works offline.</td></tr>';
+  }
+}
+
+async function loadStatus() {
+  if (!serial()) return;
+  try {
+    const since = new Date(Date.now() - 24 * 3600 * 1000).toISOString();
+    const [machine, readings, decisions, scores, events] = await Promise.all([
+      get(`machine_readings_${SCHEMA}?${S()}&order=ts_utc.desc&limit=1`),
+      get(`readings_${SCHEMA}?${S()}&order=ts_utc.desc&limit=4`),
+      get(`decisions_${SCHEMA}?${S()}&order=ts_utc.desc&limit=6`),
+      get(`observations_${SCHEMA}?${S()}&missed=eq.false&order=ts_utc.desc&limit=10`),
+      get(`events_${SCHEMA}?${S()}&ts_utc=gte.${encodeURIComponent(since)}&order=ts_utc.desc&limit=60`),
+    ]);
+    const m = machine[0];
+    const latest = (rows, ch) => rows.find((r) => r.chamber === ch);
+    // Freshness: a reading every 42 s means something is logging this machine.
+    const last = m ? m.ts_utc : (readings[0] && readings[0].ts_utc);
+    const age = last ? (Date.now() - new Date(last).getTime()) / 1000 : Infinity;
+    const fresh = $("freshness"); fresh.textContent = "";
+    fresh.append(age < 180 ? pill("live", "good") : age < 900 ? pill("late", "dry") : pill("not logging", "bad"),
+      last ? ` Last data ${ago(last)} (${when(last)}), from ${(m || readings[0]).harness_version}` : " No data for this machine yet.");
+
+    kv($("machine-kv"), m ? [
+      ["Lid", m.lid_closed == null ? "–" : pill(m.lid_closed ? "closed" : "open", m.lid_closed ? "good" : "dry")],
+      ["Blower", m.blower_on == null ? "not recorded" : (m.blower_on ? "on" : "off") + (m.blower_pwm_pct != null ? ` at ${m.blower_pwm_pct} %` : "")],
+      ["Blower PTC", m.ptc_on == null ? "not recorded" : (m.ptc_on ? "on" : "off")],
+      ["PTC temperature", fmt(m.ptc_ntc_c, " °C")],
+      ["Machine current", fmt(m.machine_current_a, " A")],
+      ["Sensors ok (ptc, fan, machine)", m.valid_mask || "–"],
+    ] : [["Machine", "No machine readings yet."]]);
+
+    const cards = $("chamber-cards"); cards.textContent = "";
+    ["L", "R"].forEach((ch) => {
+      const d = latest(decisions, ch), r = latest(readings, ch), o = latest(scores, ch);
+      const card = document.createElement("div"); card.className = "chamber";
+      const h = document.createElement("h3"); h.append(`Chamber ${ch}`);
+      if (d) { const a = document.createElement("span"); a.className = "action"; a.textContent = d.action; h.append(a); }
+      const dl = document.createElement("dl"); dl.className = "kv";
+      kv(dl, [
+        ["Action since", d ? when(d.ts_utc) : "no decision yet"],
+        ["Allowed / chance", d ? `${d.allowed_set} · ${Math.round(d.action_prob * 100)} %` : "–"],
+        ["Why that set", d ? d.restrict_reason : "–"],
+        ["Policy", d ? `${d.policy_version} (${d.arm})` : "–"],
+        ["Exhaust temperature", r ? fmt(r.bme_temp_c, " °C") : "–"],
+        ["Humidity", r ? fmt(r.bme_rh_pct, " %") : "–"],
+        ["Vapour pressure", r ? fmt(r.vapour_pressure_kpa, " kPa") : "–"],
+        ["Gas", r ? (r.bme_gas_saturated ? "stuck at ceiling" : fmt(r.bme_gas_ohm, " Ω")) : "–"],
+        ["Pad heater", r ? `${fmt(r.pad_ntc_c, " °C")}${r.pad_on == null ? "" : r.pad_on ? ", on" : ", off"}` : "–"],
+        ["Mixer current", r ? fmt(r.motor_current_a, " A") : "–"],
+        ["Last score", o ? `squeeze ${o.squeeze} (${o.moisture_class}), ${ago(o.ts_utc)}` : "none yet"],
+      ]);
+      card.append(h, dl); cards.appendChild(card);
+    });
+
+    const body = $("events"); body.textContent = "";
+    if (!events.length) body.innerHTML = '<tr><td colspan="4" class="hint">No events in the last 24 hours.</td></tr>';
+    events.forEach((e) => {
+      const tr = document.createElement("tr");
+      const kind = /alarm|guardrail/.test(e.type) ? "bad" : /mix/.test(e.type) ? "good" : /lid/.test(e.type) ? "dry" : "";
+      const detail = [e.value != null ? (e.type === "water" ? `${e.value} mL` : e.value) : "",
+        e.size_guess, e.wetness_guess, e.note, e.entered_by && e.entered_by !== "harness" ? `by ${e.entered_by}` : ""]
+        .filter(Boolean).join(" · ");
+      cells(tr, [when(e.ts_utc), e.chamber || "machine", kind ? pill(e.type, kind) : e.type, detail]);
+      body.appendChild(tr);
+    });
+  } catch (e) {
+    $("freshness").textContent = "Could not load the status. Check the connection.";
   }
 }
 
@@ -479,6 +747,7 @@ showPending();
 loadRecent();
 flushQueue();
 window.addEventListener("online", flushQueue);
+setInterval(() => { if (tab === "status" && !document.hidden) loadStatus(); }, 60000);
 </script>
 </body>
 </html>
