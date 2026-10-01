@@ -5,6 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <title>P150 Compost Check</title>
 <meta name="robots" content="noindex">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/uplot@1.6.32/dist/uPlot.min.css">
 <style>
 /* Layout: one narrow column for a phone held in one hand: machine bar, a
    tab per kind of entry (the same set as the harness page), big buttons,
@@ -31,6 +32,11 @@
   --radius: 10px;
   --sans: system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
   --mono: ui-monospace, "Cascadia Mono", Consolas, Menlo, monospace;
+  /* Chart series: categorical slots 1-5 in fixed order (validated: CVD and
+     normal-vision separation pass on both surfaces; light 3/4/5 rely on the
+     live legend values for relief). */
+  --s1: #2a78d6; --s2: #eb6834; --s3: #1baf7a; --s4: #eda100; --s5: #e87ba4;
+  --grid: #ecebe6;
   color-scheme: light;
 }
 @media (prefers-color-scheme: dark) {
@@ -39,6 +45,8 @@
     --accent: #6fb384; --accent-ink: #0f1a12; --sel: #ecede8; --sel-ink: #151714;
     --dry: #e0a64a; --dry-soft: #3a2e19; --good: #7cc98f; --good-soft: #1f3325;
     --wet: #7fb4e6; --wet-soft: #1b2a3a; --bad: #ef7d74; --bad-soft: #3d1f1d;
+    --s1: #3987e5; --s2: #d95926; --s3: #199e70; --s4: #c98500; --s5: #d55181;
+    --grid: #2a2e29;
     color-scheme: dark;
   }
 }
@@ -47,6 +55,8 @@
   --accent: #6fb384; --accent-ink: #0f1a12; --sel: #ecede8; --sel-ink: #151714;
   --dry: #e0a64a; --dry-soft: #3a2e19; --good: #7cc98f; --good-soft: #1f3325;
   --wet: #7fb4e6; --wet-soft: #1b2a3a; --bad: #ef7d74; --bad-soft: #3d1f1d;
+  --s1: #3987e5; --s2: #d95926; --s3: #199e70; --s4: #c98500; --s5: #d55181;
+  --grid: #2a2e29;
   color-scheme: dark;
 }
 
@@ -69,7 +79,7 @@ header.top h1 { font-size: 18px; margin: 0; text-wrap: balance; }
 header.top .machine { margin-left: auto; display: flex; gap: 6px; align-items: center; font-size: 13px; color: var(--muted); }
 header.top select, header.top input { font: 13px var(--mono); }
 
-nav.tabs { display: grid; grid-template-columns: repeat(3, 1fr); gap: 6px; margin-top: 14px; }
+nav.tabs { display: grid; grid-template-columns: repeat(auto-fit, minmax(84px, 1fr)); gap: 6px; margin-top: 14px; }
 nav.tabs button { padding: 10px 6px; border-radius: var(--radius); border: 1px solid var(--line);
   background: var(--panel); color: var(--ink); font: 600 14px var(--sans); cursor: pointer; }
 nav.tabs button[aria-selected="true"] { background: var(--sel); color: var(--sel-ink); border-color: var(--sel); }
@@ -139,6 +149,24 @@ table.log th { font-size: 12px; color: var(--muted); font-weight: 700; letter-sp
 .pending { font-size: 13px; color: var(--dry); margin: 0; }
 .photo-view { max-width: 100%; border-radius: 8px; border: 1px solid var(--line); }
 
+/* Charts: one uPlot per panel, all sharing the time range above them. */
+main:has([data-panel="charts"]:not([hidden])) { max-width: 980px; }
+.chart-bar { display: flex; flex-wrap: wrap; gap: 10px; align-items: center; justify-content: space-between; }
+.chart-bar .seg { flex: 0 1 auto; }
+.chart-bar .seg button { min-width: 56px; padding: 8px 10px; font-size: 14px; }
+.chart-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(420px, 1fr)); gap: 16px; }
+@media (max-width: 480px) { .chart-grid { grid-template-columns: 1fr; } }
+.chart { border: 1px solid var(--line); border-radius: 8px; padding: 12px 12px 6px; display: grid; gap: 6px; min-width: 0; }
+.chart h3 { margin: 0; font-size: 14px; font-weight: 700; }
+.chart .unit { color: var(--muted); font-weight: 400; }
+.chart .plot { min-height: 200px; width: 100%; overflow: hidden; }
+.chart .empty { font-size: 13px; color: var(--muted); margin: 0; }
+.uplot { font-family: var(--sans); color: var(--ink); }
+.uplot .u-legend { font-size: 12px; text-align: left; color: var(--ink); }
+.uplot .u-legend .u-series th { font-weight: 400; color: var(--muted); }
+.uplot .u-legend .u-value { font-variant-numeric: tabular-nums; color: var(--ink); }
+.uplot .u-select { background: color-mix(in srgb, var(--accent) 18%, transparent); }
+
 button:focus-visible, input:focus-visible, select:focus-visible, textarea:focus-visible {
   outline: 3px solid var(--accent); outline-offset: 2px; }
 [hidden] { display: none !important; }
@@ -165,6 +193,7 @@ button:focus-visible, input:focus-visible, select:focus-visible, textarea:focus-
     <button role="tab" data-tab="unload" aria-selected="false">Unload</button>
     <button role="tab" data-tab="service" aria-selected="false">Service</button>
     <button role="tab" data-tab="status" aria-selected="false">Status</button>
+    <button role="tab" data-tab="charts" aria-selected="false">Charts</button>
   </nav>
 
   <div class="field">
@@ -329,6 +358,19 @@ button:focus-visible, input:focus-visible, select:focus-visible, textarea:focus-
     </div>
   </section>
 
+  <!-- Charts: the sensor history in Supabase, the same panels as the machine dashboard -->
+  <section class="card" data-panel="charts" hidden>
+    <div class="chart-bar">
+      <h2>Sensor charts</h2>
+      <div class="seg" data-group="range" id="range">
+        <button type="button" data-v="6">6 h</button><button type="button" data-v="24">24 h</button><button type="button" data-v="72">3 days</button>
+      </div>
+    </div>
+    <p class="hint" id="chart-note">Hover or touch a chart to read every line at that moment. Drag across a chart to zoom; double-click to reset.</p>
+    <div class="chart-grid" id="charts"></div>
+    <p class="hint">Wi-Fi signal (RSSI) comes from the machine's Wi-Fi chip and cannot be read over the USB cable the bench laptop uses, so it is not charted yet.</p>
+  </section>
+
   <section class="card">
     <h2>Latest scores on this machine</h2>
     <p class="hint">Only scoring? The <a href="../simple/">quick score page</a> has just the score and feed forms.</p>
@@ -343,6 +385,7 @@ button:focus-visible, input:focus-visible, select:focus-visible, textarea:focus-
   </section>
 </main>
 
+<script src="https://cdn.jsdelivr.net/npm/uplot@1.6.32/dist/uPlot.iife.min.js"></script>
 <div class="save" id="save-bar">
   <div class="row">
     <span class="msg" id="msg" role="status" aria-live="polite"></span>
@@ -358,7 +401,7 @@ button:focus-visible, input:focus-visible, select:focus-visible, textarea:focus-
 // can sit in a public page. Rows match what the harness API writes.
 const SUPABASE_URL = "https://apmncybxykyvacpwccyx.supabase.co";
 const SUPABASE_KEY = "sb_publishable_A31poHKFHwYld6Fy2zjPRQ_-GfIeIWA";
-const SCHEMA = "v2";
+const SCHEMA = "v3";
 const PHOTO_BUCKET = "study-photos";
 const MAX_PHOTO_BYTES = 15 * 1024 * 1024;
 const PHOTO_TYPES = { "image/jpeg": ".jpg", "image/png": ".png", "image/webp": ".webp",
@@ -386,7 +429,11 @@ const savedSerial = store("p150-serial");
 if (savedSerial && MACHINES.includes(savedSerial)) $("serial").value = savedSerial;
 else if (savedSerial) { $("serial").value = "other"; $("serial-other").hidden = false; $("serial-other").value = savedSerial; }
 function serial() { return $("serial").value === "other" ? $("serial-other").value.trim() : $("serial").value; }
-function machineChanged() { store("p150-serial", serial()); loadRecent(); if (tab === "status") loadStatus(); }
+function machineChanged() {
+  store("p150-serial", serial()); loadRecent();
+  if (tab === "status") loadStatus();
+  if (tab === "charts") loadCharts();
+}
 $("serial").addEventListener("change", () => { $("serial-other").hidden = $("serial").value !== "other"; machineChanged(); });
 $("serial-other").addEventListener("change", machineChanged);
 
@@ -396,6 +443,7 @@ document.querySelectorAll("[data-group]").forEach((group) => {
   group.querySelectorAll("button").forEach((b) => {
     b.setAttribute("aria-pressed", "false");
     b.addEventListener("click", () => {
+      if (name === "range") return;           // handled by the charts code
       const again = state[name] === b.dataset.v;
       group.querySelectorAll("button").forEach((x) => x.setAttribute("aria-pressed", "false"));
       state[name] = again ? undefined : b.dataset.v;
@@ -423,12 +471,14 @@ function showTab(t) {
   tab = t;
   document.querySelectorAll("#tabs button").forEach((b) => b.setAttribute("aria-selected", b.dataset.tab === t));
   document.querySelectorAll("[data-panel]").forEach((p) => { p.hidden = p.dataset.panel !== t; });
-  $("save-bar").hidden = t === "status";
-  $("observer").parentElement.hidden = t === "status";
+  const readOnly = t === "status" || t === "charts";
+  $("save-bar").hidden = readOnly;
+  $("observer").parentElement.hidden = readOnly;
   $("save").textContent = SAVE_LABEL[t] || "";
   $("save").className = t === "unload" ? "danger" : "";
   say("");
   if (t === "status") loadStatus();
+  if (t === "charts") loadCharts();
 }
 document.querySelectorAll("#tabs button").forEach((b) => b.addEventListener("click", () => showTab(b.dataset.tab)));
 
@@ -744,11 +794,156 @@ async function loadStatus() {
   }
 }
 
+// ---- charts: the dashboard's panels, from readings_v3 and machine_readings_v3
+// One axis per chart: blower PWM (%) gets its own panel rather than sharing the
+// temperature axis. Series colors are the categorical slots in fixed order.
+const PANELS = [
+  { title: "BME humidity", unit: "%RH", series: [
+    { label: "Left", src: "L", col: "bme_rh_pct" }, { label: "Right", src: "R", col: "bme_rh_pct" }] },
+  { title: "BME temperature", unit: "°C", series: [
+    { label: "Left", src: "L", col: "bme_temp_c" }, { label: "Right", src: "R", col: "bme_temp_c" }] },
+  { title: "Currents", unit: "A", series: [
+    { label: "Machine (AC)", src: "M", col: "machine_current_a" },
+    { label: "Left motor", src: "L", col: "motor_current_a" },
+    { label: "Right motor", src: "R", col: "motor_current_a" }] },
+  { title: "Temperatures", unit: "°C", series: [
+    { label: "Left pad", src: "L", col: "pad_ntc_c" }, { label: "Right pad", src: "R", col: "pad_ntc_c" },
+    { label: "Intake", src: "M", col: "intake_ntc_c" }, { label: "Internal", src: "M", col: "internal_temp_c" },
+    { label: "Inner shell", src: "M", col: "ptc_ntc_c" }] },
+  { title: "Blower PWM", unit: "%", step: true, series: [
+    { label: "Blower", src: "M", col: "blower_pwm_pct" }] },
+  { title: "Lid", unit: "1 = closed, 0 = open", step: true, series: [
+    { label: "Lid", src: "M", col: "lid_closed" }] },
+  { title: "Machine state", unit: "code", step: true, series: [
+    { label: "State", src: "M", col: "machine_state", names: "machine_state_name" }] },
+];
+const R_COLS = "ts_utc,chamber,bme_rh_pct,bme_temp_c,pad_ntc_c,motor_current_a";
+const M_COLS = "ts_utc,machine_current_a,intake_ntc_c,internal_temp_c,ptc_ntc_c,blower_pwm_pct," +
+  "lid_closed,machine_state,machine_state_name";
+let chartHours = Number(store("p150-range")) || 24;
+let plots = [];
+let chartData = null;
+
+document.querySelectorAll("#range button").forEach((b) => {
+  b.setAttribute("aria-pressed", String(Number(b.dataset.v) === chartHours));
+  b.addEventListener("click", () => {
+    chartHours = Number(b.dataset.v); store("p150-range", String(chartHours));
+    document.querySelectorAll("#range button").forEach((x) => x.setAttribute("aria-pressed", String(x === b)));
+    loadCharts();
+  });
+});
+
+async function getAll(path) {
+  // PostgREST returns at most 1000 rows a request: page until a short page.
+  const rows = [];
+  for (let offset = 0; offset < 40000; offset += 1000) {
+    const page = await get(`${path}&limit=1000&offset=${offset}`);
+    rows.push(...page);
+    if (page.length < 1000) break;
+  }
+  return rows;
+}
+
+async function loadCharts() {
+  const box = $("charts");
+  if (!serial()) { box.innerHTML = '<p class="hint">Choose a machine at the top.</p>'; return; }
+  $("chart-note").textContent = "Loading the sensor history…";
+  try {
+    const since = encodeURIComponent(new Date(Date.now() - chartHours * 3600 * 1000).toISOString());
+    const [readings, machine] = await Promise.all([
+      getAll(`readings_${SCHEMA}?select=${R_COLS}&${S()}&ts_utc=gte.${since}&order=ts_utc.asc`),
+      getAll(`machine_readings_${SCHEMA}?select=${M_COLS}&${S()}&ts_utc=gte.${since}&order=ts_utc.asc`),
+    ]);
+    // One x value per tick: chamber and machine rows of a tick share ts_utc.
+    const ticks = new Map();
+    const at = (ts) => {
+      const t = Math.round(new Date(ts).getTime() / 1000);
+      if (!ticks.has(t)) ticks.set(t, { L: null, R: null, M: null });
+      return ticks.get(t);
+    };
+    readings.forEach((r) => { at(r.ts_utc)[r.chamber] = r; });
+    machine.forEach((m) => { at(m.ts_utc).M = m; });
+    const xs = [...ticks.keys()].sort((a, b) => a - b);
+    chartData = { xs, ticks, count: readings.length + machine.length };
+    $("chart-note").textContent = xs.length
+      ? `${xs.length} readings over the last ${chartHours} h. Hover or touch a chart to read every line at that moment; drag to zoom, double-click to reset.`
+      : `No sensor data for this machine in the last ${chartHours} h. Charts fill in while the harness or collect.py is logging it.`;
+    drawCharts();
+  } catch (e) {
+    $("chart-note").textContent = "Could not load the sensor history. Check the connection and try again.";
+  }
+}
+
+function cssVar(name) { return getComputedStyle(document.documentElement).getPropertyValue(name).trim(); }
+
+function drawCharts() {
+  plots.forEach((p) => p.destroy()); plots = [];
+  const box = $("charts"); box.textContent = "";
+  if (!chartData || !chartData.xs.length) return;
+  const { xs, ticks } = chartData;
+  const ink = cssVar("--muted"), grid = cssVar("--grid");
+  const colors = ["--s1", "--s2", "--s3", "--s4", "--s5"].map(cssVar);
+  PANELS.forEach((panel) => {
+    const card = document.createElement("div"); card.className = "chart";
+    const h = document.createElement("h3");
+    h.innerHTML = `${panel.title} <span class="unit">(${panel.unit})</span>`;
+    const plotBox = document.createElement("div"); plotBox.className = "plot";
+    card.append(h, plotBox); box.appendChild(card);
+    const cols = panel.series.map((s) => xs.map((t) => {
+      const row = ticks.get(t)[s.src];
+      const v = row ? row[s.col] : null;
+      return v == null ? null : (typeof v === "boolean" ? (v ? 1 : 0) : Number(v));
+    }));
+    if (cols.every((c) => c.every((v) => v == null))) {
+      const p = document.createElement("p"); p.className = "empty";
+      p.textContent = "No values recorded for this yet.";
+      plotBox.replaceWith(p); return;
+    }
+    const names = panel.series[0].names;
+    const stateName = names ? new Map(xs.map((t) => {
+      const m = ticks.get(t).M; return [t, m ? m[names] : null];
+    })) : null;
+    const opts = {
+      width: Math.max(260, plotBox.clientWidth), height: 200,
+      cursor: { drag: { x: true, y: false } },
+      scales: { x: { time: true } },
+      axes: [
+        { stroke: ink, grid: { stroke: grid, width: 1 }, ticks: { stroke: grid } },
+        { stroke: ink, grid: { stroke: grid, width: 1 }, ticks: { stroke: grid }, size: 46 },
+      ],
+      series: [{ label: "Time", value: (u, v) => v == null ? "–" : new Date(v * 1000).toLocaleString([],
+        { month: "short", day: "numeric", hour: "2-digit", minute: "2-digit" }) }]
+        .concat(panel.series.map((s, i) => ({
+          label: s.label, stroke: colors[i], width: 2, spanGaps: false,
+          points: { show: false },
+          paths: panel.step ? uPlot.paths.stepped({ align: 1 }) : undefined,
+          value: (u, v, si, di) => v == null ? "–"
+            : stateName ? `${v} ${stateName.get(xs[di]) || ""}` : `${+v.toFixed(2)}`,
+        }))),
+    };
+    plots.push(new uPlot(opts, [xs].concat(cols), plotBox));
+  });
+}
+
+let resizeTimer;
+window.addEventListener("resize", () => {
+  clearTimeout(resizeTimer);
+  resizeTimer = setTimeout(() => { if (tab === "charts") drawCharts(); }, 200);
+});
+// Colors come from the theme tokens; redraw when the theme changes.
+matchMedia("(prefers-color-scheme: dark)").addEventListener("change", () => { if (tab === "charts") drawCharts(); });
+new MutationObserver(() => { if (tab === "charts") drawCharts(); })
+  .observe(document.documentElement, { attributes: true, attributeFilter: ["data-theme"] });
+
 showPending();
 loadRecent();
 flushQueue();
 window.addEventListener("online", flushQueue);
-setInterval(() => { if (tab === "status" && !document.hidden) loadStatus(); }, 60000);
+setInterval(() => {
+  if (document.hidden) return;
+  if (tab === "status") loadStatus();
+  if (tab === "charts") loadCharts();
+}, 60000);
 </script>
 </body>
 </html>
