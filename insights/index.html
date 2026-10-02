@@ -1,0 +1,805 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>P150 Compost Insights</title>
+<meta name="robots" content="noindex">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/uplot@1.6.32/dist/uPlot.min.css">
+<style>
+/* Layout: a wide analysis page that still stacks on a phone. One bar on top
+   (machine, time range, refresh), tabs by question, then charts and tables.
+   Palette follows the scoring pages; chart series are categorical slots 1-5
+   in fixed order, validated for colour-vision separation on both surfaces. */
+:root {
+  --bg: #f4f3ef; --panel: #ffffff; --ink: #1d1f1c; --muted: #5d625a; --line: #d9d8d0;
+  --accent: #2f5d3a; --accent-ink: #ffffff; --sel: #1d1f1c; --sel-ink: #ffffff;
+  --good: #2f7d4a; --good-soft: #e3f1e6; --warn: #9a5b00; --warn-soft: #fbefd9;
+  --bad: #a3261f; --bad-soft: #f8e1df; --wet: #1f5f9a; --wet-soft: #dfeaf6;
+  --s1: #2a78d6; --s2: #eb6834; --s3: #1baf7a; --s4: #eda100; --s5: #e87ba4;
+  --grid: #ecebe6; --heat: 47, 93, 58;
+  --radius: 10px;
+  --sans: system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+  --mono: ui-monospace, "Cascadia Mono", Consolas, Menlo, monospace;
+  color-scheme: light;
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --bg: #151714; --panel: #1f221e; --ink: #ecede8; --muted: #a3a89f; --line: #353a33;
+    --accent: #6fb384; --accent-ink: #0f1a12; --sel: #ecede8; --sel-ink: #151714;
+    --good: #7cc98f; --good-soft: #1f3325; --warn: #e0a64a; --warn-soft: #3a2e19;
+    --bad: #ef7d74; --bad-soft: #3d1f1d; --wet: #7fb4e6; --wet-soft: #1b2a3a;
+    --s1: #3987e5; --s2: #d95926; --s3: #199e70; --s4: #c98500; --s5: #d55181;
+    --grid: #2a2e29; --heat: 111, 179, 132;
+    color-scheme: dark;
+  }
+}
+:root[data-theme="dark"] {
+  --bg: #151714; --panel: #1f221e; --ink: #ecede8; --muted: #a3a89f; --line: #353a33;
+  --accent: #6fb384; --accent-ink: #0f1a12; --sel: #ecede8; --sel-ink: #151714;
+  --good: #7cc98f; --good-soft: #1f3325; --warn: #e0a64a; --warn-soft: #3a2e19;
+  --bad: #ef7d74; --bad-soft: #3d1f1d; --wet: #7fb4e6; --wet-soft: #1b2a3a;
+  --s1: #3987e5; --s2: #d95926; --s3: #199e70; --s4: #c98500; --s5: #d55181;
+  --grid: #2a2e29; --heat: 111, 179, 132;
+  color-scheme: dark;
+}
+
+* { box-sizing: border-box; }
+html { -webkit-text-size-adjust: 100%; }
+body { margin: 0; background: var(--bg); color: var(--ink); font: 15px/1.45 var(--sans);
+  padding-bottom: calc(24px + env(safe-area-inset-bottom, 0px)); }
+main { max-width: 1100px; margin: 0 auto; padding: 0 16px; display: grid; gap: 16px; }
+
+header.top { position: sticky; top: 0; z-index: 5; background: var(--panel); border-bottom: 1px solid var(--line);
+  padding: calc(10px + env(safe-area-inset-top, 0px)) 16px 10px; }
+header.top .row { max-width: 1100px; margin: 0 auto; display: flex; gap: 10px 14px; align-items: center; flex-wrap: wrap; }
+header.top h1 { font-size: 18px; margin: 0; text-wrap: balance; }
+header.top .controls { margin-left: auto; display: flex; gap: 8px; align-items: center; flex-wrap: wrap; font-size: 13px; color: var(--muted); }
+header.top select, header.top input { font: 13px var(--mono); }
+.links { display: flex; gap: 8px; flex-wrap: wrap; }
+.links a { font-size: 13px; color: var(--accent); }
+
+nav.tabs { display: grid; grid-template-columns: repeat(auto-fit, minmax(96px, 1fr)); gap: 6px; margin-top: 14px; }
+nav.tabs button { padding: 10px 6px; border-radius: var(--radius); border: 1px solid var(--line);
+  background: var(--panel); color: var(--ink); font: 600 14px var(--sans); cursor: pointer; }
+nav.tabs button[aria-selected="true"] { background: var(--sel); color: var(--sel-ink); border-color: var(--sel); }
+
+.seg { display: flex; flex-wrap: wrap; gap: 4px; }
+.seg button { padding: 6px 10px; border-radius: 8px; border: 1px solid var(--line); background: var(--panel);
+  color: var(--ink); font: 13px var(--sans); cursor: pointer; }
+.seg button[aria-pressed="true"] { background: var(--sel); color: var(--sel-ink); border-color: var(--sel); }
+
+section.card { background: var(--panel); border: 1px solid var(--line); border-radius: var(--radius);
+  padding: 16px; display: grid; gap: 14px; min-width: 0; }
+section.card h2 { margin: 0; font-size: 17px; text-wrap: balance; }
+.hint { font-size: 13px; color: var(--muted); margin: 0; max-width: 75ch; }
+.note { font-size: 13px; padding: 10px 12px; border-radius: 8px; background: var(--warn-soft); color: var(--ink); margin: 0; }
+.status-line { font-size: 13px; color: var(--muted); }
+
+.chart-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 420px), 1fr)); gap: 14px; }
+.chart-grid.small { grid-template-columns: repeat(auto-fit, minmax(min(100%, 300px), 1fr)); }
+.chart { border: 1px solid var(--line); border-radius: 8px; padding: 12px 12px 6px; display: grid; gap: 6px; min-width: 0; }
+.chart h3 { margin: 0; font-size: 14px; font-weight: 700; }
+.chart .unit { color: var(--muted); font-weight: 400; }
+.chart .plot { min-height: 180px; width: 100%; overflow: hidden; }
+.empty { font-size: 13px; color: var(--muted); margin: 0; }
+.uplot { font-family: var(--sans); color: var(--ink); }
+.uplot .u-legend { font-size: 12px; text-align: left; color: var(--ink); }
+.uplot .u-legend .u-series th { font-weight: 400; color: var(--muted); }
+.uplot .u-legend .u-value { font-variant-numeric: tabular-nums; }
+.uplot .u-select { background: color-mix(in srgb, var(--accent) 18%, transparent); }
+.markers-key { display: flex; flex-wrap: wrap; gap: 6px 14px; font-size: 12px; color: var(--muted); }
+.markers-key span::before { content: ""; display: inline-block; width: 3px; height: 12px; margin-right: 6px; vertical-align: -2px; background: var(--c); }
+
+.tiles { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 230px), 1fr)); gap: 12px; }
+.tile { border: 1px solid var(--line); border-radius: 8px; padding: 12px; display: grid; gap: 8px; }
+.tile .k { font-size: 12px; font-weight: 700; letter-spacing: .05em; text-transform: uppercase; color: var(--muted); }
+.tile .v { font: 700 26px var(--sans); font-variant-numeric: tabular-nums; }
+.tile .v small { font-size: 14px; font-weight: 400; color: var(--muted); }
+.bar { height: 8px; border-radius: 4px; background: var(--grid); overflow: hidden; }
+.bar > i { display: block; height: 100%; background: var(--accent); border-radius: 4px; }
+
+.scroll { overflow-x: auto; }
+table.t { width: 100%; border-collapse: collapse; font-size: 13px; font-variant-numeric: tabular-nums; }
+table.t th, table.t td { text-align: left; padding: 7px 8px; border-bottom: 1px solid var(--line); vertical-align: top; white-space: nowrap; }
+table.t th { font-size: 11px; color: var(--muted); font-weight: 700; letter-spacing: .05em; text-transform: uppercase; }
+table.t td.wrap { white-space: normal; min-width: 180px; }
+table.t td.num, table.t th.num { text-align: right; }
+table.grid td.cell { text-align: center; min-width: 54px; }
+.pill { font-size: 12px; font-weight: 700; padding: 2px 8px; border-radius: 999px; white-space: nowrap; display: inline-block; }
+.pill.ok { background: var(--good-soft); color: var(--good); }
+.pill.warn { background: var(--warn-soft); color: var(--warn); }
+.pill.bad { background: var(--bad-soft); color: var(--bad); }
+.pill.info { background: var(--wet-soft); color: var(--wet); }
+.pill.plain { background: var(--grid); color: var(--ink); }
+.action { font: 700 13px var(--mono); padding: 1px 7px; border-radius: 6px; background: var(--sel); color: var(--sel-ink); }
+.probs { display: flex; gap: 2px; min-width: 220px; }
+.probs > span { flex: 1; display: grid; gap: 2px; font-size: 11px; text-align: center; color: var(--muted); }
+.probs > span > i { display: block; height: 22px; border-radius: 3px; background: var(--grid); position: relative; overflow: hidden; }
+.probs > span > i > b { position: absolute; left: 0; right: 0; bottom: 0; background: var(--accent); }
+.probs > span.chosen { color: var(--ink); font-weight: 700; }
+dl.kv { display: grid; grid-template-columns: max-content 1fr; gap: 6px 14px; margin: 0; font-size: 14px; }
+dl.kv dt { color: var(--muted); }
+dl.kv dd { margin: 0; font-variant-numeric: tabular-nums; overflow-wrap: anywhere; }
+.cards2 { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 300px), 1fr)); gap: 12px; }
+.box { border: 1px solid var(--line); border-radius: 8px; padding: 12px; display: grid; gap: 10px; }
+.box h3 { margin: 0; font-size: 15px; display: flex; gap: 8px; align-items: center; }
+svg.scatter text { fill: var(--muted); font: 11px var(--sans); }
+svg.scatter .axis { stroke: var(--line); }
+svg.scatter .gridl { stroke: var(--grid); }
+button.linkish { background: none; border: 0; padding: 0; color: var(--accent); font: inherit; text-decoration: underline; cursor: pointer; }
+button.print { padding: 8px 12px; border-radius: 8px; border: 1px solid var(--line); background: var(--panel); color: var(--ink); font: 600 13px var(--sans); cursor: pointer; }
+
+button:focus-visible, select:focus-visible, input:focus-visible, a:focus-visible { outline: 3px solid var(--accent); outline-offset: 2px; }
+[hidden] { display: none !important; }
+@media print {
+  header.top, nav.tabs, .no-print { display: none !important; }
+  body { background: #ffffff; }
+  section.card { break-inside: avoid; border-color: #cccccc; }
+}
+</style>
+</head>
+<body>
+<header class="top">
+  <div class="row">
+    <h1>P150 Compost Insights</h1>
+    <div class="links no-print">
+      <a href="../score/">+ Add a score</a>
+      <a href="../score/#feed">+ Log a feed</a>
+    </div>
+    <div class="controls">
+      <label for="serial">Machine</label>
+      <select id="serial"></select>
+      <input id="serial-other" type="text" placeholder="LL01-…" size="16" hidden>
+      <div class="seg" id="range" role="group" aria-label="Time range">
+        <button type="button" data-v="6">6 h</button><button type="button" data-v="24">24 h</button><button type="button" data-v="72">3 days</button><button type="button" data-v="168">1 week</button><button type="button" data-v="0">All</button>
+      </div>
+      <button type="button" class="print" id="refresh">Refresh</button>
+    </div>
+  </div>
+</header>
+
+<main>
+  <nav class="tabs" role="tablist" id="tabs">
+    <button role="tab" data-tab="sensors" aria-selected="true">Sensors</button>
+    <button role="tab" data-tab="policy" aria-selected="false">Policy</button>
+    <button role="tab" data-tab="progress" aria-selected="false">Progress</button>
+    <button role="tab" data-tab="health" aria-selected="false">Health</button>
+    <button role="tab" data-tab="compare" aria-selected="false">Compare</button>
+    <button role="tab" data-tab="weekly" aria-selected="false">Weekly</button>
+  </nav>
+  <p class="status-line" id="status-line">Loading…</p>
+
+  <!-- ===================== Sensors ===================== -->
+  <section class="card" data-panel="sensors">
+    <h2>Sensor history</h2>
+    <p class="hint">Hover or touch a chart to read every line at that moment. Drag across a chart to zoom; double-click to reset. Thin vertical marks are activity: feeds, water, unloads, service and lid openings.</p>
+    <div class="markers-key" id="markers-key"></div>
+    <div class="chart-grid" id="sensor-charts"></div>
+    <p class="hint">Wi-Fi signal (RSSI) comes from the machine's Wi-Fi chip and cannot be read over the USB cable the bench laptop uses, so it is not charted yet.</p>
+  </section>
+
+  <!-- ===================== Policy ===================== -->
+  <section class="card" data-panel="policy" hidden>
+    <h2>Current policy</h2>
+    <div class="cards2" id="policy-cards"></div>
+  </section>
+  <section class="card" data-panel="policy" hidden>
+    <h2>Actions over time and what they asked for</h2>
+    <p class="hint">Actions run for 4 hours per chamber. The blower and its heater are shared by both chambers: when the chambers ask for different air, one setting is applied to both, shown as "applied".</p>
+    <div class="chart-grid" id="policy-charts"></div>
+  </section>
+  <section class="card" data-panel="policy" hidden>
+    <h2>Predictions</h2>
+    <div id="predictions"></div>
+  </section>
+  <section class="card" data-panel="policy" hidden>
+    <h2>How each decision was made</h2>
+    <p class="hint">Every decision in the time range, newest first: the actions it could choose from, the chance it gave each one (the bars), what it picked, and why the set was narrowed.</p>
+    <div class="scroll"><table class="t" id="decisions-table"></table></div>
+  </section>
+  <section class="card" data-panel="policy" hidden>
+    <h2>What the policy saw</h2>
+    <p class="hint">The inputs recorded with each decision, by chamber: moisture signals, feeding signals and where the chamber is in its cycle.</p>
+    <div class="chart-grid small" id="feature-charts"></div>
+  </section>
+
+  <!-- ===================== Progress ===================== -->
+  <section class="card" data-panel="progress" hidden>
+    <h2>Study progress</h2>
+    <p class="hint">Per chamber, against the study plan: weeks 1 to 5 need about 210 decisions (6 a day) and 50 scores (2 a working day); week 12 about 504 decisions and 120 scores. Counts are for all time on this machine, whatever the range above.</p>
+    <div class="tiles" id="progress-tiles"></div>
+  </section>
+  <section class="card" data-panel="progress" hidden>
+    <h2>Exploration coverage</h2>
+    <p class="hint">How often each action was tried, by chamber and by whether the chamber had been fed in the last 24 hours. Learning needs every action tried in every situation; an empty cell is a gap.</p>
+    <div class="scroll"><table class="t grid" id="coverage"></table></div>
+  </section>
+  <section class="card" data-panel="progress" hidden>
+    <h2>Scoring</h2>
+    <p class="hint">Scores entered per day and chamber; the plan asks for 2 a day, after the 09:00 and 15:00 mixes.</p>
+    <div class="chart-grid" id="scoring-charts"></div>
+    <div class="scroll"><table class="t" id="missed-table"></table></div>
+  </section>
+  <section class="card" data-panel="progress" hidden>
+    <h2>What happened after each action</h2>
+    <p class="hint">For each action, the next squeeze score of that chamber within 30 hours. Early evidence of which settings keep the compost in the good band.</p>
+    <div class="scroll"><table class="t grid" id="outcomes"></table></div>
+  </section>
+  <section class="card" data-panel="progress" hidden>
+    <h2>Reward and sensors against scores</h2>
+    <p class="hint">Left: the study's reward for every score (+1 good, −1 too dry, −2 too wet or sour), the number a learned policy will try to raise. Right: each score against the chamber's vapour pressure in the hour before it, the test of whether the sensors can tell moisture.</p>
+    <div class="chart-grid" id="reward-charts"></div>
+  </section>
+
+  <!-- ===================== Health ===================== -->
+  <section class="card" data-panel="health" hidden>
+    <h2>Data health</h2>
+    <p class="hint">How complete and believable the data in the time range is. A reading is expected every 42 seconds while something is logging the machine.</p>
+    <div class="scroll"><table class="t" id="health-table"></table></div>
+  </section>
+  <section class="card" data-panel="health" hidden>
+    <h2>Alarms and safety</h2>
+    <div class="tiles" id="alarm-tiles"></div>
+    <div class="scroll"><table class="t" id="alarm-table"></table></div>
+  </section>
+
+  <!-- ===================== Compare ===================== -->
+  <section class="card" data-panel="compare" hidden>
+    <h2>Compare machines</h2>
+    <div id="compare"></div>
+  </section>
+
+  <!-- ===================== Weekly ===================== -->
+  <section class="card" data-panel="weekly" hidden>
+    <div class="links" style="justify-content: space-between; align-items: center;">
+      <h2 id="weekly-title">Weekly summary</h2>
+      <div class="links no-print">
+        <label for="week" class="hint">Week ending</label>
+        <input id="week" type="date">
+        <button type="button" class="print" id="print">Print or save as PDF</button>
+      </div>
+    </div>
+    <div id="weekly"></div>
+  </section>
+</main>
+
+<script src="https://cdn.jsdelivr.net/npm/uplot@1.6.32/dist/uPlot.iife.min.js"></script>
+<script>
+// Reads the shared Supabase project with the publishable key, which can only
+// read and add rows; this page only reads. Same pair as
+// RL/harness/config/supabase.yaml and the scoring pages.
+const SUPABASE_URL = "https://apmncybxykyvacpwccyx.supabase.co";
+const SUPABASE_KEY = "sb_publishable_A31poHKFHwYld6Fy2zjPRQ_-GfIeIWA";
+const SCHEMA = "v4";
+const MACHINES = ["LL01-00000000285"];
+const HEADERS = { apikey: SUPABASE_KEY, Authorization: `Bearer ${SUPABASE_KEY}` };
+const ACTIONS = ["A0", "A1", "A2", "A3", "A4"];
+const ACTION_NAMES = { A0: "dormant", A1: "light", A2: "middle", A3: "heavy", A4: "boost" };
+// Blower duty and heater use each action asks for (RL/harness/config/actions.yaml).
+const ACTION_ASK = { A0: { duty: 4.86, pad: 0, ptc: 0 }, A1: { duty: 4.86, pad: 1, ptc: 1 },
+  A2: { duty: 12.6, pad: 1, ptc: 1 }, A3: { duty: 20.34, pad: 1, ptc: 1 }, A4: { duty: 40, pad: 1, ptc: 1 } };
+const DECISION_TIMES = ["01:45", "05:45", "09:45", "13:45", "17:45", "21:45"];   // Toronto
+const TARGETS = { stage1: { decisions: 210, scores: 50 }, week12: { decisions: 504, scores: 120 } };
+const TICK_S = 42;
+const H = 3600;
+
+const $ = (id) => document.getElementById(id);
+function store(k, v) { try { if (v === undefined) return localStorage.getItem(k); localStorage.setItem(k, v); } catch (e) { return null; } }
+function esc(s) { return String(s ?? "").replace(/[&<>"]/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[c])); }
+const when = (t) => new Date(t * 1000).toLocaleString([], { month: "short", day: "numeric", hour: "2-digit", minute: "2-digit" });
+const ago = (t) => { const s = Math.max(0, Date.now() / 1000 - t);
+  return s < 90 ? `${Math.round(s)} s ago` : s < 5400 ? `${Math.round(s / 60)} min ago` : s < 172800 ? `${(s / H).toFixed(1)} h ago` : `${(s / 86400).toFixed(1)} days ago`; };
+const sec = (iso) => Math.round(new Date(iso).getTime() / 1000);
+const pct = (a, b) => b ? Math.round(100 * a / b) : 0;
+const cssVar = (n) => getComputedStyle(document.documentElement).getPropertyValue(n).trim();
+const pill = (text, kind) => `<span class="pill ${kind}">${esc(text)}</span>`;
+
+// ---------------------------------------------------------------- machine, range, tabs
+MACHINES.concat(["other"]).forEach((m) => { const o = document.createElement("option");
+  o.value = m; o.textContent = m === "other" ? "Other…" : m; $("serial").appendChild(o); });
+// ?machine=LL01-... in the address picks the machine (a link to one machine's view).
+const saved = new URLSearchParams(location.search).get("machine") || store("p150-serial");
+if (saved && MACHINES.includes(saved)) $("serial").value = saved;
+else if (saved) { $("serial").value = "other"; $("serial-other").hidden = false; $("serial-other").value = saved; }
+const serial = () => $("serial").value === "other" ? $("serial-other").value.trim() : $("serial").value;
+$("serial").addEventListener("change", () => { $("serial-other").hidden = $("serial").value !== "other"; store("p150-serial", serial()); reload(); });
+$("serial-other").addEventListener("change", () => { store("p150-serial", serial()); reload(); });
+
+let hours = Number(store("p150-insights-range") ?? 72);
+if (![6, 24, 72, 168, 0].includes(hours)) hours = 72;
+function markRange() { document.querySelectorAll("#range button").forEach((b) => b.setAttribute("aria-pressed", String(Number(b.dataset.v) === hours))); }
+markRange();
+document.querySelectorAll("#range button").forEach((b) => b.addEventListener("click", () => {
+  hours = Number(b.dataset.v); store("p150-insights-range", String(hours)); markRange(); reload();
+}));
+$("refresh").addEventListener("click", () => reload());
+
+let tab = "sensors";
+function showTab(t) {
+  tab = t;
+  document.querySelectorAll("#tabs button").forEach((b) => b.setAttribute("aria-selected", String(b.dataset.tab === t)));
+  document.querySelectorAll("[data-panel]").forEach((p) => { p.hidden = p.dataset.panel !== t; });
+  history.replaceState(null, "", `#${t}`);
+  render();
+}
+document.querySelectorAll("#tabs button").forEach((b) => b.addEventListener("click", () => showTab(b.dataset.tab)));
+
+// ---------------------------------------------------------------- data
+async function get(path, extra) {
+  const res = await fetch(`${SUPABASE_URL}/rest/v1/${path}`, { headers: Object.assign({}, HEADERS, extra || {}) });
+  if (!res.ok) throw new Error(`${res.status}`);
+  return res;
+}
+async function getAll(path, cap = 60000) {
+  const rows = [];
+  for (let off = 0; off < cap; off += 1000) {
+    const page = await (await get(`${path}&limit=1000&offset=${off}`)).json();
+    rows.push(...page);
+    if (page.length < 1000) break;
+  }
+  return rows;
+}
+async function count(path) {
+  const res = await get(`${path}&select=ts_utc&limit=1`, { Prefer: "count=exact" });
+  const r = res.headers.get("Content-Range") || "";
+  return Number(r.split("/")[1] || 0);
+}
+const S = () => `serial=eq.${encodeURIComponent(serial())}`;
+const T = (table) => `${table}_${SCHEMA}`;
+
+let data = null;
+let loading = null;
+async function load() {
+  const since = hours ? `&ts_utc=gte.${encodeURIComponent(new Date(Date.now() - hours * H * 1000).toISOString())}` : "";
+  const [readings, machine, decisions, events, observations] = await Promise.all([
+    getAll(`${T("readings")}?select=ts_utc,chamber,bme_rh_pct,bme_temp_c,bme_gas_saturated,vapour_pressure_kpa,pad_ntc_c,motor_current_a,valid_mask&${S()}${since}&order=ts_utc.asc`),
+    getAll(`${T("machine_readings")}?select=ts_utc,lid_closed,ptc_ntc_c,intake_ntc_c,internal_temp_c,blower_pwm_pct,machine_current_a,machine_state,machine_state_name,valid_mask,harness_version&${S()}${since}&order=ts_utc.asc`),
+    getAll(`${T("decisions")}?select=*&${S()}${since}&order=ts_utc.asc`),
+    getAll(`${T("events")}?select=*&${S()}${since}&order=ts_utc.asc`),
+    getAll(`${T("observations")}?select=*&${S()}${since}&order=ts_utc.asc`),
+  ]);
+  return { readings, machine, decisions, events, observations, from: hours ? Date.now() / 1000 - hours * H : null, loadedAt: Date.now() / 1000 };
+}
+async function reload() {
+  $("status-line").textContent = "Loading…";
+  const mine = loading = load();
+  try {
+    const d = await mine;
+    if (mine !== loading) return;
+    data = d;
+    const n = d.readings.length + d.machine.length + d.decisions.length + d.events.length + d.observations.length;
+    $("status-line").textContent = `${serial()} · ${hours ? `last ${hours >= 24 ? hours / 24 + " day" + (hours > 24 ? "s" : "") : hours + " h"}` : "all time"} · ${n} rows · updated ${new Date().toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })}`;
+    render();
+  } catch (e) {
+    $("status-line").textContent = "Could not load the data. Check the connection and press Refresh.";
+  }
+}
+
+// ---------------------------------------------------------------- charts
+let plots = [];
+function destroyPlots() { plots.forEach((p) => p.destroy()); plots = []; }
+const COLORS = () => ["--s1", "--s2", "--s3", "--s4", "--s5"].map(cssVar);
+
+/* panel: {title, unit, series:[{label, values}], xs, step, binary, yNames, markers} */
+function timeChart(box, panel) {
+  const card = document.createElement("div"); card.className = "chart";
+  card.innerHTML = `<h3>${esc(panel.title)} <span class="unit">(${esc(panel.unit)})</span></h3>`;
+  const plotBox = document.createElement("div"); plotBox.className = "plot";
+  card.appendChild(plotBox); box.appendChild(card);
+  if (!panel.xs.length || panel.series.every((s) => s.values.every((v) => v == null))) {
+    plotBox.outerHTML = `<p class="empty">${esc(panel.empty || "No values in this time range.")}</p>`;
+    return;
+  }
+  const ink = cssVar("--muted"), grid = cssVar("--grid"), colors = COLORS();
+  const yAxis = { stroke: ink, grid: { stroke: grid, width: 1 }, ticks: { stroke: grid }, size: 54 };
+  if (panel.yNames) { const n = panel.yNames; yAxis.splits = () => n.map((_, i) => i); yAxis.values = (u, v) => v.map((x) => n[x] ?? ""); }
+  else yAxis.values = (u, vals) => vals.map((v) => v == null ? "" : String(+v.toPrecision(3)));
+  const markers = panel.markers || [];
+  const opts = {
+    width: Math.max(240, plotBox.clientWidth), height: panel.height || 200,
+    cursor: { drag: { x: true, y: false } },
+    scales: { x: { time: true }, y: panel.yNames ? { range: [-0.3, panel.yNames.length - 0.7] } : (panel.yRange ? { range: panel.yRange } : {}) },
+    axes: [{ stroke: ink, grid: { stroke: grid, width: 1 }, ticks: { stroke: grid } }, yAxis],
+    series: [{ label: "Time", value: (u, v) => v == null ? "–" : when(v) }].concat(panel.series.map((s, i) => ({
+      label: s.label, stroke: s.color || colors[i % 5], width: 2, spanGaps: !!panel.spanGaps,
+      points: { show: !!panel.points, size: 7, fill: s.color || colors[i % 5] },
+      paths: panel.step ? uPlot.paths.stepped({ align: 1 }) : (panel.points && !panel.lines ? () => null : undefined),
+      value: (u, v, si, di) => v == null ? "–" : panel.yNames ? (panel.yNames[v] ?? v) : (s.fmt ? s.fmt(v, di) : String(+v.toFixed(3))),
+    }))),
+    hooks: markers.length ? { draw: [(u) => {
+      const ctx = u.ctx; const top = u.bbox.top, h = u.bbox.height;
+      markers.forEach((m) => {
+        const x = u.valToPos(m.t, "x", true);
+        if (x < u.bbox.left || x > u.bbox.left + u.bbox.width) return;
+        ctx.save(); ctx.strokeStyle = m.color; ctx.globalAlpha = 0.55; ctx.lineWidth = 2 * devicePixelRatio;
+        ctx.beginPath(); ctx.moveTo(x, top); ctx.lineTo(x, top + h); ctx.stroke(); ctx.restore();
+      });
+    }] } : {},
+  };
+  plots.push(new uPlot(opts, [panel.xs].concat(panel.series.map((s) => s.values)), plotBox));
+}
+
+function tickTable() {
+  const ticks = new Map();
+  const at = (iso) => { const t = sec(iso); if (!ticks.has(t)) ticks.set(t, { L: null, R: null, M: null }); return ticks.get(t); };
+  data.readings.forEach((r) => { at(r.ts_utc)[r.chamber] = r; });
+  data.machine.forEach((m) => { at(m.ts_utc).M = m; });
+  const xs = [...ticks.keys()].sort((a, b) => a - b);
+  const col = (src, c, f) => xs.map((t) => { const r = ticks.get(t)[src]; const v = r ? r[c] : null;
+    return v == null ? null : f ? f(v) : (typeof v === "boolean" ? (v ? 1 : 0) : Number(v)); });
+  return { xs, col };
+}
+
+const MARKER_KINDS = [
+  { types: ["feed_tap", "feed_inferred"], label: "Feed", var: "--s3" },
+  { types: ["water"], label: "Water", var: "--s1" },
+  { types: ["unload", "role_change"], label: "Unload", var: "--s2" },
+  { types: ["service"], label: "Service", var: "--s5" },
+  { types: ["lid_open"], label: "Lid opened", var: "--s4" },
+];
+function eventMarkers() {
+  const out = [];
+  data.events.forEach((e) => { const k = MARKER_KINDS.find((m) => m.types.includes(e.type));
+    if (k && !(e.type === "role_change")) out.push({ t: sec(e.ts_utc), color: cssVar(k.var), label: k.label }); });
+  return out;
+}
+
+function renderSensors() {
+  $("markers-key").innerHTML = MARKER_KINDS.map((k) => `<span style="--c:${cssVar(k.var)}">${k.label}</span>`).join("");
+  const box = $("sensor-charts"); box.textContent = "";
+  const { xs, col } = tickTable();
+  const markers = eventMarkers();
+  const P = (title, unit, series, extra) => timeChart(box, Object.assign({ title, unit, xs, series, markers,
+    empty: "No sensor data in this time range. Charts fill in while the harness or collect.py logs the machine." }, extra || {}));
+  P("BME humidity", "%RH", [{ label: "Left", values: col("L", "bme_rh_pct") }, { label: "Right", values: col("R", "bme_rh_pct") }]);
+  P("BME temperature", "°C", [{ label: "Left", values: col("L", "bme_temp_c") }, { label: "Right", values: col("R", "bme_temp_c") }]);
+  P("Currents", "A", [{ label: "Machine (AC)", values: col("M", "machine_current_a") },
+    { label: "Left motor", values: col("L", "motor_current_a") }, { label: "Right motor", values: col("R", "motor_current_a") }]);
+  P("Temperatures", "°C", [{ label: "Left pad", values: col("L", "pad_ntc_c") }, { label: "Right pad", values: col("R", "pad_ntc_c") },
+    { label: "Intake", values: col("M", "intake_ntc_c") }, { label: "Internal", values: col("M", "internal_temp_c") },
+    { label: "Inner shell", values: col("M", "ptc_ntc_c") }]);
+  P("Blower PWM", "%", [{ label: "Blower", values: col("M", "blower_pwm_pct") }], { step: true,
+    empty: "No blower values: only the harness, when it controls the machine, records the blower." });
+  P("Lid", "open or closed", [{ label: "Lid", values: col("M", "lid_closed") }], { step: true, yNames: ["open", "closed"] });
+  const names = new Map(data.machine.map((m) => [sec(m.ts_utc), m.machine_state_name]));
+  P("Machine state", "code", [{ label: "State", values: col("M", "machine_state"), fmt: (v, di) => `${v} ${names.get(xs[di]) || ""}` }], { step: true });
+}
+
+// ---------------------------------------------------------------- policy
+const byChamber = (rows) => ({ L: rows.filter((r) => r.chamber === "L"), R: rows.filter((r) => r.chamber === "R") });
+function parseProbs(r) {
+  if (r.action_probs) {
+    const out = {}; String(r.action_probs).split("|").forEach((p) => { const [a, v] = p.split(":"); out[a] = Number(v); });
+    return out;
+  }
+  // Rows without the spread: the random policy's even split over the allowed set.
+  const allowed = String(r.allowed_set || "").split("|").filter(Boolean);
+  return Object.fromEntries(ACTIONS.map((a) => [a, r.policy_version === "random" && allowed.includes(a) ? 1 / allowed.length
+    : a === r.action ? Number(r.action_prob) : null]));
+}
+function nextDecision(now = Date.now()) {
+  const fmt = new Intl.DateTimeFormat("en-CA", { timeZone: "America/Toronto", hour: "2-digit", minute: "2-digit", hourCycle: "h23" });
+  const [hh, mm] = fmt.format(new Date(now)).split(":").map(Number);
+  const nowMin = hh * 60 + mm;
+  const slots = DECISION_TIMES.map((s) => { const [h, m] = s.split(":").map(Number); return h * 60 + m; });
+  const next = slots.find((s) => s > nowMin) ?? slots[0] + 1440;
+  return new Date(now + (next - nowMin) * 60000 - new Date(now).getSeconds() * 1000);
+}
+const REASON_TEXT = { none: "nothing narrowed: all five allowed", last_wet: "last score wet: only drying actions",
+  last_dry: "last score dry: only gentle actions", stale_score: "no score for 30 h: middle actions only" };
+
+function renderPolicy() {
+  const dec = data.decisions, ch = byChamber(dec);
+  // 5. current policy cards
+  $("policy-cards").innerHTML = ["L", "R"].map((c) => {
+    const d = ch[c][ch[c].length - 1];
+    if (!d) return `<div class="box"><h3>Chamber ${c}</h3><p class="empty">No decisions in this time range. Decisions are made only while the harness controls the machine.</p></div>`;
+    const steer = d.scores_steer == null ? "not recorded" : d.scores_steer ? "yes" : "no, scores are recorded only";
+    return `<div class="box"><h3>Chamber ${c} <span class="action">${esc(d.action)}</span> ${esc(ACTION_NAMES[d.action] || "")}</h3>
+      <dl class="kv"><dt>Since</dt><dd>${when(sec(d.ts_utc))} (${ago(sec(d.ts_utc))})</dd>
+      <dt>Policy</dt><dd>${esc(d.policy_version)} · ${esc(d.arm)} arm · stage ${esc(d.stage)}</dd>
+      <dt>Scores steer it</dt><dd>${esc(steer)}</dd>
+      <dt>Choice</dt><dd>${esc(d.allowed_set)} · picked with ${Math.round(Number(d.action_prob) * 100)} % chance</dd>
+      <dt>Narrowed by</dt><dd>${esc(REASON_TEXT[d.restrict_reason] || d.restrict_reason)}</dd>
+      <dt>Next decision</dt><dd>${nextDecision().toLocaleString([], { weekday: "short", hour: "2-digit", minute: "2-digit" })} (scheduled; the harness must be running)</dd></dl></div>`;
+  }).join("");
+
+  // 1-2. actions and asks over time, as steps held until "now"
+  const box = $("policy-charts"); box.textContent = "";
+  const now = Math.floor(Date.now() / 1000);
+  const xs = [...new Set(dec.map((d) => sec(d.ts_utc)))].sort((a, b) => a - b);
+  if (xs.length) xs.push(now);
+  const held = (c, f) => { let cur = null; const rows = ch[c];
+    return xs.map((t) => { const r = rows.filter((x) => sec(x.ts_utc) <= t).pop(); if (r) cur = f(r); return cur; }); };
+  const machineAt = (f) => { let cur = null; return xs.map((t) => { const r = dec.filter((x) => sec(x.ts_utc) <= t).pop(); if (r) cur = f(r); return cur; }); };
+  const empty = "No decisions in this time range. The harness makes one per chamber every 4 hours while it controls the machine.";
+  timeChart(box, { title: "Action in force", unit: "A0 to A4", xs, step: true, yNames: ACTIONS, empty,
+    series: ["L", "R"].map((c) => ({ label: `Chamber ${c}`, values: held(c, (r) => ACTIONS.indexOf(r.action)),
+      fmt: (v) => `${ACTIONS[v]} ${ACTION_NAMES[ACTIONS[v]]}` })) });
+  timeChart(box, { title: "Blower duty: asked vs applied", unit: "% of time on", xs, step: true, empty,
+    series: [{ label: "Left asked", values: held("L", (r) => ACTION_ASK[r.action]?.duty ?? null) },
+      { label: "Right asked", values: held("R", (r) => ACTION_ASK[r.action]?.duty ?? null) },
+      { label: "Applied (shared)", values: machineAt((r) => r.duty_pct == null ? null : Number(r.duty_pct)) }] });
+  timeChart(box, { title: "Heaters: asked vs applied", unit: "on or off", xs, step: true, yNames: ["off", "on"], empty,
+    series: [{ label: "Left pad", values: held("L", (r) => Number(r.pad_on_frac) > 0 ? 1 : 0) },
+      { label: "Right pad", values: held("R", (r) => Number(r.pad_on_frac) > 0 ? 1 : 0) },
+      { label: "Blower PTC (shared)", values: machineAt((r) => Number(r.ptc_on_frac) > 0 ? 1 : 0) }] });
+
+  // 6. predictions
+  const latest = dec[dec.length - 1];
+  const learned = dec.some((d) => d.arm === "learned" || (d.policy_version && !/^(random|matched)/.test(d.policy_version)));
+  $("predictions").innerHTML = learned
+    ? `<p class="hint">The learned policy's chances for each action at its latest decisions are in the table below. Values it predicts for each action will appear here once the policy file exports them.</p>`
+    : `<p class="note">No learned policy is running yet, so there is nothing to predict. Today's policy is <b>${esc(latest ? latest.policy_version : "random")}</b>: every allowed action gets an equal chance. After a few weeks of decisions and scores, training produces a learned policy; this panel then shows which action it expects to keep each chamber in the good band, and how sure it is.</p>`;
+
+  // 3 + 7. decisions table with the full spread
+  const rows = dec.slice().reverse().slice(0, 200);
+  $("decisions-table").innerHTML = rows.length ? `<thead><tr><th>When</th><th>Ch</th><th>Picked</th><th>Chance of each action</th><th>Narrowed by</th><th>Scores steer</th><th class="num">Last squeeze</th><th>Policy</th></tr></thead><tbody>` +
+    rows.map((r) => { const p = parseProbs(r); const allowed = String(r.allowed_set || "").split("|");
+      const bars = ACTIONS.map((a) => { const v = p[a]; const h = v == null ? 0 : Math.round(v * 100);
+        return `<span class="${a === r.action ? "chosen" : ""}" title="${a}: ${v == null ? "not recorded" : h + " %"}"><i><b style="height:${allowed.includes(a) ? Math.max(h, v ? 4 : 0) : 0}%"></b></i>${a}${v == null ? "" : `<br>${h}%`}</span>`; }).join("");
+      return `<tr><td>${when(sec(r.ts_utc))}</td><td>${esc(r.chamber)}</td><td><span class="action">${esc(r.action)}</span></td>
+        <td><div class="probs">${bars}</div></td><td class="wrap">${esc(REASON_TEXT[r.restrict_reason] || r.restrict_reason)}</td>
+        <td>${r.scores_steer == null ? "–" : r.scores_steer ? "yes" : "no"}</td><td class="num">${r.last_squeeze ?? "–"}</td><td>${esc(r.policy_version)}</td></tr>`; }).join("") + "</tbody>"
+    : `<tbody><tr><td class="empty">${empty}</td></tr></tbody>`;
+
+  // 4. what it saw
+  const fbox = $("feature-charts"); fbox.textContent = "";
+  const fx = [...new Set(dec.map((d) => sec(d.ts_utc)))].sort((a, b) => a - b);
+  const F = (title, unit, col, extra) => timeChart(fbox, Object.assign({ title, unit, xs: fx, height: 160, points: true, lines: true, spanGaps: true, empty,
+    series: ["L", "R"].map((c) => ({ label: `Chamber ${c}`, values: fx.map((t) => { const r = ch[c].find((x) => sec(x.ts_utc) === t);
+      const v = r ? r[col] : null; return v == null ? null : extra && extra.map ? extra.map(v) : Number(v); }) })) }, extra || {}));
+  F("Vapour pressure, 1 h mean", "kPa", "vp_mean_1h_kpa");
+  F("Vapour pressure trend, 6 h", "kPa per h", "vp_slope_6h_kpa_h");
+  F("Exhaust temperature, 1 h mean", "°C", "exhaust_t_mean_1h_c");
+  F("Lid openings, last 24 h", "count", "lid_events_24h");
+  F("Hours since the lid was last opened", "h", "h_since_lid");
+  F("Humidity jump at the last feed", "kPa", "jump_last_kpa");
+  F("Fed or curing", "inferred role", "role_inferred", { yNames: ["curing", "fed"], map: (v) => v === "fed" ? 1 : 0, step: true });
+  F("Day in cycle", "days since unload", "day_in_cycle_inferred");
+  F("Mixer current at the last mix", "A", "motor_current_last_mix_a");
+}
+
+// ---------------------------------------------------------------- progress
+const grade = (o) => {   // the study's reward for one score (Machine_Learning/reward.py grade)
+  if (o.smell_descriptor === "sour" && o.smell_location === "material") return -2;
+  const q = Number(o.squeeze); if (o.squeeze == null || Number.isNaN(q)) return null;
+  return q >= 6 ? -2 : q <= 2 ? -1 : 1;
+};
+const outcomeOf = (s) => s === 1 ? "good" : s === -1 ? "dry" : s === -2 ? "wet / sour" : null;
+
+async function renderProgress() {
+  // 8. progress tiles: all-time counts per chamber
+  const tiles = $("progress-tiles");
+  tiles.innerHTML = `<p class="empty">Counting…</p>`;
+  try {
+    const counts = await Promise.all(["L", "R"].flatMap((c) => [
+      count(`${T("decisions")}?${S()}&chamber=eq.${c}`),
+      count(`${T("observations")}?${S()}&chamber=eq.${c}&missed=eq.false`)]));
+    const tile = (k, v, target, sub) => `<div class="tile"><span class="k">${esc(k)}</span>
+      <span class="v">${v} <small>of ${target} ${esc(sub)}</small></span><div class="bar"><i style="width:${Math.min(100, pct(v, target))}%"></i></div>
+      <span class="hint">${pct(v, target)} % of the weeks 1-5 target</span></div>`;
+    tiles.innerHTML = ["L", "R"].map((c, i) =>
+      tile(`Chamber ${c} decisions`, counts[i * 2], TARGETS.stage1.decisions, "") +
+      tile(`Chamber ${c} scores`, counts[i * 2 + 1], TARGETS.stage1.scores, "")).join("");
+  } catch (e) { tiles.innerHTML = `<p class="empty">Could not count the data.</p>`; }
+
+  // 9. coverage: action x chamber x fed/curing
+  const dec = data.decisions;
+  const cell = (n, max) => `<td class="cell" style="background: rgba(var(--heat), ${max ? (0.08 + 0.6 * n / max).toFixed(2) : 0})">${n || "·"}</td>`;
+  const rowsDef = ["L", "R"].flatMap((c) => ["fed", "curing"].map((role) => ({ c, role })));
+  const grid = rowsDef.map(({ c, role }) => ACTIONS.map((a) => dec.filter((d) => d.chamber === c && (d.role_inferred || "curing") === role && d.action === a).length));
+  const gmax = Math.max(0, ...grid.flat());
+  $("coverage").innerHTML = `<thead><tr><th>Chamber, situation</th>${ACTIONS.map((a) => `<th class="num">${a} ${ACTION_NAMES[a]}</th>`).join("")}<th class="num">Total</th></tr></thead><tbody>` +
+    rowsDef.map((r, i) => `<tr><td>${r.c}, ${r.role === "fed" ? "fed in last 24 h" : "curing (not fed)"}</td>${grid[i].map((n) => cell(n, gmax)).join("")}<td class="num">${grid[i].reduce((a, b) => a + b, 0)}</td></tr>`).join("") +
+    `</tbody>` + (dec.length ? "" : `<caption class="hint" style="caption-side:bottom;text-align:left;padding-top:8px">No decisions in this time range yet.</caption>`);
+
+  // 10. scoring per day + missed
+  const obs = data.observations;
+  const days = [...new Set(obs.map((o) => o.ts_utc.slice(0, 10)))].sort();
+  const box = $("scoring-charts"); box.textContent = "";
+  const dayX = days.map((d) => sec(d + "T12:00:00Z"));
+  timeChart(box, { title: "Scores per day", unit: "count; plan is 2 a day", xs: dayX, points: true, lines: true,
+    empty: "No scores in this time range. Scores come from the Compost Check pages.",
+    series: ["L", "R"].map((c) => ({ label: `Chamber ${c}`, values: days.map((d) => obs.filter((o) => o.chamber === c && !o.missed && o.ts_utc.startsWith(d)).length) }))
+      .concat([{ label: "Plan", values: days.map(() => 2), color: cssVar("--muted") }]) });
+  const ageX = dec.map((d) => sec(d.ts_utc));
+  timeChart(box, { title: "Age of the last score at each decision", unit: "h; over 30 h counts as no score", xs: ageX, points: true,
+    empty: "No decisions in this time range.",
+    series: ["L", "R"].map((c) => ({ label: `Chamber ${c}`, values: dec.map((d) => d.chamber === c && d.last_score_age_h != null ? Number(d.last_score_age_h) : null) })) });
+  const missed = obs.filter((o) => o.missed);
+  $("missed-table").innerHTML = missed.length ? `<thead><tr><th>When</th><th>Ch</th><th>Missed because</th><th>By</th></tr></thead><tbody>` +
+    missed.slice().reverse().map((o) => `<tr><td>${when(sec(o.ts_utc))}</td><td>${esc(o.chamber)}</td><td class="wrap">${esc(o.miss_reason)}</td><td>${esc(o.observer)}</td></tr>`).join("") + "</tbody>"
+    : `<tbody><tr><td class="hint">No missed scores in this time range.</td></tr></tbody>`;
+
+  // 11. action -> next score within 30 h
+  const graded = obs.filter((o) => !o.missed && grade(o) != null).map((o) => ({ ch: o.chamber, t: sec(o.ts_utc), s: grade(o) }));
+  const OUT = ["good", "dry", "wet / sour", "no score in 30 h"];
+  const table = Object.fromEntries(ACTIONS.map((a) => [a, Object.fromEntries(OUT.map((k) => [k, 0]))]));
+  dec.forEach((d) => { const t = sec(d.ts_utc);
+    const nx = graded.find((g) => g.ch === d.chamber && g.t > t && g.t - t <= 30 * H);
+    table[d.action][nx ? outcomeOf(nx.s) : "no score in 30 h"]++; });
+  const omax = Math.max(0, ...ACTIONS.flatMap((a) => OUT.slice(0, 3).map((k) => table[a][k])));
+  $("outcomes").innerHTML = `<thead><tr><th>Action</th>${OUT.map((k) => `<th class="num">${k}</th>`).join("")}<th class="num">Good rate</th></tr></thead><tbody>` +
+    ACTIONS.map((a) => { const r = table[a]; const scored = r.good + r.dry + r["wet / sour"];
+      return `<tr><td><span class="action">${a}</span> ${ACTION_NAMES[a]}</td>${OUT.map((k, i) => i < 3 ? cell(r[k], omax) : `<td class="num">${r[k] || "·"}</td>`).join("")}<td class="num">${scored ? pct(r.good, scored) + " %" : "–"}</td></tr>`; }).join("") + "</tbody>";
+
+  // 12-13. reward over time, sensor vs score
+  const rbox = $("reward-charts"); rbox.textContent = "";
+  const rx = [...new Set(graded.map((g) => g.t))].sort((a, b) => a - b);
+  timeChart(rbox, { title: "Reward from each score", unit: "+1 good, −1 dry, −2 wet", xs: rx, points: true, yRange: [-2.5, 1.5],
+    empty: "No scores in this time range.",
+    series: ["L", "R"].map((c) => ({ label: `Chamber ${c}`, values: rx.map((t) => { const g = graded.find((x) => x.t === t && x.ch === c); return g ? g.s : null; }) })) });
+  scatterCard(rbox, graded);
+}
+
+function scatterCard(box, graded) {
+  const card = document.createElement("div"); card.className = "chart";
+  card.innerHTML = `<h3>Squeeze score against vapour pressure <span class="unit">(mean of the hour before)</span></h3>`;
+  box.appendChild(card);
+  const pts = [];
+  data.observations.filter((o) => !o.missed && o.squeeze != null).forEach((o) => {
+    const t = sec(o.ts_utc);
+    const vp = data.readings.filter((r) => r.chamber === o.chamber && r.vapour_pressure_kpa != null && sec(r.ts_utc) <= t && sec(r.ts_utc) > t - H).map((r) => Number(r.vapour_pressure_kpa));
+    if (vp.length) pts.push({ x: vp.reduce((a, b) => a + b, 0) / vp.length, y: Number(o.squeeze), ch: o.chamber });
+  });
+  if (!pts.length) { card.insertAdjacentHTML("beforeend", `<p class="empty">No scores with sensor readings in the hour before them yet.</p>`); return; }
+  const W = 420, Hh = 220, m = { l: 44, r: 12, t: 10, b: 34 };
+  let x0 = Math.min(...pts.map((p) => p.x)), x1 = Math.max(...pts.map((p) => p.x));
+  if (x1 - x0 < 0.2) { x0 -= 0.1; x1 += 0.1; }
+  const X = (v) => m.l + (v - x0) / (x1 - x0) * (W - m.l - m.r), Y = (v) => m.t + (6.5 - v) / 6 * (Hh - m.t - m.b);
+  const colors = { L: cssVar("--s1"), R: cssVar("--s2") };
+  const ticksX = [0, 0.25, 0.5, 0.75, 1].map((f) => x0 + f * (x1 - x0));
+  card.insertAdjacentHTML("beforeend", `<div class="scroll"><svg class="scatter" viewBox="0 0 ${W} ${Hh}" width="100%" role="img" aria-label="Scatter of squeeze score against vapour pressure">
+    ${[1, 2, 3, 4, 5, 6].map((v) => `<line class="gridl" x1="${m.l}" x2="${W - m.r}" y1="${Y(v)}" y2="${Y(v)}"/><text x="${m.l - 8}" y="${Y(v) + 4}" text-anchor="end">${v}</text>`).join("")}
+    ${ticksX.map((v) => `<text x="${X(v)}" y="${Hh - m.b + 16}" text-anchor="middle">${v.toFixed(2)}</text>`).join("")}
+    <text x="${(W + m.l) / 2}" y="${Hh - 4}" text-anchor="middle">vapour pressure, kPa</text>
+    ${pts.map((p) => `<circle cx="${X(p.x)}" cy="${Y(p.y)}" r="5" fill="${colors[p.ch]}" fill-opacity="0.85" stroke="${cssVar("--panel")}" stroke-width="2"><title>Chamber ${p.ch}: squeeze ${p.y}, ${p.x.toFixed(3)} kPa</title></circle>`).join("")}
+  </svg></div><div class="markers-key"><span style="--c:${colors.L}">Chamber L</span><span style="--c:${colors.R}">Chamber R</span><span>Squeeze 3-5 is the good band</span></div>`);
+}
+
+// ---------------------------------------------------------------- health
+function renderHealth() {
+  const span = data.from ? Date.now() / 1000 - data.from
+    : (data.machine.length ? Date.now() / 1000 - sec(data.machine[0].ts_utc) : 0);
+  const expected = Math.max(1, Math.floor(span / TICK_S));
+  const ticks = data.machine.length;
+  const last = data.machine.length ? sec(data.machine[data.machine.length - 1].ts_utc) : null;
+  const gaps = data.events.filter((e) => e.type === "alarm" && /^gap /.test(e.note || ""));
+  const rows = [];
+  const status = (good, ok) => good ? pill("ok", "ok") : ok ? pill("check", "warn") : pill("problem", "bad");
+  const share = (arr, f) => arr.length ? pct(arr.filter(f).length, arr.length) : null;
+  const lastAgo = last ? Date.now() / 1000 - last : Infinity;
+  rows.push(["Logging", "Time since the last reading", last ? ago(last) : "no data", status(lastAgo < 180, lastAgo < 900),
+    "A reading every 42 s while the harness or collect.py runs"]);
+  rows.push(["Logging", "Readings received vs expected", `${ticks} of ~${expected} (${pct(ticks, expected)} %)`,
+    status(pct(ticks, expected) >= 90, pct(ticks, expected) >= 50), `${gaps.length} recorded gap(s); low means the logger was off for part of the range`]);
+  ["L", "R"].forEach((c) => {
+    const rr = data.readings.filter((r) => r.chamber === c);
+    const v = (i) => share(rr, (r) => (r.valid_mask || "")[i] === "o");
+    const b = v(0), p = v(1), mo = v(2), sat = share(rr, (r) => r.bme_gas_saturated === true);
+    rows.push([`Chamber ${c}`, "BME688 readings valid", b == null ? "–" : `${b} %`, b == null ? "" : status(b >= 98, b >= 90), "Temperature, humidity, pressure, gas"]);
+    rows.push([`Chamber ${c}`, "Gas sensor stuck at its ceiling", sat == null ? "–" : `${sat} %`, sat == null ? "" : status(sat <= 5, sat <= 30), "102,400,000 Ω means no gas reading"]);
+    rows.push([`Chamber ${c}`, "Pad heater sensor valid", p == null ? "–" : `${p} %`, p == null ? "" : status(p >= 98, p >= 90), ""]);
+    rows.push([`Chamber ${c}`, "Mixer current readable", mo == null ? "–" : `${mo} %`, mo == null ? "" : status(mo >= 98, mo >= 90), ""]);
+  });
+  const mm = data.machine;
+  const ptcOk = share(mm, (m) => (m.valid_mask || "")[0] === "o");
+  const lidOpen = share(mm, (m) => m.lid_closed === false);
+  const errs = mm.filter((m) => m.machine_state_name === "Error" || (m.error_code && Number(m.error_code) !== 0)).length;
+  rows.push(["Machine", "Blower PTC sensor valid", ptcOk == null ? "–" : `${ptcOk} %`, ptcOk == null ? "" : status(ptcOk >= 98, ptcOk >= 90), ""]);
+  rows.push(["Machine", "Lid reads open", lidOpen == null ? "–" : `${lidOpen} %`, lidOpen == null ? "" : status(lidOpen <= 10, lidOpen <= 40),
+    "Mixing is blocked while the lid reads open"]);
+  rows.push(["Machine", "Readings in an error state", `${errs}`, status(errs === 0, errs < 5), "From the machine's own state and error code"]);
+  $("health-table").innerHTML = `<thead><tr><th>Area</th><th>Check</th><th class="num">Value</th><th>Status</th><th>Note</th></tr></thead><tbody>` +
+    rows.map((r) => `<tr><td>${esc(r[0])}</td><td>${esc(r[1])}</td><td class="num">${esc(r[2])}</td><td>${r[3]}</td><td class="wrap">${esc(r[4])}</td></tr>`).join("") + "</tbody>";
+
+  // 15. alarms and safety
+  const SAFETY = ["alarm", "guardrail", "power_cycle"];
+  const ev = data.events.filter((e) => SAFETY.includes(e.type));
+  const n = (f) => ev.filter(f).length;
+  const tiles = [["Alarms", n((e) => e.type === "alarm"), "bad"], ["Guardrail events", n((e) => e.type === "guardrail"), "warn"],
+    ["Harness starts and stops", n((e) => e.type === "power_cycle"), "plain"], ["Shared-air conflicts", data.events.filter((e) => e.type === "deviation").length, "info"]];
+  $("alarm-tiles").innerHTML = tiles.map(([k, v, kind]) => `<div class="tile"><span class="k">${k}</span><span class="v">${v}</span>${v ? pill(kind === "plain" ? "logged" : "in range", kind) : pill("none", "ok")}</div>`).join("");
+  const kindOf = (t) => t === "alarm" ? "bad" : t === "guardrail" ? "warn" : t === "deviation" ? "info" : "plain";
+  const list = data.events.filter((e) => SAFETY.includes(e.type) || e.type === "deviation").slice().reverse().slice(0, 300);
+  $("alarm-table").innerHTML = list.length ? `<thead><tr><th>When</th><th>Ch</th><th>Type</th><th>What happened</th></tr></thead><tbody>` +
+    list.map((e) => `<tr><td>${when(sec(e.ts_utc))}</td><td>${esc(e.chamber || "machine")}</td><td>${pill(e.type, kindOf(e.type))}</td><td class="wrap">${esc(e.note)}${e.value != null ? ` (${esc(e.value)})` : ""}</td></tr>`).join("") + "</tbody>"
+    : `<tbody><tr><td class="hint">No alarms, guardrail events or harness starts in this time range.</td></tr></tbody>`;
+}
+
+// ---------------------------------------------------------------- compare
+async function renderCompare() {
+  const box = $("compare");
+  box.innerHTML = `<p class="empty">Looking for machines…</p>`;
+  try {
+    const since = new Date(Date.now() - (hours || 24 * 365) * H * 1000).toISOString();
+    const rows = await (await get(`${T("machine_readings")}?select=serial&ts_utc=gte.${encodeURIComponent(since)}&order=ts_utc.desc&limit=5000`)).json();
+    const serials = [...new Set(rows.map((r) => r.serial))];
+    if (serials.length < 2) {
+      box.innerHTML = `<p class="note">Comparison needs at least two machines logging in this time range; ${serials.length ? `only ${esc(serials[0])} has data` : "none has data"}. The study plan has four bench machines. Once a second one logs (run the harness or collect.py on it), its lines appear here beside this one.</p>`;
+      return;
+    }
+    const sinceQ = hours ? `&ts_utc=gte.${encodeURIComponent(since)}` : "";
+    const per = await Promise.all(serials.slice(0, 5).map((s) => getAll(`${T("readings")}?select=ts_utc,bme_rh_pct,bme_temp_c&serial=eq.${encodeURIComponent(s)}${sinceQ}&order=ts_utc.asc`)));
+    const hourly = (rows, col) => { const m = new Map(); rows.forEach((r) => { if (r[col] == null) return;
+      const t = Math.floor(sec(r.ts_utc) / H) * H; const a = m.get(t) || []; a.push(Number(r[col])); m.set(t, a); });
+      return m; };
+    const grid = document.createElement("div"); grid.className = "chart-grid"; box.textContent = ""; box.appendChild(grid);
+    [["bme_rh_pct", "Humidity, both chambers", "%RH"], ["bme_temp_c", "Temperature, both chambers", "°C"]].forEach(([col, title, unit]) => {
+      const maps = per.map((rows) => hourly(rows, col));
+      const xs = [...new Set(maps.flatMap((m) => [...m.keys()]))].sort((a, b) => a - b);
+      timeChart(grid, { title: `${title}, hourly mean`, unit, xs, spanGaps: true,
+        series: serials.slice(0, 5).map((s, i) => ({ label: s, values: xs.map((t) => { const a = maps[i].get(t); return a ? a.reduce((x, y) => x + y, 0) / a.length : null; }) })) });
+    });
+  } catch (e) { box.innerHTML = `<p class="empty">Could not load the comparison.</p>`; }
+}
+
+// ---------------------------------------------------------------- weekly
+function weekEnd() {
+  const v = $("week").value;
+  const d = v ? new Date(v + "T23:59:59") : new Date();
+  return d;
+}
+$("week").value = new Date().toISOString().slice(0, 10);
+$("week").addEventListener("change", () => renderWeekly());
+$("print").addEventListener("click", () => window.print());
+
+async function renderWeekly() {
+  const end = weekEnd(), start = new Date(end.getTime() - 7 * 86400 * 1000);
+  $("weekly-title").textContent = `Weekly summary · ${serial()} · ${start.toLocaleDateString()} to ${end.toLocaleDateString()}`;
+  const box = $("weekly"); box.innerHTML = `<p class="empty">Building the summary…</p>`;
+  try {
+    const q = `${S()}&ts_utc=gte.${encodeURIComponent(start.toISOString())}&ts_utc=lte.${encodeURIComponent(end.toISOString())}&order=ts_utc.asc`;
+    const [dec, obs, ev, mach] = await Promise.all([
+      getAll(`${T("decisions")}?select=chamber,action,restrict_reason&${q}`),
+      getAll(`${T("observations")}?select=chamber,squeeze,missed,smell_descriptor,smell_location&${q}`),
+      getAll(`${T("events")}?select=type,chamber&${q}`),
+      count(`${T("machine_readings")}?${q}`)]);
+    const scored = obs.filter((o) => !o.missed && o.squeeze != null);
+    const g = (k) => scored.filter((o) => outcomeOf(grade(o)) === k).length;
+    const evn = (t) => ev.filter((e) => t.includes(e.type)).length;
+    const expected = Math.floor(7 * 86400 / TICK_S);
+    const byA = ACTIONS.map((a) => `${a} ${dec.filter((d) => d.action === a).length}`).join(" · ");
+    box.innerHTML = `<div class="tiles">
+      <div class="tile"><span class="k">Decisions</span><span class="v">${dec.length} <small>target 84 a week (2 chambers)</small></span><span class="hint">${byA}</span></div>
+      <div class="tile"><span class="k">Scores</span><span class="v">${scored.length} <small>target 20 a week</small></span><span class="hint">${obs.filter((o) => o.missed).length} missed</span></div>
+      <div class="tile"><span class="k">Compost in the good band</span><span class="v">${scored.length ? pct(g("good"), scored.length) : "–"}<small>${scored.length ? " %" : ""}</small></span><span class="hint">good ${g("good")} · dry ${g("dry")} · wet or sour ${g("wet / sour")}</span></div>
+      <div class="tile"><span class="k">Data logged</span><span class="v">${pct(mach, expected)} <small>% of the week</small></span><span class="hint">${mach} machine readings of ~${expected}</span></div>
+      <div class="tile"><span class="k">Activity</span><span class="v">${evn(["feed_tap"])} <small>feeds</small></span><span class="hint">water ${evn(["water"])} · unloads ${evn(["unload"])} · service ${evn(["service"])}</span></div>
+      <div class="tile"><span class="k">Alarms</span><span class="v">${evn(["alarm"])}</span><span class="hint">guardrail ${evn(["guardrail"])} · harness starts/stops ${evn(["power_cycle"])}</span></div>
+    </div>
+    <p class="hint">Per chamber: ${["L", "R"].map((c) => `${c}: ${dec.filter((d) => d.chamber === c).length} decisions, ${scored.filter((o) => o.chamber === c).length} scores`).join("; ")}. Details for this week are in the other tabs with the range set to 1 week.</p>`;
+  } catch (e) { box.innerHTML = `<p class="empty">Could not build the summary.</p>`; }
+}
+
+// ---------------------------------------------------------------- render
+function render() {
+  if (!data) return;
+  destroyPlots();
+  try {
+    if (tab === "sensors") renderSensors();
+    else if (tab === "policy") renderPolicy();
+    else if (tab === "progress") renderProgress();
+    else if (tab === "health") renderHealth();
+    else if (tab === "compare") renderCompare();
+    else if (tab === "weekly") renderWeekly();
+  } catch (e) { $("status-line").textContent = `Could not draw this tab: ${e.message}`; }
+}
+let resizeTimer;
+window.addEventListener("resize", () => { clearTimeout(resizeTimer); resizeTimer = setTimeout(render, 250); });
+matchMedia("(prefers-color-scheme: dark)").addEventListener("change", render);
+new MutationObserver(render).observe(document.documentElement, { attributes: true, attributeFilter: ["data-theme"] });
+
+const linked = location.hash.slice(1);
+if (document.querySelector(`#tabs button[data-tab="${CSS.escape(linked)}"]`)) {
+  tab = linked;
+  document.querySelectorAll("#tabs button").forEach((b) => b.setAttribute("aria-selected", String(b.dataset.tab === tab)));
+  document.querySelectorAll("[data-panel]").forEach((p) => { p.hidden = p.dataset.panel !== tab; });
+}
+reload();
+setInterval(() => { if (!document.hidden) reload(); }, 60000);
+</script>
+</body>
+</html>
