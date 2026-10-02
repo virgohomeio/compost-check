@@ -174,7 +174,7 @@ button:focus-visible, select:focus-visible, input:focus-visible, a:focus-visible
   <!-- ===================== Sensors ===================== -->
   <section class="card" data-panel="sensors">
     <h2>Sensor history</h2>
-    <p class="hint">Hover or touch a chart to read every line at that moment. Drag across a chart to zoom; double-click to reset. Thin vertical marks are activity: feeds, water, unloads, service and lid openings.</p>
+    <p class="hint">Hover or touch a chart to read every line at that moment. Drag across a chart to zoom; double-click to reset. Thin vertical marks are activity: feeds, water, unloads, service, and front or back lid openings.</p>
     <div class="markers-key" id="markers-key"></div>
     <div class="chart-grid" id="sensor-charts"></div>
     <p class="hint">Wi-Fi signal (RSSI) comes from the machine's Wi-Fi chip and cannot be read over the USB cable the bench laptop uses, so it is not charted yet.</p>
@@ -355,7 +355,7 @@ async function load() {
   const since = hours ? `&ts_utc=gte.${encodeURIComponent(new Date(Date.now() - hours * H * 1000).toISOString())}` : "";
   const [readings, machine, decisions, events, observations] = await Promise.all([
     getAll(`${T("readings")}?select=ts_utc,chamber,bme_rh_pct,bme_temp_c,bme_gas_saturated,vapour_pressure_kpa,pad_ntc_c,motor_current_a,valid_mask&${S()}${since}&order=ts_utc.asc`),
-    getAll(`${T("machine_readings")}?select=ts_utc,lid_closed,ptc_ntc_c,intake_ntc_c,internal_temp_c,blower_pwm_pct,machine_current_a,machine_state,machine_state_name,valid_mask,harness_version&${S()}${since}&order=ts_utc.asc`),
+    getAll(`${T("machine_readings")}?select=ts_utc,lid_closed,back_lid_closed,ptc_ntc_c,intake_ntc_c,internal_temp_c,blower_pwm_pct,machine_current_a,machine_state,machine_state_name,valid_mask,harness_version&${S()}${since}&order=ts_utc.asc`),
     getAll(`${T("decisions")}?select=*&${S()}${since}&order=ts_utc.asc`),
     getAll(`${T("events")}?select=*&${S()}${since}&order=ts_utc.asc`),
     getAll(`${T("observations")}?select=*&${S()}${since}&order=ts_utc.asc`),
@@ -455,11 +455,13 @@ const MARKER_KINDS = [
   { types: ["water"], label: "Water", var: "--s1" },
   { types: ["unload", "role_change"], label: "Unload", var: "--s2" },
   { types: ["service"], label: "Service", var: "--s5" },
-  { types: ["lid_open"], label: "Lid opened", var: "--s4" },
+  { types: ["lid_open"], label: "Front lid opened", var: "--s4", front: true },
+  { types: ["lid_open"], label: "Back lid opened", var: "--muted", back: true },
 ];
 function eventMarkers() {
   const out = [];
-  data.events.forEach((e) => { const k = MARKER_KINDS.find((m) => m.types.includes(e.type));
+  data.events.forEach((e) => { const isBack = e.note === "back lid";
+    const k = MARKER_KINDS.find((m) => m.types.includes(e.type) && !(m.front && isBack) && !(m.back && !isBack));
     if (k && !(e.type === "role_change")) out.push({ t: sec(e.ts_utc), color: cssVar(k.var), label: k.label }); });
   return out;
 }
@@ -480,7 +482,7 @@ function renderSensors() {
     { label: "Inner shell", values: col("M", "ptc_ntc_c") }]);
   P("Blower PWM", "%", [{ label: "Blower", values: col("M", "blower_pwm_pct") }], { step: true,
     empty: "No blower values: only the harness, when it controls the machine, records the blower." });
-  P("Lid", "open or closed", [{ label: "Lid", values: col("M", "lid_closed") }], { step: true, yNames: ["open", "closed"] });
+  P("Lids", "open or closed", [{ label: "Front lid", values: col("M", "lid_closed") }, { label: "Back lid", values: col("M", "back_lid_closed") }], { step: true, yNames: ["open", "closed"] });
   const names = new Map(data.machine.map((m) => [sec(m.ts_utc), m.machine_state_name]));
   P("Machine state", "code", [{ label: "State", values: col("M", "machine_state"), fmt: (v, di) => `${v} ${names.get(xs[di]) || ""}` }], { step: true });
 }
@@ -706,10 +708,13 @@ function renderHealth() {
   const mm = data.machine;
   const ptcOk = share(mm, (m) => (m.valid_mask || "")[0] === "o");
   const lidOpen = share(mm, (m) => m.lid_closed === false);
+  const backOpen = share(mm, (m) => m.back_lid_closed === false);
   const errs = mm.filter((m) => m.machine_state_name === "Error" || (m.error_code && Number(m.error_code) !== 0)).length;
   rows.push(["Machine", "Blower PTC sensor valid", ptcOk == null ? "–" : `${ptcOk} %`, ptcOk == null ? "" : status(ptcOk >= 98, ptcOk >= 90), ""]);
-  rows.push(["Machine", "Lid reads open", lidOpen == null ? "–" : `${lidOpen} %`, lidOpen == null ? "" : status(lidOpen <= 10, lidOpen <= 40),
-    "Mixing is blocked while the lid reads open"]);
+  rows.push(["Machine", "Front lid reads open", lidOpen == null ? "–" : `${lidOpen} %`, lidOpen == null ? "" : status(lidOpen <= 10, lidOpen <= 40),
+    "Mixing waits while either lid reads open; feeds go in at the front"]);
+  rows.push(["Machine", "Back lid reads open", backOpen == null ? "–" : `${backOpen} %`, backOpen == null ? "" : status(backOpen <= 10, backOpen <= 40),
+    "Mixing waits while either lid reads open"]);
   rows.push(["Machine", "Readings in an error state", `${errs}`, status(errs === 0, errs < 5), "From the machine's own state and error code"]);
   $("health-table").innerHTML = `<thead><tr><th>Area</th><th>Check</th><th class="num">Value</th><th>Status</th><th>Note</th></tr></thead><tbody>` +
     rows.map((r) => `<tr><td>${esc(r[0])}</td><td>${esc(r[1])}</td><td class="num">${esc(r[2])}</td><td>${r[3]}</td><td class="wrap">${esc(r[4])}</td></tr>`).join("") + "</tbody>";
