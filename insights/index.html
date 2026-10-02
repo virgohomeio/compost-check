@@ -121,6 +121,7 @@ table.grid td.cell { text-align: center; min-width: 54px; }
 dl.kv { display: grid; grid-template-columns: max-content 1fr; gap: 6px 14px; margin: 0; font-size: 14px; }
 dl.kv dt { color: var(--muted); }
 dl.kv dd { margin: 0; font-variant-numeric: tabular-nums; overflow-wrap: anywhere; }
+#weekly { display: grid; gap: 12px; }
 .cards2 { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 300px), 1fr)); gap: 12px; }
 .box { border: 1px solid var(--line); border-radius: 8px; padding: 12px; display: grid; gap: 10px; }
 .box h3 { margin: 0; font-size: 15px; display: flex; gap: 8px; align-items: center; }
@@ -378,7 +379,22 @@ async function reload() {
 
 // ---------------------------------------------------------------- charts
 let plots = [];
-function destroyPlots() { plots.forEach((p) => p.destroy()); plots = []; }
+let pending = [];
+function destroyPlots() { plots.forEach((p) => p.destroy()); plots = []; pending = []; }
+// Charts are drawn one frame after their cards are placed: a card measured
+// while it was still alone in its row would keep that full width after the
+// row splits into columns, and lose its right half.
+let flushQueued = false;
+function queuePlot(build) {
+  pending.push(build);
+  if (flushQueued) return;
+  flushQueued = true;
+  requestAnimationFrame(() => {
+    flushQueued = false;
+    const todo = pending; pending = [];
+    todo.forEach((b) => { try { b(); } catch (e) { /* one bad chart must not stop the rest */ } });
+  });
+}
 const COLORS = () => ["--s1", "--s2", "--s3", "--s4", "--s5"].map(cssVar);
 
 /* panel: {title, unit, series:[{label, values}], xs, step, binary, yNames, markers} */
@@ -396,13 +412,15 @@ function timeChart(box, panel) {
   if (panel.yNames) { const n = panel.yNames; yAxis.splits = () => n.map((_, i) => i); yAxis.values = (u, v) => v.map((x) => n[x] ?? ""); }
   else yAxis.values = (u, vals) => vals.map((v) => v == null ? "" : String(+v.toPrecision(3)));
   const markers = panel.markers || [];
+  queuePlot(() => {
+  if (!plotBox.isConnected) return;
   const opts = {
     width: Math.max(240, plotBox.clientWidth), height: panel.height || 200,
     cursor: { drag: { x: true, y: false } },
     scales: { x: { time: true }, y: panel.yNames ? { range: [-0.3, panel.yNames.length - 0.7] } : (panel.yRange ? { range: panel.yRange } : {}) },
     axes: [{ stroke: ink, grid: { stroke: grid, width: 1 }, ticks: { stroke: grid } }, yAxis],
     series: [{ label: "Time", value: (u, v) => v == null ? "–" : when(v) }].concat(panel.series.map((s, i) => ({
-      label: s.label, stroke: s.color || colors[i % 5], width: 2, spanGaps: !!panel.spanGaps,
+      label: s.label, stroke: s.color || colors[i % 5], width: s.dash ? 1.5 : 2, dash: s.dash, spanGaps: !!panel.spanGaps,
       points: { show: !!panel.points, size: 7, fill: s.color || colors[i % 5] },
       paths: panel.step ? uPlot.paths.stepped({ align: 1 }) : (panel.points && !panel.lines ? () => null : undefined),
       value: (u, v, si, di) => v == null ? "–" : panel.yNames ? (panel.yNames[v] ?? v) : (s.fmt ? s.fmt(v, di) : String(+v.toFixed(3))),
@@ -418,6 +436,7 @@ function timeChart(box, panel) {
     }] } : {},
   };
   plots.push(new uPlot(opts, [panel.xs].concat(panel.series.map((s) => s.values)), plotBox));
+  });
 }
 
 function tickTable() {
@@ -603,7 +622,7 @@ async function renderProgress() {
   timeChart(box, { title: "Scores per day", unit: "count; plan is 2 a day", xs: dayX, points: true, lines: true,
     empty: "No scores in this time range. Scores come from the Compost Check pages.",
     series: ["L", "R"].map((c) => ({ label: `Chamber ${c}`, values: days.map((d) => obs.filter((o) => o.chamber === c && !o.missed && o.ts_utc.startsWith(d)).length) }))
-      .concat([{ label: "Plan", values: days.map(() => 2), color: cssVar("--muted") }]) });
+      .concat([{ label: "Plan", values: days.map(() => 2), color: cssVar("--muted"), dash: [6, 4] }]) });
   const ageX = dec.map((d) => sec(d.ts_utc));
   timeChart(box, { title: "Age of the last score at each decision", unit: "h; over 30 h counts as no score", xs: ageX, points: true,
     empty: "No decisions in this time range.",
