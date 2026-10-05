@@ -159,7 +159,7 @@ button:focus-visible, select:focus-visible, input:focus-visible, a:focus-visible
       <select id="serial"></select>
       <input id="serial-other" type="text" placeholder="LL01-…" size="16" hidden>
       <div class="seg" id="range" role="group" aria-label="Time range">
-        <button type="button" data-v="6">6 h</button><button type="button" data-v="24">24 h</button><button type="button" data-v="72">3 days</button><button type="button" data-v="168">1 week</button><button type="button" data-v="0">All</button>
+        <button type="button" data-v="0.5">30 min</button><button type="button" data-v="1">1 h</button><button type="button" data-v="6">6 h</button><button type="button" data-v="24">24 h</button><button type="button" data-v="72">3 days</button><button type="button" data-v="168">1 week</button><button type="button" data-v="0">All</button>
       </div>
       <button type="button" class="print" id="refresh">Refresh</button>
     </div>
@@ -314,7 +314,7 @@ $("serial").addEventListener("change", () => { $("serial-other").hidden = $("ser
 $("serial-other").addEventListener("change", () => { store("p150-serial", serial()); reload(); });
 
 let hours = Number(store("p150-insights-range") ?? 72);
-if (![6, 24, 72, 168, 0].includes(hours)) hours = 72;
+if (![0.5, 1, 6, 24, 72, 168, 0].includes(hours)) hours = 72;
 function markRange() { document.querySelectorAll("#range button").forEach((b) => b.setAttribute("aria-pressed", String(Number(b.dataset.v) === hours))); }
 markRange();
 document.querySelectorAll("#range button").forEach((b) => b.addEventListener("click", () => {
@@ -378,7 +378,7 @@ async function reload() {
     if (mine !== loading) return;
     data = d;
     const n = d.readings.length + d.machine.length + d.decisions.length + d.events.length + d.observations.length;
-    $("status-line").textContent = `${serial()} · ${hours ? `last ${hours >= 24 ? hours / 24 + " day" + (hours > 24 ? "s" : "") : hours + " h"}` : "all time"} · ${n} rows · updated ${new Date().toLocaleTimeString([], { hour: "2-digit", minute: "2-digit", second: "2-digit" })}`;
+    $("status-line").textContent = `${serial()} · ${hours ? `last ${hours >= 24 ? hours / 24 + " day" + (hours > 24 ? "s" : "") : hours < 1 ? Math.round(hours * 60) + " min" : hours + " h"}` : "all time"} · ${n} rows · updated ${new Date().toLocaleTimeString([], { hour: "2-digit", minute: "2-digit", second: "2-digit" })}`;
     render();
   } catch (e) {
     $("status-line").textContent = "Could not load the data. Check the connection and press Refresh.";
