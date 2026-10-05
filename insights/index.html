@@ -242,7 +242,7 @@ button:focus-visible, select:focus-visible, input:focus-visible, a:focus-visible
   <!-- ===================== Health ===================== -->
   <section class="card" data-panel="health" hidden>
     <h2>Data health</h2>
-    <p class="hint">How complete and believable the data in the time range is. A reading is expected every 42 seconds while something is logging the machine.</p>
+    <p class="hint">How complete and believable the data is. Status is judged on the latest logging session, so a problem fixed since is not still flagged; the whole time range is shown beside it. A reading is expected every 42 seconds while something is logging the machine.</p>
     <div class="scroll"><table class="t" id="health-table"></table></div>
   </section>
   <section class="card" data-panel="health" hidden>
@@ -688,39 +688,64 @@ function scatterCard(box, graded) {
 
 // ---------------------------------------------------------------- health
 function renderHealth() {
-  const span = data.from ? Date.now() / 1000 - data.from
-    : (data.machine.length ? Date.now() / 1000 - sec(data.machine[0].ts_utc) : 0);
-  const expected = Math.max(1, Math.floor(span / TICK_S));
-  const ticks = data.machine.length;
-  const last = data.machine.length ? sec(data.machine[data.machine.length - 1].ts_utc) : null;
+  // Judge the data on the latest logging session, so a sensor fixed an hour
+  // ago is not still marked bad by older rows in the window. A session is a
+  // run of machine readings with no break longer than three ticks.
+  const mm = data.machine;
+  const sessions = [];
+  mm.forEach((m) => {
+    const t = sec(m.ts_utc), cur = sessions[sessions.length - 1];
+    if (cur && t - cur.end <= 3 * TICK_S) { cur.end = t; cur.n++; } else sessions.push({ start: t, end: t, n: 1 });
+  });
+  const now = Date.now() / 1000;
+  const latest = sessions[sessions.length - 1] || null;
+  const live = latest && now - latest.end < 3 * TICK_S;          // still logging
+  const sessionLen = (x, isLast) => ((isLast && live ? now : x.end) - x.start) + TICK_S;
+  const expectedIn = (x, isLast) => Math.max(1, Math.round(sessionLen(x, isLast) / TICK_S));
+  const loggedS = sessions.reduce((a, x, i) => a + sessionLen(x, i === sessions.length - 1), 0);
+  const rangeS = data.from ? now - data.from : (mm.length ? now - sec(mm[0].ts_utc) : 0);
+  const inLatest = (r) => latest && sec(r.ts_utc) >= latest.start;
   const gaps = data.events.filter((e) => e.type === "alarm" && /^gap /.test(e.note || ""));
   const rows = [];
   const status = (good, ok) => good ? pill("ok", "ok") : ok ? pill("check", "warn") : pill("problem", "bad");
   const share = (arr, f) => arr.length ? pct(arr.filter(f).length, arr.length) : null;
-  const lastAgo = last ? Date.now() / 1000 - last : Infinity;
-  rows.push(["Logging", "Time since the last reading", last ? ago(last) : "no data", status(lastAgo < 180, lastAgo < 900),
-    "A reading every 42 s while the harness or collect.py runs"]);
-  rows.push(["Logging", "Readings received vs expected", `${ticks} of ~${expected} (${pct(ticks, expected)} %)`,
-    status(pct(ticks, expected) >= 90, pct(ticks, expected) >= 50), `${gaps.length} recorded gap(s); low means the logger was off for part of the range`]);
+  const fmt = (v) => v == null ? "–" : `${v} %`;
+  // [area, check, latest session, whole range, status, note]; status follows the latest session
+  const add = (area, check, cur, all, st, note) => rows.push([area, check, cur, all, st, note]);
+  const last = mm.length ? sec(mm[mm.length - 1].ts_utc) : null;
+  const lastAgo = last ? now - last : Infinity;
+  add("Logging", "Time since the last reading", last ? ago(last) : "no data", "", status(lastAgo < 180, lastAgo < 900),
+    "A reading every 42 s while the harness or collect.py runs");
+  if (latest) {
+    const e = expectedIn(latest, true), allE = Math.max(1, Math.round(loggedS / TICK_S));
+    add("Logging", "Readings received vs expected", `${latest.n} of ${e} (${pct(latest.n, e)} %)`,
+      `${mm.length} of ${allE} (${pct(mm.length, allE)} %)`, status(pct(latest.n, e) >= 90, pct(latest.n, e) >= 50),
+      `Counted only while a logger ran: ${sessions.length} session(s), ${Math.round(loggedS / 60)} min of the ${Math.round(rangeS / 3600)} h shown. ${gaps.length} recorded gap(s)`);
+  } else {
+    add("Logging", "Readings received vs expected", "no data", "", status(false, false), "Nothing logged in this time range");
+  }
   ["L", "R"].forEach((c) => {
-    const rr = data.readings.filter((r) => r.chamber === c);
-    const v = (i) => share(rr, (r) => (r.valid_mask || "")[i] === "o");
-    const b = v(0), p = v(1), mo = v(2), sat = share(rr, (r) => r.bme_gas_saturated === true);
-    rows.push([`Chamber ${c}`, "BME688 readings valid", b == null ? "–" : `${b} %`, b == null ? "" : status(b >= 98, b >= 90), "Temperature, humidity, pressure, gas"]);
-    rows.push([`Chamber ${c}`, "Gas sensor stuck at its ceiling", sat == null ? "–" : `${sat} %`, sat == null ? "" : status(sat <= 5, sat <= 30), "102,400,000 Ω means no gas reading"]);
-    rows.push([`Chamber ${c}`, "Pad heater sensor valid", p == null ? "–" : `${p} %`, p == null ? "" : status(p >= 98, p >= 90), ""]);
-    rows.push([`Chamber ${c}`, "Mixer current readable", mo == null ? "–" : `${mo} %`, mo == null ? "" : status(mo >= 98, mo >= 90), ""]);
+    const all = data.readings.filter((r) => r.chamber === c), cur = all.filter(inLatest);
+    const v = (arr, i) => share(arr, (r) => (r.valid_mask || "")[i] === "o");
+    const sat = (arr) => share(arr, (r) => r.bme_gas_saturated === true);
+    const line = (check, fc, fa, good, ok, note) => add(`Chamber ${c}`, check, fmt(fc), fmt(fa), fc == null ? "" : status(good(fc), ok(fc)), note);
+    line("BME688 readings valid", v(cur, 0), v(all, 0), (x) => x >= 98, (x) => x >= 90, "Temperature, humidity, pressure, gas");
+    line("Gas sensor stuck at its ceiling", sat(cur), sat(all), (x) => x <= 5, (x) => x <= 30, "102,400,000 Ω means no gas reading");
+    line("Pad heater sensor valid", v(cur, 1), v(all, 1), (x) => x >= 98, (x) => x >= 90, "");
+    line("Mixer current readable", v(cur, 2), v(all, 2), (x) => x >= 98, (x) => x >= 90, "");
   });
-  const mm = data.machine;
-  const ptcOk = share(mm, (m) => (m.valid_mask || "")[0] === "o");
-  const lidOpen = share(mm, (m) => m.lid_closed === false);
-  const errs = mm.filter((m) => m.machine_state_name === "Error" || (m.error_code && Number(m.error_code) !== 0)).length;
-  rows.push(["Machine", "Blower PTC sensor valid", ptcOk == null ? "–" : `${ptcOk} %`, ptcOk == null ? "" : status(ptcOk >= 98, ptcOk >= 90), ""]);
-  rows.push(["Machine", "Front lid reads open", lidOpen == null ? "–" : `${lidOpen} %`, lidOpen == null ? "" : status(lidOpen <= 10, lidOpen <= 40),
-    "Mixing waits while the lid reads open; the front lid is the only lid switch"]);
-  rows.push(["Machine", "Readings in an error state", `${errs}`, status(errs === 0, errs < 5), "From the machine's own state and error code"]);
-  $("health-table").innerHTML = `<thead><tr><th>Area</th><th>Check</th><th class="num">Value</th><th>Status</th><th>Note</th></tr></thead><tbody>` +
-    rows.map((r) => `<tr><td>${esc(r[0])}</td><td>${esc(r[1])}</td><td class="num">${esc(r[2])}</td><td>${r[3]}</td><td class="wrap">${esc(r[4])}</td></tr>`).join("") + "</tbody>";
+  const cur = mm.filter(inLatest);
+  const ptc = (arr) => share(arr, (m) => (m.valid_mask || "")[0] === "o");
+  const lid = (arr) => share(arr, (m) => m.lid_closed === false);
+  const errs = (arr) => arr.filter((m) => m.machine_state_name === "Error" || (m.error_code && Number(m.error_code) !== 0)).length;
+  const pc = ptc(cur), lc = lid(cur), ec = errs(cur);
+  add("Machine", "Blower PTC sensor valid", fmt(pc), fmt(ptc(mm)), pc == null ? "" : status(pc >= 98, pc >= 90), "");
+  add("Machine", "Front lid reads open", fmt(lc), fmt(lid(mm)), lc == null ? "" : status(lc <= 10, lc <= 40),
+    "Mixing waits while the lid reads open; the front lid is the only lid switch");
+  add("Machine", "Readings in an error state", `${ec}`, `${errs(mm)}`, status(ec === 0, ec < 5), "From the machine's own state and error code");
+  const since = latest ? `since ${when(latest.start)}${live ? ", still running" : ""}` : "";
+  $("health-table").innerHTML = `<thead><tr><th>Area</th><th>Check</th><th class="num">Latest session<br><span class="hint">${esc(since)}</span></th><th class="num">Whole range</th><th>Status</th><th>Note</th></tr></thead><tbody>` +
+    rows.map((r) => `<tr><td>${esc(r[0])}</td><td>${esc(r[1])}</td><td class="num">${esc(r[2])}</td><td class="num">${esc(r[3])}</td><td>${r[4]}</td><td class="wrap">${esc(r[5])}</td></tr>`).join("") + "</tbody>";
 
   // 15. alarms and safety
   const SAFETY = ["alarm", "guardrail", "power_cycle"];
