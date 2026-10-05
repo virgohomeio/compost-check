@@ -454,8 +454,16 @@ function tickTable() {
   const at = (iso) => { const t = sec(iso); if (!ticks.has(t)) ticks.set(t, { L: null, R: null, M: null }); return ticks.get(t); };
   data.readings.forEach((r) => { at(r.ts_utc)[r.chamber] = r; });
   data.machine.forEach((m) => { at(m.ts_utc).M = m; });
-  const xs = [...ticks.keys()].sort((a, b) => a - b);
-  const col = (src, c, f) => xs.map((t) => { const r = ticks.get(t)[src]; const v = r ? r[c] : null;
+  // Where no reading came for more than three ticks, add one empty point just
+  // after the last reading so the lines break there instead of drawing a
+  // straight line across hours with no data.
+  const xs = [];
+  [...ticks.keys()].sort((a, b) => a - b).forEach((t) => {
+    const prev = xs[xs.length - 1];
+    if (prev != null && t - prev > 3 * TICK_S) xs.push(prev + TICK_S);
+    xs.push(t);
+  });
+  const col = (src, c, f) => xs.map((t) => { const k = ticks.get(t); const r = k ? k[src] : null; const v = r ? r[c] : null;
     return v == null ? null : f ? f(v) : (typeof v === "boolean" ? (v ? 1 : 0) : Number(v)); });
   return { xs, col };
 }
