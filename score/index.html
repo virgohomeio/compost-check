@@ -620,7 +620,7 @@ $("save").addEventListener("click", async () => {
 
 // ---- reading back
 async function get(path) {
-  const res = await fetch(`${SUPABASE_URL}/rest/v1/${path}`, { headers: HEADERS });
+  const res = await fetch(`${SUPABASE_URL}/rest/v1/${path}`, { headers: HEADERS, cache: "no-store" });
   if (!res.ok) throw new Error(String(res.status));
   return res.json();
 }

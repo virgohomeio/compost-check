@@ -334,7 +334,7 @@ document.querySelectorAll("#tabs button").forEach((b) => b.addEventListener("cli
 
 // ---------------------------------------------------------------- data
 async function get(path, extra) {
-  const res = await fetch(`${SUPABASE_URL}/rest/v1/${path}`, { headers: Object.assign({}, HEADERS, extra || {}) });
+  const res = await fetch(`${SUPABASE_URL}/rest/v1/${path}`, { headers: Object.assign({}, HEADERS, extra || {}), cache: "no-store" });
   if (!res.ok) throw new Error(`${res.status}`);
   return res;
 }
@@ -370,16 +370,20 @@ async function load() {
 }
 async function reload() {
   $("status-line").textContent = "Loading…";
+  const btn = $("refresh");
+  btn.disabled = true; btn.textContent = "Refreshing…";
   const mine = loading = load();
   try {
     const d = await mine;
     if (mine !== loading) return;
     data = d;
     const n = d.readings.length + d.machine.length + d.decisions.length + d.events.length + d.observations.length;
-    $("status-line").textContent = `${serial()} · ${hours ? `last ${hours >= 24 ? hours / 24 + " day" + (hours > 24 ? "s" : "") : hours + " h"}` : "all time"} · ${n} rows · updated ${new Date().toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })}`;
+    $("status-line").textContent = `${serial()} · ${hours ? `last ${hours >= 24 ? hours / 24 + " day" + (hours > 24 ? "s" : "") : hours + " h"}` : "all time"} · ${n} rows · updated ${new Date().toLocaleTimeString([], { hour: "2-digit", minute: "2-digit", second: "2-digit" })}`;
     render();
   } catch (e) {
     $("status-line").textContent = "Could not load the data. Check the connection and press Refresh.";
+  } finally {
+    if (mine === loading) { btn.disabled = false; btn.textContent = "Refresh"; }
   }
 }
 
