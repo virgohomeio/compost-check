@@ -718,8 +718,19 @@ function renderHealth() {
   const add = (area, check, cur, all, st, note) => rows.push([area, check, cur, all, st, note]);
   const last = mm.length ? sec(mm[mm.length - 1].ts_utc) : null;
   const lastAgo = last ? now - last : Infinity;
-  add("Logging", "Time since the last reading", last ? ago(last) : "no data", "", status(lastAgo < 180, lastAgo < 900),
-    "A reading every 42 s while the harness or collect.py runs");
+  // A logger stopped on purpose (Ctrl+C, --hours, collect.py's end) records a
+  // clean stop; then silence is expected, not a warning. Crashes record
+  // "stop: crash" or nothing at all, and stay amber or red.
+  const cleanStop = last && data.events.some((e) => e.type === "power_cycle" && sec(e.ts_utc) >= last - TICK_S
+    && /stop: stopped|stop, run_id/.test(e.note || ""));
+  if (last && lastAgo >= 180 && cleanStop) {
+    add("Logging", "Time since the last reading", ago(last), "", pill("stopped", "plain"),
+      "The logger was stopped on purpose; start it again to resume readings");
+  } else {
+    add("Logging", "Time since the last reading", last ? ago(last) : "no data", "", status(lastAgo < 180, lastAgo < 900),
+      lastAgo >= 180 ? "No reading for a while and no clean stop: the logger may have crashed, lost the cable, or the laptop slept"
+        : "A reading every 42 s while the harness or collect.py runs");
+  }
   if (latest) {
     const e = expectedIn(latest, true), allE = Math.max(1, Math.round(loggedS / TICK_S));
     add("Logging", "Readings received vs expected", `${latest.n} of ${e} (${pct(latest.n, e)} %)`,
