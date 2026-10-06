@@ -1,0 +1,489 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Compost Study Run Guide</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Archivo+Narrow:wght@500;600;700&family=Public+Sans:ital,wght@0,400;0,600;0,700;1,400&family=JetBrains+Mono:wght@400;600&display=swap">
+<style>
+/* Layout: a bench manual. One reading column; phases as labelled bands; numbered steps because order matters; commands as copyable blocks. */
+:root {
+  --paper: #f3f5f2;
+  --sheet: #ffffff;
+  --ink: #1d2420;
+  --ink-2: #4a554e;
+  --rule: #d5dcd6;
+  --moss: #3f6b4a;
+  --moss-soft: #e3ece4;
+  --code-bg: #1f2622;
+  --code-ink: #e6ede7;
+  --warn: #8a5a00;
+  --warn-soft: #fbefd6;
+  --stop: #9b2c2c;
+  --stop-soft: #f8e1e1;
+  --skip: #1f5fbf;
+  --skip-soft: #e3edfb;
+  --f-display: "Archivo Narrow", "Arial Narrow", system-ui, sans-serif;
+  --f-body: "Public Sans", system-ui, -apple-system, "Segoe UI", sans-serif;
+  --f-mono: "JetBrains Mono", ui-monospace, Consolas, monospace;
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    color-scheme: dark;
+    --paper: #141916; --sheet: #1b211d; --ink: #e3e9e4; --ink-2: #a5b0a8;
+    --rule: #2f3832; --moss: #8cc29a; --moss-soft: #22322a;
+    --code-bg: #0e1210; --code-ink: #dfe7e1;
+    --warn: #e8b85a; --warn-soft: #33290f; --stop: #f08a8a; --stop-soft: #3a1c1c; --skip: #8ab4f8; --skip-soft: #17263d;
+  }
+}
+:root[data-theme="dark"] {
+  color-scheme: dark;
+  --paper: #141916; --sheet: #1b211d; --ink: #e3e9e4; --ink-2: #a5b0a8;
+  --rule: #2f3832; --moss: #8cc29a; --moss-soft: #22322a;
+  --code-bg: #0e1210; --code-ink: #dfe7e1;
+  --warn: #e8b85a; --warn-soft: #33290f; --stop: #f08a8a; --stop-soft: #3a1c1c; --skip: #8ab4f8; --skip-soft: #17263d;
+}
+
+body { margin: 0; background: var(--paper); color: var(--ink); font: 15.5px/1.6 var(--f-body); padding-inline: 20px; }
+.wrap { max-width: 760px; margin: 0 auto; padding-block: 40px 80px; display: grid; gap: 40px; }
+h1, h2, h3 { font-family: var(--f-display); text-wrap: balance; margin: 0; line-height: 1.15; }
+h1 { font-size: 2.3rem; font-weight: 700; letter-spacing: .005em; }
+h2 { font-size: 1.45rem; font-weight: 600; }
+h3 { font-size: 1.12rem; font-weight: 600; }
+p { margin: 0; }
+a { color: var(--moss); text-underline-offset: 3px; }
+a:focus-visible, button:focus-visible { outline: 2px solid var(--moss); outline-offset: 2px; }
+code { font-family: var(--f-mono); font-size: .86em; background: var(--moss-soft); padding: 1px 5px; border-radius: 3px; }
+.eyebrow { font: 600 .74rem/1 var(--f-mono); letter-spacing: .12em; text-transform: uppercase; color: var(--moss); }
+
+header { display: grid; gap: 14px; }
+header .lede { color: var(--ink-2); max-width: 62ch; }
+.facts { display: grid; grid-template-columns: repeat(auto-fit, minmax(160px, 1fr)); gap: 1px; background: var(--rule); border: 1px solid var(--rule); border-radius: 6px; overflow: hidden; }
+.facts div { background: var(--sheet); padding: 10px 14px; display: grid; gap: 2px; }
+.facts dt { font: 600 .7rem/1.2 var(--f-mono); letter-spacing: .1em; text-transform: uppercase; color: var(--ink-2); }
+.facts dd { margin: 0; font: 600 .9rem/1.3 var(--f-mono); font-variant-numeric: tabular-nums; overflow-wrap: anywhere; }
+
+.links { display: flex; flex-wrap: wrap; gap: 8px; }
+.links a { font: 600 .85rem/1 var(--f-body); text-decoration: none; border: 1px solid var(--moss); border-radius: 999px; padding: 7px 12px; }
+.links a:hover { background: var(--moss-soft); }
+
+.note { border-left: 3px solid var(--warn); background: var(--warn-soft); padding: 12px 16px; border-radius: 0 6px 6px 0; display: grid; gap: 6px; }
+.note.stop { border-color: var(--stop); background: var(--stop-soft); }
+.note strong { color: var(--ink); }
+
+.phase { display: grid; gap: 18px; }
+.phase-head { display: grid; gap: 6px; border-top: 2px solid var(--ink); padding-top: 12px; }
+.phase-head p { color: var(--ink-2); }
+
+ol.steps { list-style: none; margin: 0; padding: 0; display: grid; gap: 22px; counter-reset: none; }
+.step { display: grid; grid-template-columns: 2.4rem 1fr; gap: 0 14px; }
+.step .n { font: 700 1.25rem/1.4 var(--f-display); color: var(--moss); font-variant-numeric: tabular-nums; }
+.step .body { display: grid; gap: 10px; min-width: 0; }
+.where { font: .78rem/1.3 var(--f-mono); color: var(--ink-2); }
+.where b { color: var(--ink); font-weight: 600; }
+.step ul { margin: 0; padding-left: 1.1rem; display: grid; gap: 4px; }
+.tag { font: 600 .68rem/1 var(--f-mono); letter-spacing: .08em; text-transform: uppercase; padding: 3px 6px; border-radius: 3px; vertical-align: 2px; margin-left: 6px; }
+.tag.once { background: var(--moss-soft); color: var(--moss); }
+.tag.blocked { background: var(--stop-soft); color: var(--stop); }
+.tag.opt { background: var(--warn-soft); color: var(--warn); }
+.ph { font-style: italic; }
+.skip { font-size: .9rem; color: var(--ink); background: var(--skip-soft); border-left: 4px solid var(--skip); border-radius: 0 6px 6px 0; padding: 8px 12px; }
+.skip b { display: inline-block; color: var(--sheet); background: var(--skip); font-family: var(--f-mono); font-size: .7rem; letter-spacing: .1em; text-transform: uppercase; padding: 3px 7px; border-radius: 3px; margin-right: 8px; }
+
+.cmd { position: relative; background: var(--code-bg); color: var(--code-ink); border-radius: 6px; }
+.cmd pre { margin: 0; padding: 12px 64px 12px 14px; overflow-x: auto; font: .82rem/1.55 var(--f-mono); white-space: pre; }
+.cmd button { position: absolute; top: 7px; right: 7px; font: 600 .7rem/1 var(--f-mono); letter-spacing: .06em; text-transform: uppercase; color: var(--code-ink); background: transparent; border: 1px solid #ffffff40; border-radius: 4px; padding: 5px 8px; cursor: pointer; }
+.cmd button:hover { background: #ffffff18; }
+
+.table-wrap { overflow-x: auto; border: 1px solid var(--rule); border-radius: 6px; background: var(--sheet); }
+table { border-collapse: collapse; width: 100%; font-size: .9rem; }
+th, td { text-align: left; vertical-align: top; padding: 9px 12px; border-bottom: 1px solid var(--rule); }
+th { font: 600 .72rem/1.2 var(--f-mono); letter-spacing: .08em; text-transform: uppercase; color: var(--ink-2); background: var(--paper); }
+tr:last-child td { border-bottom: 0; }
+
+.check { list-style: none; margin: 0; padding: 0; display: grid; gap: 8px; }
+.check li { display: grid; grid-template-columns: 1.2rem 1fr; gap: 10px; align-items: start; }
+.box { width: 14px; height: 14px; border: 2px solid var(--ink-2); border-radius: 2px; margin-top: 4px; }
+.check .done .box { background: var(--moss); border-color: var(--moss); }
+.check .open .box { border-color: var(--stop); }
+
+footer { color: var(--ink-2); font-size: .82rem; border-top: 1px solid var(--rule); padding-top: 14px; }
+@media (max-width: 480px) { h1 { font-size: 1.9rem; } .step { grid-template-columns: 1.8rem 1fr; gap: 0 10px; } }
+@media (prefers-reduced-motion: reduce) { * { transition: none !important; } }
+
+/* page bar shared with the other study pages */
+nav.pages { max-width: 760px; margin: 0 auto; padding-top: 16px; display: flex; flex-wrap: wrap; gap: 4px; font: 14px var(--f-body); }
+nav.pages a { padding: 5px 11px; border-radius: 999px; color: var(--ink-2); text-decoration: none; border: 1px solid transparent; }
+nav.pages a:hover { color: var(--ink); border-color: var(--rule); }
+nav.pages a[aria-current="page"] { background: var(--moss); color: var(--sheet); font-weight: 600; }
+nav.pages a:focus-visible { outline: 2px solid var(--moss); outline-offset: 2px; }
+</style>
+</head>
+<body>
+<nav class="pages" aria-label="Pages"><a href="../">Home</a><a href="../simple/">Quick score</a><a href="../score/">Full check</a><a href="../insights/">Insights</a><a href="../guide/" aria-current="page">Guide</a></nav>
+<div class="wrap">
+
+<header>
+  <span class="eyebrow">Compost study · run guide</span>
+  <h1>Running a composter in the study</h1>
+  <p class="lede">From a fresh laptop to a machine running the study, then the daily routine, then training. It works for any machine and any laptop. Do the steps in order. Every command is for PowerShell on Windows, run from the <b>RND_AI_DynamicAlgo</b> folder unless the step says otherwise.</p>
+  <dl class="facts">
+    <div><dt>Decisions</dt><dd>every 4 h, per chamber</dd></div>
+    <div><dt>Readings</dt><dd>every 42 s</dd></div>
+    <div><dt>Actions in use</dt><dd>A1 and A3 (of A0–A4)</dd></div>
+    <div><dt>Policy now</dt><dd>random, 50 % each</dd></div>
+  </dl>
+  <div class="links">
+    <a href="https://virgohomeio.github.io/compost-check/simple/" target="_blank" rel="noopener">Quick score</a>
+    <a href="https://virgohomeio.github.io/compost-check/score/" target="_blank" rel="noopener">Full compost check</a>
+    <a href="https://virgohomeio.github.io/compost-check/insights/" target="_blank" rel="noopener">Insights</a>
+  </div>
+  <p class="where">In the commands, replace <b class="ph">&lt;PORT&gt;</b> with your machine's port and <b class="ph">&lt;SERIAL&gt;</b> with its serial number. Step 2 and step 3 show you both.</p>
+</header>
+
+<!-- A -->
+<section class="phase">
+  <div class="phase-head">
+    <span class="eyebrow">Phase A</span>
+    <h2>Set up the laptop and the machine</h2>
+  </div>
+  <ol class="steps">
+    <li class="step"><span class="n">1</span><div class="body">
+      <h3>Install the Python packages <span class="tag once">once per laptop</span></h3>
+      <p class="skip"><b>Can skip</b>if this laptop already has them installed.</p>
+      <div class="cmd"><pre>pip install -r requirements-bench.txt
+pip install -r RL\requirements.txt</pre><button type="button">Copy</button></div>
+      <p>Python 3.11 or newer.</p>
+    </div></li>
+
+    <li class="step"><span class="n">2</span><div class="body">
+      <h3>Find the machine's port</h3>
+      <p class="skip"><b>Can skip</b>if you already know the port from an earlier run on this laptop.</p>
+      <p>Run this once with the machine unplugged and once with it plugged in by USB. The port that appears the second time is the machine, for example <code>COM5</code>.</p>
+      <div class="cmd"><pre>python -m serial.tools.list_ports -v</pre><button type="button">Copy</button></div>
+      <p>Only one program can use the port at a time, so close any other script first.</p>
+    </div></li>
+
+    <li class="step"><span class="n">3</span><div class="body">
+      <h3>Read the sensors for two minutes</h3>
+      <p class="skip"><b>Can skip</b>if this machine was checked before and you already have its serial.</p>
+      <div class="cmd"><pre>python read_sensors.py --port &lt;PORT&gt; --seconds 120 --no-upload</pre><button type="button">Copy</button></div>
+      <ul>
+        <li>The first line shows the machine's serial number. You need it in step 4.</li>
+        <li>This only reads, and <code>--no-upload</code> keeps the test out of the study data.</li>
+        <li>Temperatures and humidity should look sensible.</li>
+      </ul>
+    </div></li>
+
+    <li class="step"><span class="n">4</span><div class="body">
+      <h3>Write the machine's settings file <span class="tag once">once per laptop and machine</span></h3>
+      <p class="skip"><b>Can skip</b>if <code>machine.yaml</code> already exists on this laptop with this machine's serial and port.</p>
+      <p>If <code>RL\harness\config\machine.yaml</code> does not exist yet, copy it from the example:</p>
+      <div class="cmd"><pre>Copy-Item RL\harness\config\machine.example.yaml RL\harness\config\machine.yaml</pre><button type="button">Copy</button></div>
+      <p>Open <code>machine.yaml</code> and set two lines:</p>
+      <div class="cmd"><pre>serial: &lt;SERIAL&gt;
+  uart: {port: &lt;PORT&gt;, baud: 115200, timeout_s: 0.5}</pre><button type="button">Copy</button></div>
+      <ul>
+        <li>Leave <code>seed</code> and <code>decision_times_local</code> as they are. Every laptop must use the same values so a run can move between laptops without breaking its cycle.</li>
+        <li>The harness checks the serial against the machine at start and refuses to run if they differ.</li>
+        <li>This file stays on the laptop. Git ignores it.</li>
+      </ul>
+    </div></li>
+
+    <li class="step"><span class="n">5</span><div class="body">
+      <h3>Unlock control on this laptop <span class="tag once">once per laptop</span></h3>
+      <p class="skip"><b>Can skip</b>if this laptop is already unlocked, or if you only do read-only runs.</p>
+      <p>An unlocked laptop is one allowed to drive a real machine. By default the harness only reads and refuses to control a machine. To unlock this laptop, in <code>RL\harness\config\actions.yaml</code> change <code>false</code> to <code>true</code>:</p>
+      <div class="cmd"><pre>placeholders_confirmed: true</pre><button type="button">Copy</button></div>
+      <ul>
+        <li>Only after the A1 and A3 bench check has shown that they match the firmware's light and heavy modes.</li>
+        <li>Never commit this change. The shared copy stays locked on purpose.</li>
+        <li>Not needed for read-only runs.</li>
+      </ul>
+    </div></li>
+
+    <li class="step"><span class="n">6</span><div class="body">
+      <h3>Clear out files from older versions</h3>
+      <p class="skip"><b>Can skip</b>on a laptop that never ran earlier tests. Running it anyway is harmless; it moves nothing.</p>
+      <p>Training refuses a data folder that mixes schema versions. The current version is <b>v4</b>, so this moves every study file of an older version into an archive folder. On a laptop that has never run a test it moves nothing.</p>
+      <div class="cmd"><pre>New-Item -ItemType Directory -Force RL\data\archive_old_versions | Out-Null
+Get-ChildItem RL\data\study -Recurse -File -Filter *.csv |
+  Where-Object { $_.Name -notmatch '_v4_' } |
+  Move-Item -Destination RL\data\archive_old_versions</pre><button type="button">Copy</button></div>
+    </div></li>
+
+    <li class="step"><span class="n">7</span><div class="body">
+      <h3>Run the tests</h3>
+      <p class="where">Run in <b>RND_AI_DynamicAlgo\RL</b></p>
+      <div class="cmd"><pre>cd RL
+python -m pytest harness\tests -q</pre><button type="button">Copy</button></div>
+      <p>Every test should pass. The only allowed failure is the lock test, on a laptop unlocked in step 5. Any other failure: stop and save the output.</p>
+    </div></li>
+  </ol>
+</section>
+
+<!-- B -->
+<section class="phase">
+  <div class="phase-head">
+    <span class="eyebrow">Phase B</span>
+    <h2>Load and start</h2>
+  </div>
+  <ol class="steps">
+    <li class="step"><span class="n">8</span><div class="body">
+      <h3>Check the machine</h3>
+      <p>Fit both chambers, empty, and close both lids. Then run the check. It confirms every sensor answers, every actuator responds under laptop control, and the data can be saved and uploaded.</p>
+      <p class="where">Run in <b>RND_AI_DynamicAlgo\RL</b></p>
+      <div class="cmd"><pre>python -m harness.tools.machine_check --config harness\config\machine.yaml</pre><button type="button">Copy</button></div>
+      <ul>
+        <li>The blower, intake fan, each pad heater, the PTC and each mixer run for a few seconds each. Stay beside the machine; the mixers turn.</li>
+        <li>Every line says PASS, WARN, FAIL or SKIP. It ends with <b>READY</b> or <b>NOT READY</b>.</li>
+        <li>Fix every FAIL before loading. WARN lines are worth a look but don't block a run.</li>
+        <li>The actuators are skipped while a lid is open.</li>
+        <li>A report is saved next to the machine's study files.</li>
+      </ul>
+      <div class="table-wrap"><table>
+        <thead><tr><th>FAIL line</th><th>What to do</th></tr></thead>
+        <tbody>
+          <tr><td>lid: front lid open</td><td>Close the lid, then run the check again.</td></tr>
+          <tr><td>chamber air (BME) answers with zeros</td><td>The chamber's air sensor is missing or not connected.</td></tr>
+          <tr><td>firmware hands over: STOP_PROCESS refused</td><td>The machine's firmware does not accept laptop control. It needs the PC-control firmware build.</td></tr>
+          <tr><td>mixer: no motor current</td><td>The mixer did not turn. Check its connector and the chamber seating.</td></tr>
+          <tr><td>Supabase not reachable</td><td>Check the internet connection. A run still saves locally and uploads later.</td></tr>
+        </tbody>
+      </table></div>
+    </div></li>
+
+    <li class="step"><span class="n">9</span><div class="body">
+      <h3>Fill both chambers and close both lids again</h3>
+      <p>Only the front lid has a switch. The mixers never run while it reads open.</p>
+    </div></li>
+
+    <li class="step"><span class="n">10</span><div class="body">
+      <h3>Start a read-only run for about 5 minutes</h3>
+      <p class="where">Run in <b>RND_AI_DynamicAlgo\RL</b></p>
+      <div class="cmd"><pre>python -m harness.run --config harness\config\machine.yaml --read-only</pre><button type="button">Copy</button></div>
+      <ul>
+        <li>The harness logs and decides but sends nothing to the machine. The firmware keeps running it.</li>
+        <li>Open <a href="https://virgohomeio.github.io/compost-check/insights/" target="_blank" rel="noopener">Insights</a> and pick your machine, or add <code>?machine=&lt;SERIAL&gt;</code> to the address. New readings should appear within a few minutes.</li>
+        <li>Decisions only appear at the 4-hourly times. You don't need to wait for one.</li>
+        <li>Press <strong>Ctrl+C once</strong> and wait for it to finish.</li>
+      </ul>
+    </div></li>
+
+    <li class="step"><span class="n">11</span><div class="body">
+      <h3>Start the real run</h3>
+      <p class="where">Run in <b>RND_AI_DynamicAlgo\RL</b></p>
+      <div class="cmd"><pre>python -m harness.run --config harness\config\machine.yaml</pre><button type="button">Copy</button></div>
+      <p>For a run you will leave, also start the watchdog in a <b>second</b> terminal. It is a separate safety process: if the harness stops answering, it switches everything off.</p>
+      <div class="cmd"><pre>python -m harness.run --config harness\config\machine.yaml --watchdog</pre><button type="button">Copy</button></div>
+      <ul>
+        <li>The harness pauses the firmware's program and runs the blower, heaters and mixers itself.</li>
+        <li>It picks one of A0 to A4 at random for each chamber at each 4-hourly decision.</li>
+        <li>Every row goes to the local CSV files and to Supabase.</li>
+        <li>Start it with this command, not <code>start_harness.bat</code>. The batch file refuses to start when any test fails, and on an unlocked laptop the lock test always fails.</li>
+      </ul>
+    </div></li>
+  </ol>
+</section>
+
+<!-- C -->
+<section class="phase">
+  <div class="phase-head">
+    <span class="eyebrow">Phase C</span>
+    <h2>Every day while it runs</h2>
+    <p>Your scores are the only thing the system learns from. A decision with no score in the 30 hours after it teaches nothing.</p>
+  </div>
+  <ol class="steps">
+    <li class="step"><span class="n">12</span><div class="body">
+      <h3>Score each chamber at least twice a day</h3>
+      <p>For example once in the morning and once in the evening. Use whichever way suits the moment. All three save to the same place and count the same.</p>
+      <div class="table-wrap"><table>
+        <thead><tr><th>Way</th><th>Use it for</th><th>What it records</th></tr></thead>
+        <tbody>
+          <tr><td><a href="https://virgohomeio.github.io/compost-check/simple/" target="_blank" rel="noopener">Quick score</a></td><td>The routine daily check</td><td>Squeeze, smell, or why it was missed, and a feed with an optional note</td></tr>
+          <tr><td><a href="https://virgohomeio.github.io/compost-check/score/" target="_blank" rel="noopener">Full compost check</a></td><td>A detailed check, or anything beyond a feed</td><td>Score with a photo, feed, water added, unload, service done, plus the machine's status, recent events and latest scores</td></tr>
+          <tr><td>Terminal questions (<code>score.py</code>)</td><td>When you are at the laptop and don't want to open a browser</td><td>Asks you questions in the PowerShell window, chamber L then R: scored or missed, squeeze 1 to 6, smell level 0 to 2, and if it smells, what kind and where. No photo and no feed. If the internet is down it keeps the score and sends it the next time you run it.</td></tr>
+        </tbody>
+      </table></div>
+      <div class="cmd"><pre>python score.py --observer &lt;YOUR NAME&gt;</pre><button type="button">Copy</button></div>
+      <div class="table-wrap"><table>
+        <thead><tr><th>Squeeze</th><th>What you see</th><th>Grade</th></tr></thead>
+        <tbody>
+          <tr><td>1</td><td>Crumbles, dry</td><td>−1</td></tr>
+          <tr><td>2</td><td>Holds briefly, then crumbles</td><td>−1</td></tr>
+          <tr><td>3</td><td>Holds its shape, no water</td><td>+1</td></tr>
+          <tr><td>4</td><td>A few drops</td><td>+1</td></tr>
+          <tr><td>5</td><td>Steady drips</td><td>+1</td></tr>
+          <tr><td>6</td><td>Water runs, slurry</td><td>−2</td></tr>
+          <tr><td>any, sour smell in the material</td><td>Gone wrong</td><td>−2</td></tr>
+        </tbody>
+      </table></div>
+    </div></li>
+
+    <li class="step"><span class="n">13</span><div class="body">
+      <h3>Check progress</h3>
+      <p>On the Progress tab of <a href="https://virgohomeio.github.io/compost-check/insights/" target="_blank" rel="noopener">Insights</a>: decisions and scores so far for each chamber, against the current stage targets.</p>
+    </div></li>
+  </ol>
+</section>
+
+<!-- D -->
+<section class="phase">
+  <div class="phase-head">
+    <span class="eyebrow">Reference</span>
+    <h2>The five actions</h2>
+    <p>Every 4 hours each chamber gets one action. A1 and A3 are the firmware's own light and heavy modes; A0, A2 and A4 are built from them. The blower always runs at 30 % power, and mixing starts after 20.7 min of idle time in every action.</p>
+  </div>
+  <div class="table-wrap"><table>
+    <thead><tr><th>Setting</th><th>A0 dormant</th><th>A1 light</th><th>A2 middle</th><th>A3 heavy</th><th>A4 boost</th></tr></thead>
+    <tbody>
+          <tr><td>Source</td><td>Built from light</td><td><b>Firmware light mode</b></td><td>Built: halfway</td><td><b>Firmware heavy mode</b></td><td>Built from heavy</td></tr>
+          <tr><td>Blower on / off</td><td>47.5 s / 930 s</td><td>47.5 s / 930 s</td><td>47.5 s / 329 s</td><td>47.5 s / 186 s</td><td>47.5 s / 71 s</td></tr>
+          <tr><td>Air time</td><td>4.9 %</td><td>4.9 %</td><td>12.6 %</td><td>20.3 %</td><td>40 %</td></tr>
+          <tr><td>Pad heaters</td><td><b>off</b></td><td>to 70 °C</td><td>to 70 °C</td><td>to 70 °C</td><td>to 70 °C</td></tr>
+          <tr><td>Blower PTC</td><td><b>off</b></td><td>off 62, on below 58 °C</td><td>off 62, on below 58 °C</td><td>off 62, on below 58 °C</td><td>off 62, on below 58 °C</td></tr>
+          <tr><td>Mix phases</td><td>12 s / 6 s</td><td>12 s / 6 s</td><td>18 s / 9 s</td><td>24 s / 12 s</td><td>24 s / 12 s</td></tr>
+          <tr><td>What it is for</td><td>Curing chamber: air on, heat off</td><td>Light household</td><td>Between the two modes</td><td>Heavy household</td><td>Big wet feed, or too wet</td></tr>
+    </tbody>
+  </table></div>
+  <div class="note"><p><strong>In use now: A1 and A3 only.</strong> <code>firmware_modes_only: true</code> in <code>machine.yaml</code> limits every decision to the two firmware modes, 50 % each, until further notice. A4 needs an odour smoke test of the enclosure before it is used.</p></div>
+  <p>Differences from the firmware: the PTC switches off at 62 °C instead of 70, because 70 overshot to 76–88 °C; heavy's mix phases are 24 s / 12 s where the firmware source uses 12 s / 6 s.</p>
+</section>
+
+<section class="phase">
+  <div class="phase-head">
+    <span class="eyebrow">During a run</span>
+    <h2>Checking a chamber</h2>
+    <p>There is no pause button. Opening a lid is the pause: the run keeps logging and stays on its 4-hourly schedule.</p>
+  </div>
+  <ol class="steps">
+    <li class="step"><span class="n">a</span><div class="body">
+      <h3>Open the front lid</h3>
+      <p>The mixers stop at once and do not start while the lid is open. The blower and heaters keep their current setting.</p>
+    </div></li>
+    <li class="step"><span class="n">b</span><div class="body">
+      <h3>Check and close</h3>
+      <p>Do the squeeze test and smell, then close the lid. Mixing resumes on its own. Each opening is logged as a lid event.</p>
+    </div></li>
+    <li class="step"><span class="n">c</span><div class="body">
+      <h3>Enter the score</h3>
+      <p>On the Quick score or Full check page. The run picks it up from Supabase.</p>
+    </div></li>
+  </ol>
+  <div class="table-wrap"><table>
+    <thead><tr><th>Good to know</th><th>Why</th></tr></thead>
+    <tbody>
+      <tr><td>Keep a check to a minute or two</td><td>A lid open for more than 60 s is half of how an unload is spotted. It only counts as an unload if the next mix also draws much less current, so a normal check will not trigger it.</td></tr>
+      <tr><td>Opening the lid is not a feed</td><td>A feed is only inferred when the chamber's humidity jumps after the lid closes. Log real feeds on the page.</td></tr>
+      <tr><td>For maintenance, emptying or moving the machine</td><td>Stop the run with Ctrl+C once (see Stopping below), and start it again with the same command when you are done. It carries on the same cycle.</td></tr>
+      <tr><td>Do not unplug the USB cable to pause</td><td>The watchdog would catch it and hand the machine back to its firmware, but it is an untidy stop.</td></tr>
+    </tbody>
+  </table></div>
+</section>
+
+<section class="phase">
+  <div class="phase-head">
+    <span class="eyebrow">Phase D</span>
+    <h2>Stopping, and moving between laptops</h2>
+    <p>The random cycle belongs to the machine, not to the laptop. Decisions fall on the same clock times everywhere, and each draw is fixed by the seed, the machine's serial, the chamber and the decision time. Any laptop with the same settings makes the same draw.</p>
+  </div>
+  <div class="table-wrap"><table>
+    <thead><tr><th>Situation</th><th>What happens</th></tr></thead>
+    <tbody>
+      <tr><td>You press Ctrl+C once</td><td>The harness finishes the current step, sends what is left to Supabase, puts the machine in a safe state and hands it back to the firmware.</td></tr>
+      <tr><td>The laptop crashes or the harness dies</td><td>The watchdog notices the missing heartbeat, sends the safe state and hands the machine back to the firmware.</td></tr>
+      <tr><td>Another laptop takes over the same machine</td><td>Do steps 1 to 5 there with the same serial, then step 11. It reads Supabase and carries on: the actions already chosen for the current 4-hour block stay, the sensor history and latest scores are reloaded, and the next decision is the one the old laptop would have made.</td></tr>
+      <tr><td>A laptop moves to a different machine</td><td>Change <code>serial</code> and <code>port</code> in <code>machine.yaml</code>. Each machine keeps its own cycle under its own serial, so neither machine's cycle is disturbed.</td></tr>
+      <tr><td>You change <code>machine.yaml</code> during a run</td><td>No restart needed. The change applies at the next 4-hourly decision.</td></tr>
+    </tbody>
+  </table></div>
+  <p>Only one laptop can drive a machine at a time. Stop the old one before starting the new one.</p>
+</section>
+
+<!-- E -->
+<section class="phase">
+  <div class="phase-head">
+    <span class="eyebrow">Phase E</span>
+    <h2>Train and use the learned policy</h2>
+    <p>When the Progress tab shows the stage targets reached.</p>
+  </div>
+  <ol class="steps">
+    <li class="step"><span class="n">14</span><div class="body">
+      <h3>Train</h3>
+      <p class="where">Run in <b>RND_AI_DynamicAlgo\RL</b></p>
+      <div class="cmd"><pre>python -m Machine_Learning validate --since &lt;STUDY START DATE&gt;
+python -m Machine_Learning train --since &lt;STUDY START DATE&gt; --out runs\r1</pre><button type="button">Copy</button></div>
+      <p>Training reads everything straight from Supabase, from every laptop and every web page, so no files need copying. <code>--since</code> leaves out the bench tests from before the study; add <code>--serial</code> to train on one machine. It writes <code>runs\r1\policy_&lt;version&gt;.json</code> only if a learned policy beats the firmware's own modes. If no file appears, keep collecting and train again later.</p>
+    </div></li>
+
+    <li class="step"><span class="n">15</span><div class="body">
+      <h3>Switch the machine to the learned policy</h3>
+      <p>In <code>RL\harness\config\machine.yaml</code>, replace the <code>policy:</code> line with:</p>
+      <div class="cmd"><pre>policy: {kind: loaded, path: runs/r1/policy_&lt;version&gt;.json, epsilon: 0.1}</pre><button type="button">Copy</button></div>
+      <p>It applies at the next decision. One decision in ten stays random so the data keeps growing.</p>
+    </div></li>
+  </ol>
+</section>
+
+<!-- Optional -->
+<section class="phase">
+  <div class="phase-head">
+    <span class="eyebrow">Optional</span>
+    <h2>Weekly feed profile</h2>
+    <p>A label for how each chamber was fed that week. The machine runs the same without it.</p>
+  </div>
+  <div class="table-wrap"><table>
+    <thead><tr><th>Field</th><th>Set by</th><th>Used for</th></tr></thead>
+    <tbody>
+      <tr><td><b>Role</b>: fed or curing</td><td>Automatic. A chamber is fed if a feed was logged in the last 24 hours, otherwise curing.</td><td>Deciding which chamber sets the shared blower when the two chambers want different air.</td></tr>
+      <tr><td><b>Profile</b>: heavy, light, switcher, holiday, binge or none</td><td>You, once a week per chamber, with the command below.</td><td>Never an input to any policy. Training uses it to compare policies week type by week type, and the matched comparison uses it to pick heavy or light mode.</td></tr>
+    </tbody>
+  </table></div>
+  <div class="note">
+    <p><strong>Training needs it.</strong> Training only exports a learned policy if it holds up on each week type, and it can only check that on weeks that carry a profile. Weeks left as none are still used for learning but cannot count toward that check.</p>
+  </div>
+  <p class="where">Run in <b>RND_AI_DynamicAlgo</b>, while the harness is running. Change <code>chamber</code> (L or R) and <code>profile</code> each time.</p>
+  <div class="cmd"><pre>$t = (Get-Content RL\harness\secrets\api_token -Raw).Trim()
+Invoke-RestMethod -Method Post -Uri https://localhost:8443/intervals -SkipCertificateCheck `
+  -Headers @{Authorization = "Bearer $t"} -ContentType "application/json" `
+  -Body '{"kind":"feed_week","chamber":"L","profile":"heavy","stage":1}'</pre><button type="button">Copy</button></div>
+  <p>This command has not been tried on a machine yet. If it answers with an error, keep the message.</p>
+</section>
+
+<section class="phase">
+  <div class="phase-head">
+    <span class="eyebrow">If something goes wrong</span>
+    <h2>Problems and fixes</h2>
+  </div>
+  <div class="table-wrap"><table>
+    <thead><tr><th>You see</th><th>Do this</th></tr></thead>
+    <tbody>
+      <tr><td>No new port appears</td><td>Machine off, unplugged or a bad cable. Try another cable.</td></tr>
+      <tr><td>"Access denied" on the port</td><td>Another program has it. Close other scripts and terminals.</td></tr>
+      <tr><td>"machine serial … does not match config"</td><td>The serial in <code>machine.yaml</code> is for a different machine. Fix it from step 3.</td></tr>
+      <tr><td>"placeholders are not confirmed"</td><td>Control is still locked on this laptop. See step 5.</td></tr>
+      <tr><td>Tests fail beyond the lock test</td><td>Don't start. Save the output.</td></tr>
+      <tr><td>Nothing new on Insights after 5 minutes</td><td>Check the terminal for upload errors. Rows are still saved locally and sent later.</td></tr>
+      <tr><td>Mixers never run</td><td>A lid reads open. Run the machine check (step 8).</td></tr>
+      <tr><td>Machine runs on its own after a stop</td><td>Expected. The firmware takes over whenever the harness is not running.</td></tr>
+    </tbody>
+  </table></div>
+</section>
+
+<footer>Settings this guide relies on, in <code>RL\harness\config\machine.yaml</code>: <code>policy: random</code>, <code>scores_drive_decisions: false</code>, <code>arbitration: fed_chamber_wins</code>. Data schema v4. Written 2 Oct 2026.</footer>
+</div>
+
+<script>
+document.querySelectorAll(".cmd button").forEach(function (b) {
+  b.addEventListener("click", function () {
+    var text = b.parentElement.querySelector("pre").innerText;
+    function done(ok) { b.textContent = ok ? "Copied" : "Select"; setTimeout(function () { b.textContent = "Copy"; }, 1500); }
+    try { navigator.clipboard.writeText(text).then(function () { done(true); }, function () { done(false); }); }
+    catch (e) { done(false); }
+  });
+});
+</script>
+</body>
+</html>
