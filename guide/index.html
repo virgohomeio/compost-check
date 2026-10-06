@@ -233,7 +233,7 @@ python -m harness.api.certs --out harness\secrets</pre><button type="button">Cop
       <h3>Run the tests</h3>
       <p class="where">Run in <b>RND_AI_DynamicAlgo\RL</b></p>
       <div class="cmd"><pre>python -m pytest harness\tests -q</pre><button type="button">Copy</button></div>
-      <p>Every test should pass, except one: on a laptop allowed to control a machine (step 5), the test that checks the lock fails. That is expected. Any other failure: stop and save the output.</p>
+      <p>Every test should pass. If any fails: stop and save the output.</p>
     </div></li>
   </ol>
 </section>
@@ -297,7 +297,6 @@ python -m harness.api.certs --out harness\secrets</pre><button type="button">Cop
         <li>The harness pauses the firmware's program and runs the blower, heaters and mixers itself.</li>
         <li>It picks one of A0 to A4 at random for each chamber at each 4-hourly decision.</li>
         <li>Every row goes to the local CSV files and to Supabase.</li>
-        <li>Start it with this command, not <code>start_harness.bat</code>. The batch file refuses to start when any test fails, and on an unlocked laptop the lock test always fails.</li>
       </ul>
     </div></li>
   </ol>
@@ -479,7 +478,7 @@ Invoke-RestMethod -Method Post -Uri https://localhost:8443/intervals -SkipCertif
       <tr><td>"Access denied" on the port</td><td>Another program has it. Close other scripts and terminals.</td></tr>
       <tr><td>"machine serial … does not match config"</td><td>The serial in <code>machine.yaml</code> is for a different machine. Fix it from step 3.</td></tr>
       <tr><td>"placeholders are not confirmed"</td><td>Control is still locked on this laptop. See step 5.</td></tr>
-      <tr><td>Tests fail beyond the lock test</td><td>Don't start. Save the output.</td></tr>
+      <tr><td>A test fails</td><td>Don't start. Save the output.</td></tr>
       <tr><td>Nothing new on Insights after 5 minutes</td><td>Check the terminal for upload errors. Rows are still saved locally and sent later.</td></tr>
       <tr><td>Mixers never run</td><td>A lid reads open. Run the machine check (step 8).</td></tr>
       <tr><td>Machine runs on its own after a stop</td><td>Expected. The firmware takes over whenever the harness is not running.</td></tr>
