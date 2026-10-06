@@ -193,17 +193,22 @@ button:focus-visible, select:focus-visible, input:focus-visible, a:focus-visible
   </section>
   <section class="card" data-panel="policy" hidden>
     <h2>What the actions mean</h2>
-    <p class="hint">Each chamber runs one action for 4 hours. The blower always runs 47.5 s at 30 % power; the actions differ in how long it rests between runs, whether the heaters are on, and how long each mix phase lasts. Mixing starts after 20.7 min of idle time in every action.</p>
+    <p class="hint">Every 4 hours each chamber gets one action. A1 and A3 are the firmware's own light and heavy modes; A0, A2 and A4 are built from them for the study. Mixing starts after 20.7 min of idle time in every action. Differences from the firmware: the PTC switches off at 62 °C instead of 70 (70 overshot to 76–88 °C), and heavy's mix phases are 24 s / 12 s where the firmware source uses 12 s / 6 s.</p>
     <div class="scroll"><table class="t">
-      <thead><tr><th>Action</th><th>Blower</th><th class="num">Air time</th><th>Heaters (pads and PTC)</th><th>Mix phases</th><th>What it is for</th></tr></thead>
+      <thead><tr><th>Setting</th><th><b>A0</b> dormant</th><th><b>A1</b> light</th><th><b>A2</b> middle</th><th><b>A3</b> heavy</th><th><b>A4</b> boost</th></tr></thead>
       <tbody>
-        <tr><td><b>A0</b> dormant</td><td>on 47.5 s, off 15.5 min</td><td class="num">4.9 %</td><td><b>off</b></td><td>12 s and 6 s</td><td class="wrap">A curing chamber: air stays on, heat off, so it dries slowly</td></tr>
-        <tr><td><b>A1</b> light</td><td>on 47.5 s, off 15.5 min</td><td class="num">4.9 %</td><td>on</td><td>12 s and 6 s</td><td class="wrap">The firmware's own light mode</td></tr>
-        <tr><td><b>A2</b> middle</td><td>on 47.5 s, off 5.5 min</td><td class="num">12.6 %</td><td>on</td><td>18 s and 9 s</td><td class="wrap">Halfway between light and heavy</td></tr>
-        <tr><td><b>A3</b> heavy</td><td>on 47.5 s, off 3.1 min</td><td class="num">20.3 %</td><td>on</td><td>24 s and 12 s</td><td class="wrap">The firmware's own heavy mode</td></tr>
-        <tr><td><b>A4</b> boost</td><td>on 47.5 s, off 71 s</td><td class="num">40 %</td><td>on, no hotter than heavy</td><td>24 s and 12 s</td><td class="wrap">A big wet feed, or a chamber that has gone too wet</td></tr>
+        <tr><td>Source</td><td>Built from light</td><td><b>Firmware light mode</b></td><td>Built: halfway</td><td><b>Firmware heavy mode</b></td><td>Built from heavy</td></tr>
+        <tr><td>Blower on / off</td><td>47.5 s / 930 s</td><td>47.5 s / 930 s</td><td>47.5 s / 329 s</td><td>47.5 s / 186 s</td><td>47.5 s / 71 s</td></tr>
+        <tr><td>Air time</td><td>4.9 %</td><td>4.9 %</td><td>12.6 %</td><td>20.3 %</td><td>40 %</td></tr>
+        <tr><td>Blower power</td><td>30 %</td><td>30 %</td><td>30 %</td><td>30 %</td><td>30 %</td></tr>
+        <tr><td>Pad heaters</td><td><b>off</b></td><td>to 70 °C</td><td>to 70 °C</td><td>to 70 °C</td><td>to 70 °C</td></tr>
+        <tr><td>Blower PTC</td><td><b>off</b></td><td>off 62, on below 58 °C</td><td>off 62, on below 58 °C</td><td>off 62, on below 58 °C</td><td>off 62, on below 58 °C</td></tr>
+        <tr><td>Mix phases</td><td>12 s / 6 s</td><td>12 s / 6 s</td><td>18 s / 9 s</td><td>24 s / 12 s</td><td>24 s / 12 s</td></tr>
+        <tr><td>What it is for</td><td class="wrap">Curing chamber: air on, heat off</td><td class="wrap">Light household</td><td class="wrap">Between the two modes</td><td class="wrap">Heavy household</td><td class="wrap">Big wet feed, or too wet</td></tr>
+        <tr id="actions-in-use"><td>Allowed at the last decision</td><td>–</td><td>–</td><td>–</td><td>–</td><td>–</td></tr>
       </tbody>
     </table></div>
+    <p class="hint" id="actions-in-use-note"></p>
   </section>
   <section class="card" data-panel="policy" hidden>
     <h2>Actions over time and what they asked for</h2>
@@ -546,6 +551,14 @@ const REASON_TEXT = { none: "nothing narrowed: all five allowed", last_wet: "las
 
 function renderPolicy() {
   const dec = data.decisions, ch = byChamber(dec);
+  // "In use now": the actions the latest decision was allowed to choose from
+  const lastDec = dec[dec.length - 1];
+  const inUse = lastDec && lastDec.allowed_set ? String(lastDec.allowed_set).split("|") : null;
+  $("actions-in-use").innerHTML = "<td>Allowed at the last decision</td>" + ACTIONS.map((a) =>
+    `<td>${!inUse ? "–" : inUse.includes(a) ? pill("yes", "ok") : pill("no", "plain")}</td>`).join("");
+  $("actions-in-use-note").textContent = inUse
+    ? `From the latest decision (${when(sec(lastDec.ts_utc))}): ${REASON_TEXT[lastDec.restrict_reason] || lastDec.restrict_reason}.`
+    : "No decision in this time range yet.";
   // 5. current policy cards
   $("policy-cards").innerHTML = ["L", "R"].map((c) => {
     const d = ch[c][ch[c].length - 1];
