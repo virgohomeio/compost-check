@@ -192,6 +192,20 @@ button:focus-visible, select:focus-visible, input:focus-visible, a:focus-visible
     <div class="cards2" id="policy-cards"></div>
   </section>
   <section class="card" data-panel="policy" hidden>
+    <h2>What the actions mean</h2>
+    <p class="hint">Each chamber runs one action for 4 hours. The blower always runs 47.5 s at 30 % power; the actions differ in how long it rests between runs, whether the heaters are on, and how long each mix phase lasts. Mixing starts after 20.7 min of idle time in every action.</p>
+    <div class="scroll"><table class="t">
+      <thead><tr><th>Action</th><th>Blower</th><th class="num">Air time</th><th>Heaters (pads and PTC)</th><th>Mix phases</th><th>What it is for</th></tr></thead>
+      <tbody>
+        <tr><td><b>A0</b> dormant</td><td>on 47.5 s, off 15.5 min</td><td class="num">4.9 %</td><td><b>off</b></td><td>12 s and 6 s</td><td class="wrap">A curing chamber: air stays on, heat off, so it dries slowly</td></tr>
+        <tr><td><b>A1</b> light</td><td>on 47.5 s, off 15.5 min</td><td class="num">4.9 %</td><td>on</td><td>12 s and 6 s</td><td class="wrap">The firmware's own light mode</td></tr>
+        <tr><td><b>A2</b> middle</td><td>on 47.5 s, off 5.5 min</td><td class="num">12.6 %</td><td>on</td><td>18 s and 9 s</td><td class="wrap">Halfway between light and heavy</td></tr>
+        <tr><td><b>A3</b> heavy</td><td>on 47.5 s, off 3.1 min</td><td class="num">20.3 %</td><td>on</td><td>24 s and 12 s</td><td class="wrap">The firmware's own heavy mode</td></tr>
+        <tr><td><b>A4</b> boost</td><td>on 47.5 s, off 71 s</td><td class="num">40 %</td><td>on, no hotter than heavy</td><td>24 s and 12 s</td><td class="wrap">A big wet feed, or a chamber that has gone too wet</td></tr>
+      </tbody>
+    </table></div>
+  </section>
+  <section class="card" data-panel="policy" hidden>
     <h2>Actions over time and what they asked for</h2>
     <p class="hint">Actions run for 4 hours per chamber. The blower and its heater are shared by both chambers: when the chambers ask for different air, one setting is applied to both, shown as "applied".</p>
     <div class="chart-grid" id="policy-charts"></div>
