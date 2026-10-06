@@ -500,7 +500,7 @@ function renderSensors() {
     { label: "Inner shell", values: col("M", "ptc_ntc_c") }]);
   P("Blower PWM", "%", [{ label: "Blower", values: col("M", "blower_pwm_pct") }], { step: true,
     empty: "No blower values: only the harness, when it controls the machine, records the blower." });
-  P("Lid", "open or closed", [{ label: "Front lid", values: col("M", "lid_closed") }], { step: true, yNames: ["open", "closed"] });
+  P("Lid", "open or closed", [{ label: "Lid", values: col("M", "lid_closed") }], { step: true, yNames: ["open", "closed"] });
   const names = new Map(data.machine.map((m) => [sec(m.ts_utc), m.machine_state_name]));
   P("Machine state", "code", [{ label: "State", values: col("M", "machine_state"), fmt: (v, di) => `${v} ${names.get(xs[di]) || ""}` }], { step: true });
 }
@@ -763,8 +763,8 @@ function renderHealth() {
   const errs = (arr) => arr.filter((m) => m.machine_state_name === "Error" || (m.error_code && Number(m.error_code) !== 0)).length;
   const pc = ptc(cur), lc = lid(cur), ec = errs(cur);
   add("Machine", "Blower PTC sensor valid", fmt(pc), fmt(ptc(mm)), pc == null ? "" : status(pc >= 98, pc >= 90), "");
-  add("Machine", "Front lid reads open", fmt(lc), fmt(lid(mm)), lc == null ? "" : status(lc <= 10, lc <= 40),
-    "Mixing waits while the lid reads open; the front lid is the only lid switch");
+  add("Machine", "Lid reads open", fmt(lc), fmt(lid(mm)), lc == null ? "" : status(lc <= 10, lc <= 40),
+    "Mixing waits while the lid reads open");
   add("Machine", "Readings in an error state", `${ec}`, `${errs(mm)}`, status(ec === 0, ec < 5), "From the machine's own state and error code");
   const since = latest ? `since ${when(latest.start)}${live ? ", still running" : ""}` : "";
   $("health-table").innerHTML = `<thead><tr><th>Area</th><th>Check</th><th class="num">Latest session<br><span class="hint">${esc(since)}</span></th><th class="num">Whole range</th><th>Status</th><th>Note</th></tr></thead><tbody>` +

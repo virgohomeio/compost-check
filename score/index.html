@@ -711,7 +711,7 @@ async function loadStatus() {
       last ? ` Last data ${ago(last)} (${when(last)}), from ${(m || readings[0]).harness_version}` : " No data for this machine yet.");
 
     kv($("machine-kv"), m ? [
-      ["Front lid", m.lid_closed == null ? "–" : pill(m.lid_closed ? "closed" : "open", m.lid_closed ? "good" : "dry")],
+      ["Lid", m.lid_closed == null ? "–" : pill(m.lid_closed ? "closed" : "open", m.lid_closed ? "good" : "dry")],
       ["Blower", m.blower_on == null ? "not recorded" : (m.blower_on ? "on" : "off") + (m.blower_pwm_pct != null ? ` at ${m.blower_pwm_pct} %` : "")],
       ["Blower PTC", m.ptc_on == null ? "not recorded" : (m.ptc_on ? "on" : "off")],
       ["PTC temperature", fmt(m.ptc_ntc_c, " °C")],
