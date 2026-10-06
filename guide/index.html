@@ -178,48 +178,62 @@ pip install -r RL\requirements.txt</pre><button type="button">Copy</button></div
     </div></li>
 
     <li class="step"><span class="n">4</span><div class="body">
-      <h3>Write the machine's settings file <span class="tag once">once per laptop and machine</span></h3>
-      <p class="skip"><b>Can skip</b>if <code>machine.yaml</code> already exists on this laptop with this machine's serial and port.</p>
-      <p>If <code>RL\harness\config\machine.yaml</code> does not exist yet, copy it from the example:</p>
+      <h3>Create this laptop's settings file <span class="tag once">once per laptop</span></h3>
+      <p class="skip"><b>Can skip</b>if <code>RL\harness\config\machine.yaml</code> already exists on this laptop for this machine.</p>
+      <p>Each laptop has its own <code>machine.yaml</code>. It is never shared through GitHub, because it holds this laptop's port. Start from the shared template:</p>
       <div class="cmd"><pre>Copy-Item RL\harness\config\machine.example.yaml RL\harness\config\machine.yaml</pre><button type="button">Copy</button></div>
-      <p>Open <code>machine.yaml</code> and set two lines:</p>
-      <div class="cmd"><pre>serial: &lt;SERIAL&gt;
-  uart: {port: &lt;PORT&gt;, baud: 115200, timeout_s: 0.5}</pre><button type="button">Copy</button></div>
+      <p>Open <code>RL\harness\config\machine.yaml</code> in a text editor and set these lines. The first two are this machine and this laptop; the other three are the study's current rules, which the template does not have yet:</p>
+      <div class="table-wrap"><table>
+        <thead><tr><th>Line</th><th>Set it to</th></tr></thead>
+        <tbody>
+          <tr><td><code>serial:</code></td><td>the serial from step 3, for example <code>LL01-00000000305</code></td></tr>
+          <tr><td><code>uart: {port: …}</code></td><td>this laptop's port from step 2, for example <code>COM10</code></td></tr>
+          <tr><td><code>firmware_modes_only:</code></td><td><code>true</code>: decisions use only A1 light and A3 heavy</td></tr>
+          <tr><td><code>scores_drive_decisions:</code></td><td><code>false</code>: scores are recorded but do not steer decisions</td></tr>
+          <tr><td><code>gas_saturation_ohm:</code></td><td><code>102400000</code>: the gas sensor's real ceiling</td></tr>
+        </tbody>
+      </table></div>
       <ul>
-        <li>Leave <code>seed</code> and <code>decision_times_local</code> as they are. Every laptop must use the same values so a run can move between laptops without breaking its cycle.</li>
+        <li>Leave <code>seed</code> and <code>decision_times_local</code> as they are, so a run can move between laptops without breaking its cycle.</li>
         <li>The harness checks the serial against the machine at start and refuses to run if they differ.</li>
-        <li>This file stays on the laptop. Git ignores it.</li>
       </ul>
     </div></li>
 
     <li class="step"><span class="n">5</span><div class="body">
-      <h3>Unlock control on this laptop <span class="tag once">once per laptop</span></h3>
-      <p class="skip"><b>Can skip</b>if this laptop is already unlocked, or if you only do read-only runs.</p>
-      <p>An unlocked laptop is one allowed to drive a real machine. By default the harness only reads and refuses to control a machine. To unlock this laptop, in <code>RL\harness\config\actions.yaml</code> change <code>false</code> to <code>true</code>:</p>
+      <h3>Allow this laptop to control a machine <span class="tag once">once per laptop</span></h3>
+      <p class="skip"><b>Can skip</b>if this laptop is already allowed, or if it will only log (read-only runs).</p>
+      <p>As it comes from GitHub, the harness only reads a machine and refuses to drive it. Each laptop that will run the study switches this on for itself. Open <code>RL\harness\config\actions.yaml</code> and change the line</p>
+      <div class="cmd"><pre>placeholders_confirmed: false</pre><button type="button">Copy</button></div>
+      <p>to</p>
       <div class="cmd"><pre>placeholders_confirmed: true</pre><button type="button">Copy</button></div>
       <ul>
-        <li>Only after the A1 and A3 bench check has shown that they match the firmware's light and heavy modes.</li>
-        <li>Never commit this change. The shared copy stays locked on purpose.</li>
-        <li>Not needed for read-only runs.</li>
+        <li><strong>Never commit or push this change.</strong> The copy on GitHub stays locked on purpose; each laptop unlocks its own.</li>
+        <li>If you see "placeholders are not confirmed" when starting a run, this step was skipped.</li>
       </ul>
     </div></li>
 
     <li class="step"><span class="n">6</span><div class="body">
-      <h3>Clear out files from older versions</h3>
-      <p class="skip"><b>Can skip</b>on a laptop that never ran earlier tests. Running it anyway is harmless; it moves nothing.</p>
-      <p>Training refuses a data folder that mixes schema versions. The current version is <b>v4</b>, so this moves every study file of an older version into an archive folder. On a laptop that has never run a test it moves nothing.</p>
-      <div class="cmd"><pre>New-Item -ItemType Directory -Force RL\data\archive_old_versions | Out-Null
-Get-ChildItem RL\data\study -Recurse -File -Filter *.csv |
-  Where-Object { $_.Name -notmatch '_v4_' } |
-  Move-Item -Destination RL\data\archive_old_versions</pre><button type="button">Copy</button></div>
+      <h3>Create this laptop's own keys <span class="tag once">once per laptop</span></h3>
+      <p class="skip"><b>Can skip</b>if <code>RL\harness\secrets\</code> already has <code>api_token</code>, <code>harness_cert.pem</code> and <code>harness_key.pem</code>.</p>
+      <p>The harness serves a small page on the laptop and needs three key files for it. <strong>Do not copy them from another laptop: each laptop makes its own.</strong> Without them, the harness will not start.</p>
+      <p class="where">Run in <b>RND_AI_DynamicAlgo\RL</b></p>
+      <div class="cmd"><pre>cd RL
+python -m harness.api.certs --out harness\secrets</pre><button type="button">Copy</button></div>
+      <div class="table-wrap"><table>
+        <thead><tr><th>File in RL\harness\secrets</th><th>Needed?</th></tr></thead>
+        <tbody>
+          <tr><td><code>api_token</code>, <code>harness_cert.pem</code>, <code>harness_key.pem</code></td><td><strong>Yes</strong>: made by the command above, on this laptop</td></tr>
+          <tr><td><code>supabase_service_key</code></td><td><strong>No.</strong> It stays only on the first laptop. Without it, the harness uses the shared key from the repository, which can add and read rows: all a run needs</td></tr>
+        </tbody>
+      </table></div>
+      <p>The folder is never sent to GitHub: the command puts a "keep out of git" file inside it.</p>
     </div></li>
 
     <li class="step"><span class="n">7</span><div class="body">
       <h3>Run the tests</h3>
       <p class="where">Run in <b>RND_AI_DynamicAlgo\RL</b></p>
-      <div class="cmd"><pre>cd RL
-python -m pytest harness\tests -q</pre><button type="button">Copy</button></div>
-      <p>Every test should pass. The only allowed failure is the lock test, on a laptop unlocked in step 5. Any other failure: stop and save the output.</p>
+      <div class="cmd"><pre>python -m pytest harness\tests -q</pre><button type="button">Copy</button></div>
+      <p>Every test should pass, except one: on a laptop allowed to control a machine (step 5), the test that checks the lock fails. That is expected. Any other failure: stop and save the output.</p>
     </div></li>
   </ol>
 </section>
@@ -394,7 +408,7 @@ python -m pytest harness\tests -q</pre><button type="button">Copy</button></div>
     <tbody>
       <tr><td>You press Ctrl+C once</td><td>The harness finishes the current step, sends what is left to Supabase, puts the machine in a safe state and hands it back to the firmware.</td></tr>
       <tr><td>The laptop crashes or the harness dies</td><td>The watchdog notices the missing heartbeat, sends the safe state and hands the machine back to the firmware.</td></tr>
-      <tr><td>Another laptop takes over the same machine</td><td>Do steps 1 to 5 there with the same serial, then step 11. It reads Supabase and carries on: the actions already chosen for the current 4-hour block stay, the sensor history and latest scores are reloaded, and the next decision is the one the old laptop would have made.</td></tr>
+      <tr><td>Another laptop takes over the same machine</td><td>Do steps 1 to 7 there with the same serial, then step 11. It reads Supabase and carries on: the actions already chosen for the current 4-hour block stay, the sensor history and latest scores are reloaded, and the next decision is the one the old laptop would have made.</td></tr>
       <tr><td>A laptop moves to a different machine</td><td>Change <code>serial</code> and <code>port</code> in <code>machine.yaml</code>. Each machine keeps its own cycle under its own serial, so neither machine's cycle is disturbed.</td></tr>
       <tr><td>You change <code>machine.yaml</code> during a run</td><td>No restart needed. The change applies at the next 4-hourly decision.</td></tr>
     </tbody>
