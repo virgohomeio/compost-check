@@ -540,7 +540,9 @@ function nextDecision(now = Date.now()) {
   return new Date(now + (next - nowMin) * 60000 - new Date(now).getSeconds() * 1000);
 }
 const REASON_TEXT = { none: "nothing narrowed: all five allowed", last_wet: "last score wet: only drying actions",
-  last_dry: "last score dry: only gentle actions", stale_score: "no score for 30 h: middle actions only" };
+  last_dry: "last score dry: only gentle actions", stale_score: "no score for 30 h: middle actions only",
+  firmware_modes: "firmware modes only: A1 light or A3 heavy", firmware_last_dry: "firmware modes only, last score dry: A1 light",
+  firmware_last_wet: "firmware modes only, last score wet: A3 heavy" };
 
 function renderPolicy() {
   const dec = data.decisions, ch = byChamber(dec);
