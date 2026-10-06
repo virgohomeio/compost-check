@@ -182,7 +182,7 @@ pip install -r RL\requirements.txt</pre><button type="button">Copy</button></div
       <p class="skip"><b>Can skip</b>if <code>RL\harness\config\machine.yaml</code> already exists on this laptop for this machine.</p>
       <p>Each laptop has its own <code>machine.yaml</code>. It is never shared through GitHub, because it holds this laptop's port. Start from the shared template:</p>
       <div class="cmd"><pre>Copy-Item RL\harness\config\machine.example.yaml RL\harness\config\machine.yaml</pre><button type="button">Copy</button></div>
-      <p>Open <code>RL\harness\config\machine.yaml</code> in a text editor and set these lines. The first two are this machine and this laptop; the other three are the study's current rules, which the template does not have yet:</p>
+      <p>Open <code>RL\harness\config\machine.yaml</code> in a text editor and set these lines. The first two are this machine and this laptop; the rest are the study's current rules. Check every one, even in a fresh copy of the template:</p>
       <div class="table-wrap"><table>
         <thead><tr><th>Line</th><th>Set it to</th></tr></thead>
         <tbody>
@@ -191,6 +191,8 @@ pip install -r RL\requirements.txt</pre><button type="button">Copy</button></div
           <tr><td><code>firmware_modes_only:</code></td><td><code>true</code>: decisions use only A1 light and A3 heavy</td></tr>
           <tr><td><code>scores_drive_decisions:</code></td><td><code>false</code>: scores are recorded but do not steer decisions</td></tr>
           <tr><td><code>gas_saturation_ohm:</code></td><td><code>102400000</code>: the gas sensor's real ceiling</td></tr>
+          <tr><td>under <code>firmware:</code><br><code>stop_process_on_start:</code><br><code>start_process_on_exit:</code></td><td><code>false</code> and <code>false</code>: these machines take commands directly and refuse the hand-over. With <code>true</code>, step 11 stops with "the firmware refused STOP_PROCESS"</td></tr>
+          <tr><td><code>ptc_guard_c:</code></td><td><code>{off_at: 62, on_below: 58, alarm_at: 75}</code>: keeps the blower PTC near 70 °C</td></tr>
         </tbody>
       </table></div>
       <ul>
@@ -408,7 +410,7 @@ python -m harness.api.certs --out harness\secrets</pre><button type="button">Cop
     <tbody>
       <tr><td>You press Ctrl+C once</td><td>The harness finishes the current step, sends what is left to Supabase, puts the machine in a safe state and hands it back to the firmware.</td></tr>
       <tr><td>The laptop crashes or the harness dies</td><td>The watchdog notices the missing heartbeat, sends the safe state and hands the machine back to the firmware.</td></tr>
-      <tr><td>Another laptop takes over the same machine</td><td>Do steps 1 to 7 there with the same serial, then step 11. It reads Supabase and carries on: the actions already chosen for the current 4-hour block stay, the sensor history and latest scores are reloaded, and the next decision is the one the old laptop would have made.</td></tr>
+      <tr><td>Another laptop takes over the same machine</td><td>First stop this laptop's harness (Ctrl+C) and its watchdog, and move the USB cable: only one laptop can drive a machine. Then do steps 1 to 7 there with the same serial, and step 11. It reads Supabase and carries on: the actions already chosen for the current 4-hour block stay, the sensor history and latest scores are reloaded, and the next decision is the one the old laptop would have made.</td></tr>
       <tr><td>A laptop moves to a different machine</td><td>Change <code>serial</code> and <code>port</code> in <code>machine.yaml</code>. Each machine keeps its own cycle under its own serial, so neither machine's cycle is disturbed.</td></tr>
       <tr><td>You change <code>machine.yaml</code> during a run</td><td>No restart needed. The change applies at the next 4-hourly decision.</td></tr>
     </tbody>
@@ -478,6 +480,8 @@ Invoke-RestMethod -Method Post -Uri https://localhost:8443/intervals -SkipCertif
       <tr><td>"Access denied" on the port</td><td>Another program has it. Close other scripts and terminals.</td></tr>
       <tr><td>"machine serial … does not match config"</td><td>The serial in <code>machine.yaml</code> is for a different machine. Fix it from step 3.</td></tr>
       <tr><td>"placeholders are not confirmed"</td><td>Control is still locked on this laptop. See step 5.</td></tr>
+      <tr><td>"the firmware refused STOP_PROCESS"</td><td>In this laptop's <code>machine.yaml</code>, under <code>firmware:</code>, set <code>stop_process_on_start: false</code> and <code>start_process_on_exit: false</code> (step 4).</td></tr>
+      <tr><td>"Access denied" on the port while another laptop ran the machine</td><td>The other laptop still holds the cable. Stop its harness and watchdog first.</td></tr>
       <tr><td>A test fails</td><td>Don't start. Save the output.</td></tr>
       <tr><td>Nothing new on Insights after 5 minutes</td><td>Check the terminal for upload errors. Rows are still saved locally and sent later.</td></tr>
       <tr><td>Mixers never run</td><td>A lid reads open. Run the machine check (step 8).</td></tr>
