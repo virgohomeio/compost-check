@@ -277,19 +277,20 @@ python -m harness.api.certs --out harness\secrets</pre><button type="button">Cop
     <li class="step"><span class="n">10</span><div class="body">
       <h3>Start a read-only run for about 5 minutes</h3>
       <p class="where">Run in <b>RND_AI_DynamicAlgo\RL</b></p>
-      <div class="cmd"><pre>python -m harness.run --config harness\config\machine.yaml --read-only</pre><button type="button">Copy</button></div>
+      <div class="cmd"><pre>python -m harness.run --config harness\config\machine.yaml --read-only --verbose --hours 0.08</pre><button type="button">Copy</button></div>
       <ul>
         <li>The harness logs and decides but sends nothing to the machine. The firmware keeps running it.</li>
         <li>Open <a href="https://virgohomeio.github.io/compost-check/insights/" target="_blank" rel="noopener">Insights</a> and pick your machine, or add <code>?machine=&lt;SERIAL&gt;</code> to the address. New readings should appear within a few minutes.</li>
         <li>Decisions only appear at the 4-hourly times. You don't need to wait for one.</li>
-        <li>Press <strong>Ctrl+C once</strong> and wait for it to finish.</li>
+        <li><code>--verbose</code> prints every reading to the screen; without it the terminal only shows events and looks idle while it logs.</li>
+        <li><code>--hours 0.08</code> stops it by itself after about 5 minutes. To stop earlier, press <strong>Ctrl+C once</strong> and wait.</li>
       </ul>
     </div></li>
 
     <li class="step"><span class="n">11</span><div class="body">
       <h3>Start the real run</h3>
       <p class="where">Run in <b>RND_AI_DynamicAlgo\RL</b></p>
-      <div class="cmd"><pre>python -m harness.run --config harness\config\machine.yaml</pre><button type="button">Copy</button></div>
+      <div class="cmd"><pre>python -m harness.run --config harness\config\machine.yaml --verbose</pre><button type="button">Copy</button></div>
       <p>For a run you will leave, also start the watchdog in a <b>second</b> terminal. It is a separate safety process: if the harness stops answering, it switches everything off.</p>
       <div class="cmd"><pre>python -m harness.run --config harness\config\machine.yaml --watchdog</pre><button type="button">Copy</button></div>
       <ul>
