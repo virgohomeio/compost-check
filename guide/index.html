@@ -167,9 +167,9 @@ cd RND_AI_DynamicAlgo</pre><button type="button">Copy</button></div>
     <li class="step"><span class="n">ii</span><div class="body">
       <h3>The settings file: what it must say</h3>
       <p>Each laptop has its own <code>RL\harness\config\machine.yaml</code> (step 4 makes it). It never goes to GitHub, so a pull never brings these settings: check them by hand on every laptop. Open the file in Notepad and make these lines read as below. Lines under <code>transport:</code> and <code>firmware:</code> keep their two spaces in front; every other line has none. If a line is missing, add it at the end of the file.</p>
-      <div class="cmd"><pre>serial: LL01-00000000305
+      <div class="cmd"><pre>serial: <b class="ph">&lt;SERIAL&gt;</b>
 transport:
-  uart: {port: COM10, baud: 115200, timeout_s: 0.5}
+  uart: {port: <b class="ph">&lt;PORT&gt;</b>, baud: 115200, timeout_s: 0.5}
 gas_saturation_ohm: 102400000
 ptc_guard_c: {off_at: 62, on_below: 58, alarm_at: 75}
 firmware:
@@ -179,6 +179,7 @@ stage: 1
 policy: {kind: random}
 scores_drive_decisions: false
 firmware_modes_only: true</pre><button type="button">Copy</button></div>
+      <p>Replace <b class="ph">&lt;SERIAL&gt;</b> with the machine's serial (step 3) and <b class="ph">&lt;PORT&gt;</b> with this laptop's port for it (step 2).</p>
       <div class="table-wrap"><table>
         <thead><tr><th>Line</th><th>What it is</th><th>Changes when</th></tr></thead>
         <tbody>
