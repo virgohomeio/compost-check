@@ -209,5 +209,24 @@
     if (now !== before && onChange) onChange();
   }
 
-  window.StudyTables = { when, utcOf, toTable, fromTable, translate, fetchRows, fillMachines, tables: BY_NAME };
+  // After a page saved people's entries ([[table, row], ...] as toTable gives
+  // them), record each one as an "add" in public.entry_changes, the change log
+  // that edits and deletes also write to. Best effort: the entry is already
+  // saved, so a failure here never undoes it.
+  async function logAdds(url, key, converted) {
+    const rows = converted.map(([name, r]) => ({
+      machine: r.machine, chamber: r.chamber || null, action: "add", entry_table: name,
+      entry_id: name === "scores" ? r.score_id : r.event_id,
+      entry_kind: name === "scores" ? "score" : r.event, after: r,
+      changed_by: (name === "scores" ? r.observer : r.entered_by) || null }));
+    if (!rows.length) return;
+    try {
+      await fetch(`${url}/rest/v1/entry_changes`, { method: "POST",
+        headers: { apikey: key, Authorization: `Bearer ${key}`, "Content-Type": "application/json",
+          Prefer: "return=minimal" }, body: JSON.stringify(rows) });
+    } catch (e) { /* the entry itself is saved */ }
+  }
+
+  window.StudyTables = { when, utcOf, toTable, fromTable, translate, fetchRows, fillMachines, logAdds,
+    tables: BY_NAME };
 })();

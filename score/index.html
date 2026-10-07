@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-<title>Compost Check</title>
+<title>Compost Control</title>
 <meta name="robots" content="noindex">
 <style>
 /* Layout: one narrow column for a phone held in one hand: machine bar, a
@@ -142,6 +142,24 @@ table.log th { font-size: 12px; color: var(--muted); font-weight: 700; letter-sp
 .scroll { overflow-x: auto; }
 .linkish { background: none; border: 0; padding: 0; color: var(--accent); font: inherit; text-decoration: underline; cursor: pointer; }
 .pending { font-size: 13px; color: var(--dry); margin: 0; }
+.entries { display: grid; gap: 10px; }
+.entry { border: 1px solid var(--line); border-radius: 8px; padding: 10px 12px; display: grid; gap: 8px; }
+.entry .head { display: flex; flex-wrap: wrap; gap: 4px 10px; align-items: baseline; }
+.entry .what { font-weight: 700; }
+.entry .meta { font-size: 13px; color: var(--muted); }
+.entry .acts { display: flex; flex-wrap: wrap; gap: 8px; }
+.entry button { padding: 7px 14px; border-radius: 8px; border: 1px solid var(--line); background: var(--panel);
+  color: var(--ink); font: inherit; cursor: pointer; }
+.entry button.primary { background: var(--accent); border-color: var(--accent); color: var(--accent-ink); }
+.entry button.warn { border-color: var(--bad); color: var(--bad); }
+.entry button.warn.solid { background: var(--bad); color: #ffffff; }
+.entry button:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+.entry button:disabled { opacity: .6; cursor: default; }
+.entry .form { display: grid; gap: 10px; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); }
+.entry .form label { display: grid; gap: 4px; font-size: 13px; color: var(--muted); }
+.entry .form input, .entry .form select { font: inherit; padding: 7px 8px; border: 1px solid var(--line);
+  border-radius: 6px; background: var(--panel); color: var(--ink); min-width: 0; }
+.entry .confirm { color: var(--bad); font-weight: 600; margin: 0; }
 .photo-view { max-width: 100%; border-radius: 8px; border: 1px solid var(--line); }
 
 
@@ -155,7 +173,7 @@ button:focus-visible, input:focus-visible, select:focus-visible, textarea:focus-
 <header class="top">
   <nav class="pages" aria-label="Pages"><a href="../">Home</a><a href="../simple/">Quick score</a><a href="../score/" aria-current="page">Full check</a><a href="../insights/">Insights</a><a href="../guide/">Guide</a></nav>
   <div class="row">
-    <h1>Compost Check</h1>
+    <h1>Compost Control</h1>
     <div class="machine">
       <label for="serial">Machine</label>
       <select id="serial"></select>
@@ -171,6 +189,7 @@ button:focus-visible, input:focus-visible, select:focus-visible, textarea:focus-
     <button role="tab" data-tab="water" aria-selected="false">Water</button>
     <button role="tab" data-tab="unload" aria-selected="false">Unload</button>
     <button role="tab" data-tab="service" aria-selected="false">Service</button>
+    <button role="tab" data-tab="entries" aria-selected="false">Entries</button>
     <button role="tab" data-tab="status" aria-selected="false">Status</button>
   </nav>
 
@@ -317,6 +336,16 @@ button:focus-visible, input:focus-visible, select:focus-visible, textarea:focus-
     </div>
   </section>
 
+  <!-- Entries: what people entered, to edit or delete; every change is logged -->
+  <section class="card" data-panel="entries" hidden>
+    <h2>Entries, last 7 days</h2>
+    <p class="hint">Feeds, scores, water, unloads and service notes entered for this machine, newest first. Edit or delete one if it was wrong. Every add, edit and delete is kept in the change log in Supabase (<code>entry_changes</code>), with who did it and when; a deleted entry keeps a full copy there.</p>
+    <p class="msg" id="entries-msg" role="status"></p>
+    <div class="entries" id="entries-list"><p class="hint">Loading…</p></div>
+    <h3 class="label">Deleted, last 7 days</h3>
+    <div class="entries" id="entries-deleted"><p class="hint">None.</p></div>
+  </section>
+
   <!-- Status: the latest rows in Supabase for this machine -->
   <section class="card" data-panel="status" hidden>
     <h2>Machine status</h2>
@@ -396,6 +425,7 @@ function serial() { return $("serial").value === "other" ? $("serial-other").val
 function machineChanged() {
   store("p150-serial", serial()); loadRecent();
   if (tab === "status") loadStatus();
+  if (tab === "entries") loadEntries();
 }
 $("serial").addEventListener("change", () => { $("serial-other").hidden = $("serial").value !== "other"; machineChanged(); });
 $("serial-other").addEventListener("change", machineChanged);
@@ -435,13 +465,14 @@ function showTab(t) {
   tab = t;
   document.querySelectorAll("#tabs button").forEach((b) => b.setAttribute("aria-selected", b.dataset.tab === t));
   document.querySelectorAll("[data-panel]").forEach((p) => { p.hidden = p.dataset.panel !== t; });
-  const readOnly = t === "status";
+  const readOnly = t === "status" || t === "entries";
   $("save-bar").hidden = readOnly;
-  $("observer").parentElement.hidden = readOnly;
+  $("observer").parentElement.hidden = t === "status";      // an edit needs a name too
   $("save").textContent = SAVE_LABEL[t] || "";
   $("save").className = t === "unload" ? "danger" : "";
   say("");
   if (t === "status") loadStatus();
+  if (t === "entries") loadEntries();
 }
 document.querySelectorAll("#tabs button").forEach((b) => b.addEventListener("click", () => {
   showTab(b.dataset.tab);
@@ -537,6 +568,7 @@ async function insert(file, rows) {
     body: JSON.stringify(conv.map(([, r]) => r)),
   });
   if (!res.ok) throw failure(res.status, await res.text());
+  StudyTables.logAdds(SUPABASE_URL, SUPABASE_KEY, conv);     // the change log: who added what
 }
 async function uploadPhoto(file, row) {
   const ext = PHOTO_TYPES[(file.type || "").toLowerCase()];
@@ -761,6 +793,160 @@ async function loadStatus() {
     });
   } catch (e) {
     $("freshness").textContent = "Could not load the status. Check the connection.";
+  }
+}
+
+// ---- entries: edit or delete what people entered; every change goes to entry_changes
+const PEOPLE_EVENTS = ["feed_tap", "water", "unload", "service", "role_change"];
+const KIND_LABEL = { feed_tap: "Feed", water: "Water", unload: "Unload", service: "Service", role_change: "Role change", score: "Score" };
+function entriesSay(text, kind) { $("entries-msg").textContent = text; $("entries-msg").className = "msg" + (kind ? " " + kind : ""); }
+async function rpc(fn, body) {
+  const res = await fetch(`${SUPABASE_URL}/rest/v1/rpc/${fn}`, { method: "POST",
+    headers: Object.assign({ "Content-Type": "application/json" }, HEADERS), body: JSON.stringify(body) });
+  const text = await res.text();
+  if (!res.ok) { let m = text; try { m = JSON.parse(text).message || text; } catch (e) { /* plain text */ } throw new Error(m); }
+  return text ? JSON.parse(text) : null;
+}
+const entryTime = (r) => StudyTables.utcOf(r.day, r.time, r.utc_offset);
+function summary(kind, r) {
+  if (kind === "score") {
+    if (r.missed) return `missed${r.miss_reason ? ": " + r.miss_reason : ""}`;
+    const smell = r.smell && r.smell !== "none" ? ` ${r.smell}` : "";
+    const where = r.smell_where && r.smell_where !== "none" ? ` at the ${r.smell_where}` : "";
+    return `squeeze ${r.squeeze ?? "–"}${r.moisture ? ` (${r.moisture})` : ""}, smell ${r.smell_level ?? "–"}${smell}${where}`;
+  }
+  if (kind === "feed_tap") return [r.size_guess || "size not given", r.wetness_guess || "wetness not given", r.note].filter(Boolean).join(", ");
+  if (kind === "water") return [r.value != null ? `${r.value} mL` : "amount not given", r.note].filter(Boolean).join(", ");
+  return r.note || "no note";
+}
+function field(labelText, el) { const l = document.createElement("label"); l.append(labelText, el); return l; }
+function select(options, value) {
+  const s = document.createElement("select");
+  options.forEach(([v, t]) => { const o = document.createElement("option"); o.value = v; o.textContent = t; s.appendChild(o); });
+  s.value = value == null ? "" : String(value);
+  return s;
+}
+function input(type, value) { const i = document.createElement("input"); i.type = type; i.value = value == null ? "" : value; return i; }
+const opt = (vals) => [["", "–"]].concat(vals.map((v) => [v, v]));
+function editFields(kind, r) {
+  // [field name, label, element, how to read it back]
+  const txt = (e) => e.value.trim() || null, num = (e) => e.value === "" ? null : Number(e.value);
+  const f = [["chamber", "Chamber", select([["L", "L"], ["R", "R"]], r.chamber), (e) => e.value]];
+  if (kind === "feed_tap") f.push(["size_guess", "Size", select(opt(["small", "medium", "large"]), r.size_guess), txt],
+                                  ["wetness_guess", "Wetness", select(opt(["dry", "normal", "wet"]), r.wetness_guess), txt]);
+  if (kind === "water") f.push(["value", "Water, mL", input("number", r.value), num]);
+  if (kind === "score") {
+    const missed = input("checkbox"); missed.checked = !!r.missed;
+    f.push(["squeeze", "Squeeze 1–6", select(opt(["1", "2", "3", "4", "5", "6"]), r.squeeze), num],
+           ["smell_level", "Smell 0–2", select(opt(["0", "1", "2"]), r.smell_level), num],
+           ["smell", "Smell type", select(opt(["none", "sour", "garbage", "musty", "ammonia", "earthy"]), r.smell), txt],
+           ["smell_where", "Smelled at", select(opt(["none", "material", "room"]), r.smell_where), txt],
+           ["missed", "Missed", missed, (e) => e.checked],
+           ["miss_reason", "Why missed", input("text", r.miss_reason), txt]);
+  } else f.push(["note", "Note", input("text", r.note), txt]);
+  return f;
+}
+function button(text, cls) { const b = document.createElement("button"); b.type = "button"; b.textContent = text; if (cls) b.className = cls; return b; }
+function entryHead(kind, r, metaText) {
+  const head = document.createElement("div"); head.className = "head";
+  const what = document.createElement("span"); what.className = "what"; what.textContent = `${KIND_LABEL[kind] || kind} · ${r.chamber || "–"}`;
+  const sum = document.createElement("span"); sum.textContent = summary(kind, r);
+  const meta = document.createElement("span"); meta.className = "meta"; meta.textContent = metaText;
+  head.append(what, sum, meta);
+  return head;
+}
+function renderEntry(item, history) {
+  const { table, id, kind, row } = item;
+  const box = document.createElement("article"); box.className = "entry";
+  const by = table === "scores" ? row.observer : row.entered_by;
+  const edits = history.filter((c) => c.action === "update");
+  const meta = `${when(entryTime(row))}${by ? " · by " + by : ""}` + (edits.length
+    ? ` · edited ${edits.length}×, last ${when(StudyTables.utcOf(edits[0].day, edits[0].time, edits[0].utc_offset))} by ${edits[0].changed_by}` : "");
+  const editBtn = button("Edit"), delBtn = button("Delete", "warn");
+  const acts = document.createElement("div"); acts.className = "acts"; acts.append(editBtn, delBtn);
+  const area = document.createElement("div");
+  box.append(entryHead(kind, row, meta), acts, area);
+  const who = () => {
+    const n = $("observer").value.trim();
+    if (!n) entriesSay("Enter your name at the top first, so the change log says who made the change.", "err");
+    else store("p150-observer", n);
+    return n;
+  };
+  editBtn.addEventListener("click", () => {
+    area.textContent = "";
+    const fields = editFields(kind, row);
+    const form = document.createElement("div"); form.className = "form";
+    fields.forEach(([, label, el]) => form.appendChild(field(label, el)));
+    const reason = input("text"); reason.placeholder = "optional";
+    form.appendChild(field("Reason for the change", reason));
+    const save = button("Save changes", "primary"), keep = button("Keep as it was");
+    const bar = document.createElement("div"); bar.className = "acts"; bar.append(save, keep);
+    area.append(form, bar);
+    keep.addEventListener("click", () => { area.textContent = ""; });
+    save.addEventListener("click", async () => {
+      const name = who(); if (!name) return;
+      const changes = {};
+      fields.forEach(([key, , el, read]) => { const v = read(el); if ((v ?? null) !== (row[key] ?? null)) changes[key] = v; });
+      if (kind === "score" && "squeeze" in changes) changes.moisture = moistureClass(changes.squeeze);
+      if (!Object.keys(changes).length) { entriesSay("Nothing was changed."); area.textContent = ""; return; }
+      save.disabled = true; entriesSay("Saving the change…");
+      try {
+        await rpc("update_entry", { p_table: table, p_id: id, p_changes: changes, p_by: name, p_reason: reason.value.trim() || null });
+        entriesSay(`Saved. The change is in the change log under ${name}.`, "ok");
+        loadEntries(); loadRecent();
+      } catch (e) { entriesSay(`Not changed: ${e.message}`, "err"); save.disabled = false; }
+    });
+  });
+  delBtn.addEventListener("click", () => {
+    area.textContent = "";
+    const q = document.createElement("p"); q.className = "confirm";
+    q.textContent = `Delete this ${(KIND_LABEL[kind] || kind).toLowerCase()}? A full copy stays in the change log.`;
+    const reason = input("text"); reason.placeholder = "optional";
+    const form = document.createElement("div"); form.className = "form"; form.appendChild(field("Reason", reason));
+    const yes = button("Delete it", "warn solid"), no = button("Keep it");
+    const bar = document.createElement("div"); bar.className = "acts"; bar.append(yes, no);
+    area.append(q, form, bar);
+    no.addEventListener("click", () => { area.textContent = ""; });
+    yes.addEventListener("click", async () => {
+      const name = who(); if (!name) return;
+      yes.disabled = true; entriesSay("Deleting…");
+      try {
+        await rpc("delete_entry", { p_table: table, p_id: id, p_by: name, p_reason: reason.value.trim() || null });
+        entriesSay(`Deleted. A copy is in the change log under ${name}.`, "ok");
+        loadEntries(); loadRecent();
+      } catch (e) { entriesSay(`Not deleted: ${e.message}`, "err"); yes.disabled = false; }
+    });
+  });
+  return box;
+}
+async function loadEntries() {
+  const list = $("entries-list"), gone = $("entries-deleted");
+  if (!serial()) { list.innerHTML = '<p class="hint">Choose the machine at the top.</p>'; gone.textContent = ""; return; }
+  const m = encodeURIComponent(serial());
+  const since = StudyTables.when(new Date(Date.now() - 7 * 86400000).toISOString()).day;
+  try {
+    const [ev, sc, ch] = await Promise.all([
+      get(`events?machine=eq.${m}&event=in.(${PEOPLE_EVENTS.join(",")})&day=gte.${since}&order=day.desc,time.desc&limit=300`),
+      get(`scores?machine=eq.${m}&day=gte.${since}&order=day.desc,time.desc&limit=300`),
+      get(`entry_changes?machine=eq.${m}&day=gte.${since}&order=day.desc,time.desc&limit=1000`).catch(() => [])]);
+    const items = ev.map((r) => ({ table: "events", id: r.event_id, kind: r.event, row: r }))
+      .concat(sc.map((r) => ({ table: "scores", id: r.score_id, kind: "score", row: r })))
+      .sort((a, b) => entryTime(b.row).localeCompare(entryTime(a.row)));
+    list.textContent = "";
+    if (!items.length) list.innerHTML = '<p class="hint">Nothing entered for this machine in the last 7 days.</p>';
+    items.forEach((it) => list.appendChild(renderEntry(it, ch.filter((c) => c.entry_id === it.id))));
+    const deleted = ch.filter((c) => c.action === "delete");
+    gone.textContent = "";
+    if (!deleted.length) gone.innerHTML = '<p class="hint">None.</p>';
+    deleted.forEach((c) => {
+      const r = c.before || {};
+      const box = document.createElement("article"); box.className = "entry";
+      box.appendChild(entryHead(c.entry_kind, r, `entered ${r.day ? when(entryTime(r)) : "–"} · deleted ` +
+        `${when(StudyTables.utcOf(c.day, c.time, c.utc_offset))} by ${c.changed_by}${c.reason ? " · " + c.reason : ""}`));
+      gone.appendChild(box);
+    });
+  } catch (e) {
+    list.innerHTML = '<p class="hint">Could not load the entries. Check the connection.</p>';
   }
 }
 

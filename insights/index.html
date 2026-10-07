@@ -671,7 +671,7 @@ async function renderProgress() {
   const box = $("scoring-charts"); box.textContent = "";
   const dayX = days.map((d) => sec(d + "T12:00:00Z"));
   timeChart(box, { title: "Scores per day", unit: "count; plan is 2 a day", xs: dayX, points: true, lines: true,
-    empty: "No scores in this time range. Scores come from the Compost Check pages.",
+    empty: "No scores in this time range. Scores come from the Compost Control pages.",
     series: ["L", "R"].map((c) => ({ label: `Chamber ${c}`, values: days.map((d) => obs.filter((o) => o.chamber === c && !o.missed && o.ts_utc.startsWith(d)).length) }))
       .concat([{ label: "Plan", values: days.map(() => 2), color: cssVar("--muted"), dash: [6, 4] }]) });
   const ageX = dec.map((d) => sec(d.ts_utc));

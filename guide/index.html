@@ -137,7 +137,7 @@ nav.pages a:focus-visible { outline: 2px solid var(--moss); outline-offset: 2px;
   </dl>
   <div class="links">
     <a href="https://virgohomeio.github.io/compost-check/simple/" target="_blank" rel="noopener">Quick score</a>
-    <a href="https://virgohomeio.github.io/compost-check/score/" target="_blank" rel="noopener">Full compost check</a>
+    <a href="https://virgohomeio.github.io/compost-check/score/" target="_blank" rel="noopener">Full check</a>
     <a href="https://virgohomeio.github.io/compost-check/insights/" target="_blank" rel="noopener">Insights</a>
   </div>
   <p class="where">In the commands, replace <b class="ph">&lt;PORT&gt;</b> with your machine's port and <b class="ph">&lt;SERIAL&gt;</b> with its serial number. Step 2 and step 3 show you both.</p>
@@ -204,7 +204,7 @@ firmware_modes_only: true</pre><button type="button">Copy</button></div>
           <tr><td><b>Same machine, other laptop</b></td><td>stop the harness and the safety guard on the first laptop, move the USB cable, then step 8 on the second. The run picks up where it was</td></tr>
         </tbody>
       </table></div>
-      <p>A machine appears on Compost Check (Insights, Quick score, Full check) by itself once it has sent any data, on any device.</p>
+      <p>A machine appears on Compost Control (Insights, Quick score, Full check) by itself once it has sent any data, on any device.</p>
     </div></li>
   </ol>
 </section>
@@ -373,7 +373,7 @@ python -m harness.api.certs --out harness\secrets</pre><button type="button">Cop
         <thead><tr><th>Way</th><th>Use it for</th><th>What it records</th></tr></thead>
         <tbody>
           <tr><td><a href="https://virgohomeio.github.io/compost-check/simple/" target="_blank" rel="noopener">Quick score</a></td><td>The routine daily check</td><td>Squeeze, smell, or why it was missed, and a feed with an optional note</td></tr>
-          <tr><td><a href="https://virgohomeio.github.io/compost-check/score/" target="_blank" rel="noopener">Full compost check</a></td><td>A detailed check, or anything beyond a feed</td><td>Score with a photo, feed, water added, unload, service done, plus the machine's status, recent events and latest scores</td></tr>
+          <tr><td><a href="https://virgohomeio.github.io/compost-check/score/" target="_blank" rel="noopener">Full check</a></td><td>A detailed check, or anything beyond a feed</td><td>Score with a photo, feed, water added, unload, service done, plus the machine's status, recent events and latest scores. The <b>Entries</b> tab fixes or deletes a wrong entry; every add, edit and delete is kept in Supabase (<code>entry_changes</code>)</td></tr>
           <tr><td>Terminal questions (<code>score.py</code>)</td><td>When you are at the laptop and don't want to open a browser</td><td>Asks you questions in the PowerShell window, chamber L then R: scored or missed, squeeze 1 to 6, smell level 0 to 2, and if it smells, what kind and where. No photo and no feed. If the internet is down it keeps the score and sends it the next time you run it.</td></tr>
         </tbody>
       </table></div>
