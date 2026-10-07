@@ -497,12 +497,13 @@ Invoke-RestMethod -Method Post -Uri https://localhost:8443/intervals -SkipCertif
   </div>
   <p>Run these one at a time in a PowerShell terminal opened in the repository folder (the one that contains <code>RL</code> and <code>docs</code>). After each one, copy everything it printed and send it back. This section changes as the diagnosis goes on; refresh the page to see the next step.</p>
   <div class="note" style="border:2px solid currentColor;border-radius:8px;padding:12px 14px;margin:12px 0">
-    <p><b>Latest message (7 Oct): add the two missing study settings.</b> Open <code>RL\harness\config\machine.yaml</code> in Notepad, go to the very end of the file, and paste these two lines on their own lines, <b>with no spaces in front</b>:</p>
-    <div class="cmd"><pre>scores_drive_decisions: false
-firmware_modes_only: true</pre><button type="button">Copy</button></div>
-    <p>If a line starting with <code>scores_drive_decisions:</code> is already somewhere in the file, change that one to <code>false</code> instead of adding a second. Save (Ctrl+S).</p>
-    <p>What they do: <code>firmware_modes_only: true</code> keeps every decision to A1 (light) or A3 (heavy), the firmware's own two modes. <code>scores_drive_decisions: false</code> means scores are recorded but do not steer decisions yet. Both laptops must match, so the study runs the same whichever laptop drives the machine.</p>
-    <p><b>Then</b> run the machine check (D6 below) once more; it should still say no failures. The laptop is then ready: carry on with the main guide from step 9.</p>
+    <p><b>Latest message (7 Oct, 285 runs checked): the data arrives, but 285 does not carry out the commands.</b> Its pads stayed at 23 °C and its PTC at 24 °C for 9 minutes while the harness had them switched on. On 305 the pads reach 38 °C and the PTC 74 °C within 2 minutes. The machine check passed because 285 <i>acknowledges</i> each command; it just does not act on them. The study settings were also missing during the first run (that decision allowed A1, A2 and A3 and let scores steer).</p>
+    <p>Two checks, in <b>Command Prompt</b> in the <code>RL</code> folder, with no harness running. Send back everything each one prints.</p>
+    <p><b>1. The settings this laptop now has:</b></p>
+    <div class="cmd"><pre>findstr /n "serial port stop_process start_process firmware_modes scores_drive" harness\config\machine.yaml</pre><button type="button">Copy</button></div>
+    <p><b>2. Does 285 act on direct commands?</b> Lids closed. It switches each heater, the blower and each mixer on for a short time and watches whether the temperature or current moves. Listen for the blower and the mixer clicks.</p>
+    <div class="cmd"><pre>python -m harness.tools.hardware_test --config harness\config\machine.yaml --only direct</pre><button type="button">Copy</button></div>
+    <p>If 2 shows nothing moving, 285 most likely still has the older build of its firmware. 305's was updated on 5 Oct, and only after that did 305 follow the laptop.</p>
   </div>
   <ol class="steps">
     <li class="step"><span class="n">D0</span><div class="body">
