@@ -497,7 +497,10 @@ Invoke-RestMethod -Method Post -Uri https://localhost:8443/intervals -SkipCertif
   </div>
   <p>Run these one at a time in a PowerShell terminal opened in the repository folder (the one that contains <code>RL</code> and <code>docs</code>). After each one, copy everything it printed and send it back. This section changes as the diagnosis goes on; refresh the page to see the next step.</p>
   <div class="note" style="border:2px solid currentColor;border-radius:8px;padding:12px 14px;margin:12px 0">
-    <p><b>Latest message (7 Oct):</b> "git is not recognized" means this laptop has no working Git, so the earlier <code>git pull</code> never ran and the code here is old. That explains both failures in the machine check: Supabase 404 (old table names) and STOP_PROCESS (old settings). Do <b>D0</b> now and send back what <code>Test-Path .git</code> and <code>where.exe git</code> print. If it says <code>False</code>, the folder came as a ZIP and the next step will be a fresh copy of the code.</p>
+    <p><b>Latest message (7 Oct):</b> "Test-Path is not recognized" means this window is the <b>Command Prompt</b>, not PowerShell. Every command in this guide is for PowerShell. Switch in the same window by typing:</p>
+    <div class="cmd"><pre>powershell</pre><button type="button">Copy</button></div>
+    <p>The prompt changes to start with <code>PS</code>. Then run <b>D0</b> again and send back what <code>Test-Path .git</code> and <code>where.exe git</code> print.</p>
+    <p><i>Earlier:</i> "git is not recognized" means this laptop has no working Git, so the earlier <code>git pull</code> never ran and the code here is old. That explains both machine-check failures: Supabase 404 (old table names) and STOP_PROCESS (old settings).</p>
   </div>
   <ol class="steps">
     <li class="step"><span class="n">D0</span><div class="body">
