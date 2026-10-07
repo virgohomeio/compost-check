@@ -496,7 +496,21 @@ Invoke-RestMethod -Method Post -Uri https://localhost:8443/intervals -SkipCertif
     <h2>Laptop diagnosis</h2>
   </div>
   <p>Run these one at a time in a PowerShell terminal opened in the repository folder (the one that contains <code>RL</code> and <code>docs</code>). After each one, copy everything it printed and send it back. This section changes as the diagnosis goes on; refresh the page to see the next step.</p>
+  <div class="note" style="border:2px solid currentColor;border-radius:8px;padding:12px 14px;margin:12px 0">
+    <p><b>Latest message (7 Oct):</b> "git is not recognized" means this laptop has no working Git, so the earlier <code>git pull</code> never ran and the code here is old. That explains both failures in the machine check: Supabase 404 (old table names) and STOP_PROCESS (old settings). Do <b>D0</b> now and send back what <code>Test-Path .git</code> and <code>where.exe git</code> print. If it says <code>False</code>, the folder came as a ZIP and the next step will be a fresh copy of the code.</p>
+  </div>
   <ol class="steps">
+    <li class="step"><span class="n">D0</span><div class="body">
+      <h3>Git on this laptop</h3>
+      <p>"git is not recognized" means Git is not installed, or this terminal cannot find it. First, how did the code get here?</p>
+      <div class="cmd"><pre>Test-Path .git
+where.exe git</pre><button type="button">Copy</button></div>
+      <p><code>True</code> means the folder was cloned with Git. <code>False</code> means it came as a ZIP download and cannot be updated with <code>git pull</code>. Send both answers. Then install Git:</p>
+      <div class="cmd"><pre>winget install --id Git.Git -e --source winget</pre><button type="button">Copy</button></div>
+      <p>When it finishes, <b>close this PowerShell window and open a new one</b> in the same folder, then check:</p>
+      <div class="cmd"><pre>git --version</pre><button type="button">Copy</button></div>
+      <p>It should print a version number. If <code>Test-Path .git</code> said <code>True</code>, go on to D1. If it said <code>False</code>, wait: the next step will be a fresh copy of the code.</p>
+    </div></li>
     <li class="step"><span class="n">D1</span><div class="body">
       <h3>Which code this laptop has</h3>
       <div class="cmd"><pre>git log -1 --oneline
