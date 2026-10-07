@@ -497,21 +497,17 @@ Invoke-RestMethod -Method Post -Uri https://localhost:8443/intervals -SkipCertif
   </div>
   <p>Run these one at a time in a PowerShell terminal opened in the repository folder (the one that contains <code>RL</code> and <code>docs</code>). After each one, copy everything it printed and send it back. This section changes as the diagnosis goes on; refresh the page to see the next step.</p>
   <div class="note" style="border:2px solid currentColor;border-radius:8px;padding:12px 14px;margin:12px 0">
-    <p><b>Latest message (7 Oct): tables.py is missing, so this laptop still has the old code.</b> Get the new code with <b>one</b> of these two ways. Both work through windows and folders only.</p>
-    <p><b>Way A: pull with the app that copied it.</b> Press the Windows key and type <b>GitHub Desktop</b>.</p>
-    <ul>
-      <li>If it opens: top left, <b>Current repository</b> → choose <b>RND_AI_DynamicAlgo</b> → press <b>Fetch origin</b> → when the button changes, press <b>Pull origin</b>.</li>
-      <li>If there is no GitHub Desktop, try <b>VS Code</b>: File → Open Folder → <b>RND_AI_DynamicAlgo</b> → Source Control (Ctrl+Shift+G) → <b>…</b> → <b>Pull</b>.</li>
-    </ul>
-    <p><b>Way B: if neither app works, copy the new files over the old ones.</b></p>
+    <p><b>Latest message (7 Oct): the pull did not work, so skip it and copy the new files in by hand.</b> No terminal and no Git needed.</p>
     <ol>
-      <li>Open <b>https://github.com/virgohomeio/RND_AI_DynamicAlgo</b> (signed in) → green <b>Code</b> button → <b>Download ZIP</b>.</li>
-      <li>Right-click the downloaded ZIP → <b>Extract All</b>.</li>
-      <li>Open the extracted folder. Inside it, select <b>RL</b> and <b>docs</b> → Copy.</li>
-      <li>Open this laptop's <b>RND_AI_DynamicAlgo</b> folder → Paste → choose <b>Replace the files in the destination</b>.</li>
+      <li>In the browser, open <b>https://github.com/virgohomeio/RND_AI_DynamicAlgo</b> (signed in to GitHub) → green <b>Code</b> button → <b>Download ZIP</b>.</li>
+      <li>In Downloads, right-click <b>RND_AI_DynamicAlgo-main.zip</b> → <b>Extract All</b> → Extract.</li>
+      <li>Open the extracted folder until you see <b>RL</b> and <b>docs</b>. Select both → right-click → <b>Copy</b>.</li>
+      <li>Open this laptop's <b>RND_AI_DynamicAlgo</b> folder (the one with <code>.git</code>, <code>RL</code> and <code>docs</code>) → right-click an empty spot → <b>Paste</b> → <b>Replace the files in the destination</b>.</li>
+      <li>Check: <code>RL\harness\log\tables.py</code> is there now.</li>
     </ol>
-    <p>Way B keeps your fixed <code>machine.yaml</code>: it is not in the download, so nothing replaces it.</p>
-    <p><b>Then:</b> check that <code>RL\harness\log\tables.py</code> is there now, run the machine check (D6 below), and send back the <b>Supabase</b> line. If anything shows an error, send its exact message.</p>
+    <p>Your fixed <code>machine.yaml</code> stays: it is not in the download, so nothing replaces it.</p>
+    <p><b>Then</b> run the machine check (D6 below) and send back the <b>Supabase</b> line.</p>
+    <p>For later (not needed now): the pull message would tell us why it failed; send it if you still have it, so the next update can be a normal pull.</p>
   </div>
   <ol class="steps">
     <li class="step"><span class="n">D0</span><div class="body">
