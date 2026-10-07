@@ -497,19 +497,14 @@ Invoke-RestMethod -Method Post -Uri https://localhost:8443/intervals -SkipCertif
   </div>
   <p>Run these one at a time in a PowerShell terminal opened in the repository folder (the one that contains <code>RL</code> and <code>docs</code>). After each one, copy everything it printed and send it back. This section changes as the diagnosis goes on; refresh the page to see the next step.</p>
   <div class="note" style="border:2px solid currentColor;border-radius:8px;padding:12px 14px;margin:12px 0">
-    <p><b>Latest message (7 Oct): the folder is a Git copy, good.</b> It was most likely made with <b>GitHub Desktop</b> or <b>VS Code</b>, which carry their own Git, so the terminal cannot find a <code>git</code> command. Update the code the same way it was copied. No terminal needed.</p>
-    <p><b>1. Get the latest code</b>, with whichever app this laptop has:</p>
+    <p><b>Latest message (7 Oct): STOP_PROCESS is solved. Now Supabase.</b> The 404 means "table not found": this laptop's code still looks for the old tables (<code>readings_v4</code>…), which were archived this morning. The new code uses the new tables, so the fix is getting the new code onto this laptop.</p>
+    <p><b>1. Check whether the new code is here</b> (no terminal). In File Explorer open <code>RND_AI_DynamicAlgo\RL\harness\log\</code>. Is there a file named <b>tables.py</b>?</p>
     <ul>
-      <li><b>GitHub Desktop:</b> Current repository → <b>RND_AI_DynamicAlgo</b> → <b>Fetch origin</b> → <b>Pull origin</b>.</li>
-      <li><b>VS Code:</b> File → Open Folder → <b>RND_AI_DynamicAlgo</b> → Source Control (the branch icon on the left, or Ctrl+Shift+G) → <b>…</b> menu → <b>Pull</b>.</li>
+      <li><b>No:</b> the update did not happen yet. Pull it: GitHub Desktop → <b>Fetch origin</b> → <b>Pull origin</b>, or VS Code → Source Control → <b>…</b> → <b>Pull</b>. Then check again for <b>tables.py</b>.</li>
+      <li><b>Yes:</b> the code is new. Go to step 2.</li>
     </ul>
-    <p>Check: in the history it should now show <b>"Tests: the pages load study-tables.js instead of naming a schema version"</b> as the newest entry. If the app reports an error or a conflict, send its message and stop.</p>
-    <p><b>2. Fix one setting.</b> In File Explorer open <code>RL\harness\config\</code>, right-click <b>machine.yaml</b> → Open with → Notepad. Find the <code>firmware:</code> lines and make them exactly:</p>
-    <div class="cmd"><pre>firmware:
-  stop_process_on_start: false
-  start_process_on_exit: false</pre><button type="button">Copy</button></div>
-    <p>Save (Ctrl+S). Send back which app you used and whether the newest entry matches.</p>
-    <p><i>Why:</i> the machine check failed twice. Supabase 404: this laptop's code is from before today and writes to the old tables, which were archived this morning; step 1 fixes it. STOP_PROCESS refused: the firmware will not hand over; step 2 tells the laptop not to ask. After both, the machine check (D6) should say READY.</p>
+    <p><b>2. Run the machine check again</b> (D6 below), and send back the whole <b>data</b> / <b>Supabase</b> line it prints.</p>
+    <p>If the pull app shows an error or says files would be overwritten, send its exact message and stop. Your <code>machine.yaml</code> is not in the repository, so the pull never changes it.</p>
   </div>
   <ol class="steps">
     <li class="step"><span class="n">D0</span><div class="body">
