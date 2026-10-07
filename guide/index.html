@@ -143,6 +143,71 @@ nav.pages a:focus-visible { outline: 2px solid var(--moss); outline-offset: 2px;
   <p class="where">In the commands, replace <b class="ph">&lt;PORT&gt;</b> with your machine's port and <b class="ph">&lt;SERIAL&gt;</b> with its serial number. Step 2 and step 3 show you both.</p>
 </header>
 
+<!-- 0 -->
+<section class="phase" id="new-laptop">
+  <div class="phase-head">
+    <span class="eyebrow">Before Phase A</span>
+    <h2>A new laptop or a new machine</h2>
+  </div>
+  <p>Commands are for <b>PowerShell</b>: the prompt starts with <code>PS</code>. If it does not (Command Prompt), type <code>powershell</code> and press Enter first. Run them from the <b>RND_AI_DynamicAlgo</b> folder unless a step says otherwise.</p>
+  <ol class="steps">
+    <li class="step"><span class="n">i</span><div class="body">
+      <h3>Get the code from GitHub <span class="tag once">once per laptop</span></h3>
+      <p class="skip"><b>Can skip</b>if this laptop already has the <b>RND_AI_DynamicAlgo</b> folder with a hidden <code>.git</code> folder inside.</p>
+      <p>The repository is private: sign in with a GitHub account that is a member of <b>virgohomeio</b>. Use one of the two ways.</p>
+      <p><b>With Git in PowerShell.</b> Install Git once, then close PowerShell and open a new one:</p>
+      <div class="cmd"><pre>winget install --id Git.Git -e --source winget</pre><button type="button">Copy</button></div>
+      <p>Go to the folder that should hold the project (for example <code>C:\Vcycene</code>) and copy it down. A GitHub sign-in window opens the first time.</p>
+      <div class="cmd"><pre>git clone https://github.com/virgohomeio/RND_AI_DynamicAlgo.git
+cd RND_AI_DynamicAlgo</pre><button type="button">Copy</button></div>
+      <p><b>With GitHub Desktop</b> (no commands): install it from desktop.github.com, sign in, then File → Clone repository → URL → <code>https://github.com/virgohomeio/RND_AI_DynamicAlgo</code> → Clone.</p>
+      <p><b>Getting updates later:</b> <code>git pull</code> in PowerShell, or Fetch origin → Pull origin in GitHub Desktop. If neither works, download the ZIP from the repository page (Code → Download ZIP), extract it, and copy its <code>RL</code> and <code>docs</code> folders over this laptop's, choosing Replace. Your <code>machine.yaml</code>, the unlock and the keys are not in the download, so they stay.</p>
+    </div></li>
+
+    <li class="step"><span class="n">ii</span><div class="body">
+      <h3>The settings file: what it must say</h3>
+      <p>Each laptop has its own <code>RL\harness\config\machine.yaml</code> (step 4 makes it). It never goes to GitHub, so a pull never brings these settings: check them by hand on every laptop. Open the file in Notepad and make these lines read as below. Lines under <code>transport:</code> and <code>firmware:</code> keep their two spaces in front; every other line has none. If a line is missing, add it at the end of the file.</p>
+      <div class="cmd"><pre>serial: LL01-00000000305
+transport:
+  uart: {port: COM10, baud: 115200, timeout_s: 0.5}
+gas_saturation_ohm: 102400000
+ptc_guard_c: {off_at: 62, on_below: 58, alarm_at: 75}
+firmware:
+  stop_process_on_start: false
+  start_process_on_exit: false
+stage: 1
+policy: {kind: random}
+scores_drive_decisions: false
+firmware_modes_only: true</pre><button type="button">Copy</button></div>
+      <div class="table-wrap"><table>
+        <thead><tr><th>Line</th><th>What it is</th><th>Changes when</th></tr></thead>
+        <tbody>
+          <tr><td><code>serial:</code></td><td>the machine this laptop drives (step 3 reads it)</td><td><b>new machine</b></td></tr>
+          <tr><td><code>port:</code> inside <code>uart:</code></td><td>where the USB cable shows up on this laptop (step 2 finds it)</td><td><b>new laptop</b>, or a new machine or cable</td></tr>
+          <tr><td><code>stop_process_on_start</code>, <code>start_process_on_exit</code></td><td><code>false</code>: these machines take commands directly and refuse the hand-over</td><td>never, for now</td></tr>
+          <tr><td><code>firmware_modes_only</code></td><td><code>true</code>: decisions use only A1 light and A3 heavy</td><td>only when the study says so</td></tr>
+          <tr><td><code>scores_drive_decisions</code></td><td><code>false</code>: scores are recorded, not used to steer</td><td>only when the study says so</td></tr>
+          <tr><td><code>gas_saturation_ohm</code>, <code>ptc_guard_c</code>, <code>stage</code>, <code>policy</code></td><td>the study's current values</td><td>only when the study says so</td></tr>
+        </tbody>
+      </table></div>
+      <p>Every laptop driving the study must have the same values, apart from <code>serial</code> and <code>port</code>, so the study runs the same whichever laptop is plugged in.</p>
+    </div></li>
+
+    <li class="step"><span class="n">iii</span><div class="body">
+      <h3>What to do for a new laptop, and for a new machine</h3>
+      <div class="table-wrap"><table>
+        <thead><tr><th></th><th>Do</th></tr></thead>
+        <tbody>
+          <tr><td><b>New laptop</b></td><td>i (get the code), step 1 (packages), step 2 (port), step 4 with the lines in ii, step 5 (unlock), step 6 (keys), step 7 (tests), then step 8 (machine check)</td></tr>
+          <tr><td><b>New machine</b> on a laptop already set up</td><td>step 2 (its port), step 3 (its serial), change <code>serial</code> and <code>port</code> in <code>machine.yaml</code>, then step 8 (machine check)</td></tr>
+          <tr><td><b>Same machine, other laptop</b></td><td>stop the harness and watchdog on the first laptop, move the USB cable, then step 8 on the second. The run picks up where it was</td></tr>
+        </tbody>
+      </table></div>
+      <p>A machine appears on Compost Check (Insights, Quick score, Full check) by itself once it has sent any data, on any device.</p>
+    </div></li>
+  </ol>
+</section>
+
 <!-- A -->
 <section class="phase">
   <div class="phase-head">
@@ -182,19 +247,7 @@ pip install -r RL\requirements.txt</pre><button type="button">Copy</button></div
       <p class="skip"><b>Can skip</b>if <code>RL\harness\config\machine.yaml</code> already exists on this laptop for this machine.</p>
       <p>Each laptop has its own <code>machine.yaml</code>. It is never shared through GitHub, because it holds this laptop's port. Start from the shared template:</p>
       <div class="cmd"><pre>Copy-Item RL\harness\config\machine.example.yaml RL\harness\config\machine.yaml</pre><button type="button">Copy</button></div>
-      <p>Open <code>RL\harness\config\machine.yaml</code> in a text editor and set these lines. The first two are this machine and this laptop; the rest are the study's current rules. Check every one, even in a fresh copy of the template:</p>
-      <div class="table-wrap"><table>
-        <thead><tr><th>Line</th><th>Set it to</th></tr></thead>
-        <tbody>
-          <tr><td><code>serial:</code></td><td>the serial from step 3, for example <code>LL01-00000000305</code></td></tr>
-          <tr><td><code>uart: {port: …}</code></td><td>this laptop's port from step 2, for example <code>COM10</code></td></tr>
-          <tr><td><code>firmware_modes_only:</code></td><td><code>true</code>: decisions use only A1 light and A3 heavy</td></tr>
-          <tr><td><code>scores_drive_decisions:</code></td><td><code>false</code>: scores are recorded but do not steer decisions</td></tr>
-          <tr><td><code>gas_saturation_ohm:</code></td><td><code>102400000</code>: the gas sensor's real ceiling</td></tr>
-          <tr><td>under <code>firmware:</code><br><code>stop_process_on_start:</code><br><code>start_process_on_exit:</code></td><td><code>false</code> and <code>false</code>: these machines take commands directly and refuse the hand-over. With <code>true</code>, step 11 stops with "the firmware refused STOP_PROCESS"</td></tr>
-          <tr><td><code>ptc_guard_c:</code></td><td><code>{off_at: 62, on_below: 58, alarm_at: 75}</code>: keeps the blower PTC near 70 °C</td></tr>
-        </tbody>
-      </table></div>
+      <p>Open <code>RL\harness\config\machine.yaml</code> in Notepad and set the lines shown in <b>ii</b> at the top of this guide: <code>serial</code> from step 3, <code>port</code> from step 2, and the study values exactly as shown.</p>
       <ul>
         <li>Leave <code>seed</code> and <code>decision_times_local</code> as they are, so a run can move between laptops without breaking its cycle.</li>
         <li>The harness checks the serial against the machine at start and refuses to run if they differ.</li>
@@ -281,7 +334,7 @@ python -m harness.api.certs --out harness\secrets</pre><button type="button">Cop
       <p class="where">Run in <b>RND_AI_DynamicAlgo\RL</b></p>
       <div class="cmd"><pre>python -m harness.run --config harness\config\machine.yaml --read-only --verbose --hours 0.08</pre><button type="button">Copy</button></div>
       <ul>
-        <li>The harness logs and decides but sends nothing to the machine. The firmware keeps running it.</li>
+        <li>The harness reads and logs, and uploads the readings, but makes no decisions and sends nothing to the machine. The firmware keeps running it.</li>
         <li>Open <a href="https://virgohomeio.github.io/compost-check/insights/" target="_blank" rel="noopener">Insights</a> and pick your machine, or add <code>?machine=&lt;SERIAL&gt;</code> to the address. New readings should appear within a few minutes.</li>
         <li>Decisions only appear at the 4-hourly times. You don't need to wait for one.</li>
         <li><code>--verbose</code> prints every reading to the screen; without it the terminal only shows events and looks idle while it logs.</li>
@@ -489,72 +542,6 @@ Invoke-RestMethod -Method Post -Uri https://localhost:8443/intervals -SkipCertif
     </tbody>
   </table></div>
 </section>
-
-<section class="phase" id="diagnosis">
-  <div class="phase-head">
-    <span class="eyebrow">Temporary · connecting a second laptop</span>
-    <h2>Laptop diagnosis</h2>
-  </div>
-  <p>Run these one at a time in a PowerShell terminal opened in the repository folder (the one that contains <code>RL</code> and <code>docs</code>). After each one, copy everything it printed and send it back. This section changes as the diagnosis goes on; refresh the page to see the next step.</p>
-  <div class="note" style="border:2px solid currentColor;border-radius:8px;padding:12px 14px;margin:12px 0">
-    <p><b>Latest message (7 Oct, 285 runs checked): the data arrives, but 285 does not carry out the commands.</b> Its pads stayed at 23 °C and its PTC at 24 °C for 9 minutes while the harness had them switched on. On 305 the pads reach 38 °C and the PTC 74 °C within 2 minutes. The machine check passed because 285 <i>acknowledges</i> each command; it just does not act on them. The study settings were also missing during the first run (that decision allowed A1, A2 and A3 and let scores steer).</p>
-    <p>Two checks, in <b>Command Prompt</b> in the <code>RL</code> folder, with no harness running. Send back everything each one prints.</p>
-    <p><b>1. The settings this laptop now has:</b></p>
-    <div class="cmd"><pre>findstr /n "serial port stop_process start_process firmware_modes scores_drive" harness\config\machine.yaml</pre><button type="button">Copy</button></div>
-    <p><b>2. Does 285 act on direct commands?</b> Lids closed. It switches each heater, the blower and each mixer on for a short time and watches whether the temperature or current moves. Listen for the blower and the mixer clicks.</p>
-    <div class="cmd"><pre>python -m harness.tools.hardware_test --config harness\config\machine.yaml --only direct</pre><button type="button">Copy</button></div>
-    <p>If 2 shows nothing moving, 285 most likely still has the older build of its firmware. 305's was updated on 5 Oct, and only after that did 305 follow the laptop.</p>
-  </div>
-  <ol class="steps">
-    <li class="step"><span class="n">D0</span><div class="body">
-      <h3>Git on this laptop</h3>
-      <p>"git is not recognized" means Git is not installed, or this terminal cannot find it. First, how did the code get here?</p>
-      <div class="cmd"><pre>Test-Path .git
-where.exe git</pre><button type="button">Copy</button></div>
-      <p><code>True</code> means the folder was cloned with Git. <code>False</code> means it came as a ZIP download and cannot be updated with <code>git pull</code>. Send both answers. Then install Git:</p>
-      <div class="cmd"><pre>winget install --id Git.Git -e --source winget</pre><button type="button">Copy</button></div>
-      <p>When it finishes, <b>close this PowerShell window and open a new one</b> in the same folder, then check:</p>
-      <div class="cmd"><pre>git --version</pre><button type="button">Copy</button></div>
-      <p>It should print a version number. If <code>Test-Path .git</code> said <code>True</code>, go on to D1. If it said <code>False</code>, wait: the next step will be a fresh copy of the code.</p>
-    </div></li>
-    <li class="step"><span class="n">D1</span><div class="body">
-      <h3>Which code this laptop has</h3>
-      <div class="cmd"><pre>git log -1 --oneline
-git status --short</pre><button type="button">Copy</button></div>
-      <p>The first line should start with <code>6b1a715</code> or a later commit. Anything older means the last pull did not happen.</p>
-    </div></li>
-    <li class="step"><span class="n">D2</span><div class="body">
-      <h3>Get the latest code</h3>
-      <div class="cmd"><pre>git pull --rebase --autostash
-git log -1 --oneline</pre><button type="button">Copy</button></div>
-      <p>If it prints an error, send the whole message and stop here.</p>
-    </div></li>
-    <li class="step"><span class="n">D3</span><div class="body">
-      <h3>The settings the harness will use</h3>
-      <div class="cmd"><pre>findstr /n "serial port stop_process start_process firmware_modes scores_drive ptc_guard gas_saturation" RL\harness\config\machine.yaml</pre><button type="button">Copy</button></div>
-      <p>Expected: <code>stop_process_on_start: false</code>, <code>start_process_on_exit: false</code>, <code>firmware_modes_only: true</code>, <code>scores_drive_decisions: false</code>, the machine's serial and this laptop's COM port.</p>
-    </div></li>
-    <li class="step"><span class="n">D4</span><div class="body">
-      <h3>Which port the composter is on</h3>
-      <div class="cmd"><pre>Get-PnpDevice -Class Ports -PresentOnly | Select-Object FriendlyName, Status</pre><button type="button">Copy</button></div>
-    </div></li>
-    <li class="step"><span class="n">D5</span><div class="body">
-      <h3>Can this laptop reach Supabase</h3>
-      <div class="cmd"><pre>cd RL
-python -c "from harness.config import load_supabase_config as L; import urllib.request as u; s=L(); k=s.publishable_key; r=u.Request(s.url+'/rest/v1/sensor_readings?select=machine,day,time&amp;order=day.desc,time.desc&amp;limit=1', headers={'apikey':k,'Authorization':'Bearer '+k}); print(u.urlopen(r, timeout=20).read().decode())"
-cd ..</pre><button type="button">Copy</button></div>
-      <p>Expected: one row with a machine, day and time.</p>
-    </div></li>
-    <li class="step"><span class="n">D6</span><div class="body">
-      <h3>Machine check again</h3>
-      <div class="cmd"><pre>cd RL
-python -m harness.tools.machine_check --config harness\config\machine.yaml
-cd ..</pre><button type="button">Copy</button></div>
-      <p>Lids closed, composter plugged into this laptop only. Expected: READY.</p>
-    </div></li>
-  </ol>
-</section>
-
 <footer>Settings this guide relies on, in <code>RL\harness\config\machine.yaml</code>: <code>policy: random</code>, <code>scores_drive_decisions: false</code>, <code>arbitration: fed_chamber_wins</code>. Supabase tables: sensor_readings, machine_status, decisions, events, scores, feed_weeks, blocks. Written 2 Oct 2026.</footer>
 </div>
 
