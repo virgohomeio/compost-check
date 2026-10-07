@@ -291,6 +291,9 @@ $("serial").addEventListener("change", () => {
   store("p150-serial", serial()); loadRecent();
 });
 $("serial-other").addEventListener("change", () => { store("p150-serial", serial()); loadRecent(); });
+// Every machine that has sent data, from Supabase (public.machines); MACHINES is the fallback.
+StudyTables.fillMachines(SUPABASE_URL, SUPABASE_KEY, $("serial"), $("serial-other"), Boolean(savedSerial),
+  () => { store("p150-serial", serial()); loadRecent(); });
 
 // ---- button groups
 document.querySelectorAll("[data-group], #squeeze").forEach((group) => {

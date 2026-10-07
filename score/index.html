@@ -399,6 +399,8 @@ function machineChanged() {
 }
 $("serial").addEventListener("change", () => { $("serial-other").hidden = $("serial").value !== "other"; machineChanged(); });
 $("serial-other").addEventListener("change", machineChanged);
+// Every machine that has sent data, from Supabase (public.machines); MACHINES is the fallback.
+StudyTables.fillMachines(SUPABASE_URL, SUPABASE_KEY, $("serial"), $("serial-other"), Boolean(savedSerial), machineChanged);
 
 // ---- button groups (tap again to clear)
 document.querySelectorAll("[data-group]").forEach((group) => {

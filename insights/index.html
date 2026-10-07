@@ -331,6 +331,9 @@ else if (saved) { $("serial").value = "other"; $("serial-other").hidden = false;
 const serial = () => $("serial").value === "other" ? $("serial-other").value.trim() : $("serial").value;
 $("serial").addEventListener("change", () => { $("serial-other").hidden = $("serial").value !== "other"; store("p150-serial", serial()); reload(); });
 $("serial-other").addEventListener("change", () => { store("p150-serial", serial()); reload(); });
+// Every machine that has sent data, from Supabase (public.machines); MACHINES is the fallback.
+StudyTables.fillMachines(SUPABASE_URL, SUPABASE_KEY, $("serial"), $("serial-other"), Boolean(saved),
+  () => { store("p150-serial", serial()); reload(); });
 
 let hours = Number(store("p150-insights-range") ?? 72);
 if (![0.25, 0.5, 1, 6, 12, 24, 72, 168, 0].includes(hours)) hours = 72;

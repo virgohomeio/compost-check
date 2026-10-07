@@ -176,5 +176,38 @@
     return out;
   }
 
-  window.StudyTables = { when, utcOf, toTable, fromTable, translate, fetchRows, tables: BY_NAME };
+  // Fill a page's machine <select> from public.machines: every machine that has
+  // sent data, newest first, labelled with its last day. The page's own list
+  // stays as the fallback when the view cannot be read. If nothing was chosen
+  // before (`chosen` false), the machine with the newest data is selected.
+  // `other` is the free-text box behind "Other…"; onChange runs when the
+  // selection changes here.
+  async function fillMachines(url, key, select, other, chosen, onChange) {
+    let rows;
+    try {
+      const res = await fetch(`${url}/rest/v1/machines?select=machine,last_day&order=last_day.desc,machine.asc`,
+        { headers: { apikey: key, Authorization: `Bearer ${key}` }, cache: "no-store" });
+      if (!res.ok) return;
+      rows = await res.json();
+    } catch (e) { return; }
+    if (!rows.length) return;
+    const before = select.value === "other" && other ? other.value.trim() : select.value;
+    const otherOpt = select.querySelector('option[value="other"]');
+    const known = [...select.options].map((o) => o.value).filter((v) => v !== "other");
+    [...select.options].forEach((o) => { if (o.value !== "other") o.remove(); });
+    const seen = new Set();
+    const add = (m, label) => {
+      if (seen.has(m)) return; seen.add(m);
+      const o = document.createElement("option"); o.value = m; o.textContent = label;
+      select.insertBefore(o, otherOpt);
+    };
+    rows.forEach((r) => r.machine && add(r.machine, `${r.machine} · last data ${r.last_day}`));
+    known.forEach((m) => add(m, m));
+    const pick = chosen ? before : rows[0].machine;
+    if (pick && seen.has(pick)) { select.value = pick; if (other) other.hidden = true; }
+    const now = select.value === "other" && other ? other.value.trim() : select.value;
+    if (now !== before && onChange) onChange();
+  }
+
+  window.StudyTables = { when, utcOf, toTable, fromTable, translate, fetchRows, fillMachines, tables: BY_NAME };
 })();
