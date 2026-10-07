@@ -497,17 +497,9 @@ Invoke-RestMethod -Method Post -Uri https://localhost:8443/intervals -SkipCertif
   </div>
   <p>Run these one at a time in a PowerShell terminal opened in the repository folder (the one that contains <code>RL</code> and <code>docs</code>). After each one, copy everything it printed and send it back. This section changes as the diagnosis goes on; refresh the page to see the next step.</p>
   <div class="note" style="border:2px solid currentColor;border-radius:8px;padding:12px 14px;margin:12px 0">
-    <p><b>Latest message (7 Oct): the pull did not work, so skip it and copy the new files in by hand.</b> No terminal and no Git needed.</p>
-    <ol>
-      <li>In the browser, open <b>https://github.com/virgohomeio/RND_AI_DynamicAlgo</b> (signed in to GitHub) → green <b>Code</b> button → <b>Download ZIP</b>.</li>
-      <li>In Downloads, right-click <b>RND_AI_DynamicAlgo-main.zip</b> → <b>Extract All</b> → Extract.</li>
-      <li>Open the extracted folder until you see <b>RL</b> and <b>docs</b>. Select both → right-click → <b>Copy</b>.</li>
-      <li>Open this laptop's <b>RND_AI_DynamicAlgo</b> folder (the one with <code>.git</code>, <code>RL</code> and <code>docs</code>) → right-click an empty spot → <b>Paste</b> → <b>Replace the files in the destination</b>.</li>
-      <li>Check: <code>RL\harness\log\tables.py</code> is there now.</li>
-    </ol>
-    <p>Your fixed <code>machine.yaml</code> stays: it is not in the download, so nothing replaces it.</p>
-    <p><b>Then</b> run the machine check (D6 below) and send back the <b>Supabase</b> line.</p>
-    <p>For later (not needed now): the pull message would tell us why it failed; send it if you still have it, so the next update can be a normal pull.</p>
+    <p><b>Latest message (7 Oct): connected. The machine check passes with no failures.</b> This laptop can run the machine now; carry on with the main guide from step 9.</p>
+    <p>Before the first run, check that this laptop's <code>RL\harness\config\machine.yaml</code> (open it in Notepad) also has the study settings: <code>firmware_modes_only: true</code>, <code>scores_drive_decisions: false</code>, <code>gas_saturation_ohm: 102400000</code> and <code>ptc_guard_c: {off_at: 62, on_below: 58, alarm_at: 75}</code>.</p>
+    <p>Updates: the pull on this laptop does not work yet, so get new code by downloading the ZIP and copying <b>RL</b> and <b>docs</b> over, as before.</p>
   </div>
   <ol class="steps">
     <li class="step"><span class="n">D0</span><div class="body">
