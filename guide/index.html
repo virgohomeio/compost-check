@@ -201,7 +201,7 @@ firmware_modes_only: true</pre><button type="button">Copy</button></div>
         <tbody>
           <tr><td><b>New laptop</b></td><td>i (get the code), step 1 (packages), step 2 (port), step 4 with the lines in ii, step 5 (unlock), step 6 (keys), step 7 (tests), then step 8 (machine check)</td></tr>
           <tr><td><b>New machine</b> on a laptop already set up</td><td>step 2 (its port), step 3 (its serial), change <code>serial</code> and <code>port</code> in <code>machine.yaml</code>, then step 8 (machine check)</td></tr>
-          <tr><td><b>Same machine, other laptop</b></td><td>stop the harness and watchdog on the first laptop, move the USB cable, then step 8 on the second. The run picks up where it was</td></tr>
+          <tr><td><b>Same machine, other laptop</b></td><td>stop the harness and the safety guard on the first laptop, move the USB cable, then step 8 on the second. The run picks up where it was</td></tr>
         </tbody>
       </table></div>
       <p>A machine appears on Compost Check (Insights, Quick score, Full check) by itself once it has sent any data, on any device.</p>
@@ -347,7 +347,7 @@ python -m harness.api.certs --out harness\secrets</pre><button type="button">Cop
       <h3>Start the real run</h3>
       <p class="where">Run in <b>RND_AI_DynamicAlgo\RL</b></p>
       <div class="cmd"><pre>python -m harness.run --config harness\config\machine.yaml --verbose</pre><button type="button">Copy</button></div>
-      <p>For a run you will leave, also start the watchdog in a <b>second</b> terminal. It is a separate safety process: if the harness stops answering, it switches everything off.</p>
+      <p>For a run you will leave, also start the <b>safety guard</b> in a <b>second</b> terminal. It is a separate safety process: if the harness stops answering, it switches everything off and hands the machine back to its firmware. It reports to Supabase, so Insights (Health tab) shows from any device whether it is on, and when it stepped in.</p>
       <div class="cmd"><pre>python -m harness.run --config harness\config\machine.yaml --watchdog</pre><button type="button">Copy</button></div>
       <ul>
         <li>The harness pauses the firmware's program and runs the blower, heaters and mixers itself.</li>
@@ -448,7 +448,7 @@ python -m harness.api.certs --out harness\secrets</pre><button type="button">Cop
       <tr><td>Keep a check to a minute or two</td><td>A lid open for more than 60 s is half of how an unload is spotted. It only counts as an unload if the next mix also draws much less current, so a normal check will not trigger it.</td></tr>
       <tr><td>Opening the lid is not a feed</td><td>A feed is only inferred when the chamber's humidity jumps after the lid closes. Log real feeds on the page.</td></tr>
       <tr><td>For maintenance, emptying or moving the machine</td><td>Stop the run with Ctrl+C once (see Stopping below), and start it again with the same command when you are done. It carries on the same cycle.</td></tr>
-      <tr><td>Do not unplug the USB cable to pause</td><td>The watchdog would catch it and hand the machine back to its firmware, but it is an untidy stop.</td></tr>
+      <tr><td>Do not unplug the USB cable to pause</td><td>The safety guard would catch it and hand the machine back to its firmware, but it is an untidy stop.</td></tr>
     </tbody>
   </table></div>
 </section>
@@ -463,8 +463,8 @@ python -m harness.api.certs --out harness\secrets</pre><button type="button">Cop
     <thead><tr><th>Situation</th><th>What happens</th></tr></thead>
     <tbody>
       <tr><td>You press Ctrl+C once</td><td>The harness finishes the current step, sends what is left to Supabase, puts the machine in a safe state and hands it back to the firmware.</td></tr>
-      <tr><td>The laptop crashes or the harness dies</td><td>The watchdog notices the missing heartbeat, sends the safe state and hands the machine back to the firmware.</td></tr>
-      <tr><td>Another laptop takes over the same machine</td><td>First stop this laptop's harness (Ctrl+C) and its watchdog, and move the USB cable: only one laptop can drive a machine. Then do steps 1 to 7 there with the same serial, and step 11. It reads Supabase and carries on: the actions already chosen for the current 4-hour block stay, the sensor history and latest scores are reloaded, and the next decision is the one the old laptop would have made.</td></tr>
+      <tr><td>The laptop crashes or the harness dies</td><td>The safety guard notices the harness has stopped answering, sends the safe state and hands the machine back to the firmware.</td></tr>
+      <tr><td>Another laptop takes over the same machine</td><td>First stop this laptop's harness (Ctrl+C) and its safety guard, and move the USB cable: only one laptop can drive a machine. Then do steps 1 to 7 there with the same serial, and step 11. It reads Supabase and carries on: the actions already chosen for the current 4-hour block stay, the sensor history and latest scores are reloaded, and the next decision is the one the old laptop would have made.</td></tr>
       <tr><td>A laptop moves to a different machine</td><td>Change <code>serial</code> and <code>port</code> in <code>machine.yaml</code>. Each machine keeps its own cycle under its own serial, so neither machine's cycle is disturbed.</td></tr>
       <tr><td>You change <code>machine.yaml</code> during a run</td><td>No restart needed. The change applies at the next 4-hourly decision.</td></tr>
     </tbody>
@@ -535,7 +535,7 @@ Invoke-RestMethod -Method Post -Uri https://localhost:8443/intervals -SkipCertif
       <tr><td>"machine serial … does not match config"</td><td>The serial in <code>machine.yaml</code> is for a different machine. Fix it from step 3.</td></tr>
       <tr><td>"placeholders are not confirmed"</td><td>Control is still locked on this laptop. See step 5.</td></tr>
       <tr><td>"the firmware refused STOP_PROCESS"</td><td>In this laptop's <code>machine.yaml</code>, under <code>firmware:</code>, set <code>stop_process_on_start: false</code> and <code>start_process_on_exit: false</code> (step 4).</td></tr>
-      <tr><td>"Access denied" on the port while another laptop ran the machine</td><td>The other laptop still holds the cable. Stop its harness and watchdog first.</td></tr>
+      <tr><td>"Access denied" on the port while another laptop ran the machine</td><td>The other laptop still holds the cable. Stop its harness and safety guard first.</td></tr>
       <tr><td>A test fails</td><td>Don't start. Save the output.</td></tr>
       <tr><td>Nothing new on Insights after 5 minutes</td><td>Check the terminal for upload errors. Rows are still saved locally and sent later.</td></tr>
       <tr><td>Mixers never run</td><td>A lid reads open. Run the machine check (step 8).</td></tr>

@@ -797,22 +797,42 @@ function renderHealth() {
   add("Machine", "Lid reads open", fmt(lc), fmt(lid(mm)), lc == null ? "" : status(lc <= 10, lc <= 40),
     "Mixing waits while the lid reads open");
   add("Machine", "Readings in an error state", `${ec}`, `${errs(mm)}`, status(ec === 0, ec < 5), "From the machine's own state and error code");
+  // Safety guard: the laptop-side watchdog reports on / still on / off / stepped in
+  // (events of type safety_guard, a "still protecting" row every 10 min).
+  const guard = data.events.filter((e) => e.type === "safety_guard");
+  const g = guard[guard.length - 1];
+  const stepped = guard.filter((e) => /^stepped in/.test(e.note || "")).length;
+  if (!g) {
+    add("Safety", "Safety guard", live ? "not reporting" : "–", "", live ? pill("check", "warn") : "",
+      live ? "No safety guard reports for this run. Start it in a second window next to the harness (guide step 11)" : "Reports appear while the safety guard runs");
+  } else {
+    const gAgo = now - sec(g.ts_utc), note = g.note || "";
+    const on = /^on/.test(note), quiet = on && gAgo > 25 * 60;
+    const st = /^stepped in/.test(note) ? pill("stepped in", "bad") : quiet ? pill("not reporting", "bad")
+      : on ? pill("on", "ok") : pill("off", "plain");
+    add("Safety", "Safety guard", `${note.split(":")[0]}, ${ago(sec(g.ts_utc))}`, `stepped in ${stepped}×`, st,
+      quiet ? "Was on but has not reported for over 25 minutes: its window may be closed, or the laptop asleep"
+        : on ? "Protects the machine if the harness stops responding" : note);
+  }
   const since = latest ? `since ${when(latest.start)}${live ? ", still running" : ""}` : "";
   $("health-table").innerHTML = `<thead><tr><th>Area</th><th>Check</th><th class="num">Latest session<br><span class="hint">${esc(since)}</span></th><th class="num">Whole range</th><th>Status</th><th>Note</th></tr></thead><tbody>` +
     rows.map((r) => `<tr><td>${esc(r[0])}</td><td>${esc(r[1])}</td><td class="num">${esc(r[2])}</td><td class="num">${esc(r[3])}</td><td>${r[4]}</td><td class="wrap">${esc(r[5])}</td></tr>`).join("") + "</tbody>";
 
   // 15. alarms and safety
-  const SAFETY = ["alarm", "guardrail", "power_cycle"];
-  const ev = data.events.filter((e) => SAFETY.includes(e.type));
+  const SAFETY = ["alarm", "guardrail", "power_cycle", "safety_guard"];
+  const routine = (e) => e.type === "safety_guard" && /^on: still/.test(e.note || "");   // the 10-minute "still on"
+  const ev = data.events.filter((e) => SAFETY.includes(e.type) && !routine(e));
   const n = (f) => ev.filter(f).length;
   const tiles = [["Alarms", n((e) => e.type === "alarm"), "bad"], ["Guardrail events", n((e) => e.type === "guardrail"), "warn"],
-    ["Harness starts and stops", n((e) => e.type === "power_cycle"), "plain"], ["Shared-air conflicts", data.events.filter((e) => e.type === "deviation").length, "info"]];
+    ["Harness starts and stops", n((e) => e.type === "power_cycle"), "plain"], ["Shared-air conflicts", data.events.filter((e) => e.type === "deviation").length, "info"],
+    ["Safety guard stepped in", n((e) => e.type === "safety_guard" && /^stepped in/.test(e.note || "")), "bad"]];
   $("alarm-tiles").innerHTML = tiles.map(([k, v, kind]) => `<div class="tile"><span class="k">${k}</span><span class="v">${v}</span>${v ? pill(kind === "plain" ? "logged" : "in range", kind) : pill("none", "ok")}</div>`).join("");
-  const kindOf = (t) => t === "alarm" ? "bad" : t === "guardrail" ? "warn" : t === "deviation" ? "info" : "plain";
-  const list = data.events.filter((e) => SAFETY.includes(e.type) || e.type === "deviation").slice().reverse().slice(0, 300);
+  const kindOf = (e) => e.type === "alarm" || /^stepped in/.test(e.note || "") ? "bad" : e.type === "guardrail" ? "warn" : e.type === "deviation" ? "info" : "plain";
+  const label = (t) => t === "safety_guard" ? "safety guard" : t;
+  const list = data.events.filter((e) => (SAFETY.includes(e.type) && !routine(e)) || e.type === "deviation").slice().reverse().slice(0, 300);
   $("alarm-table").innerHTML = list.length ? `<thead><tr><th>When</th><th>Ch</th><th>Type</th><th>What happened</th></tr></thead><tbody>` +
-    list.map((e) => `<tr><td>${when(sec(e.ts_utc))}</td><td>${esc(e.chamber || "machine")}</td><td>${pill(e.type, kindOf(e.type))}</td><td class="wrap">${esc(e.note)}${e.value != null ? ` (${esc(e.value)})` : ""}</td></tr>`).join("") + "</tbody>"
-    : `<tbody><tr><td class="hint">No alarms, guardrail events or harness starts in this time range.</td></tr></tbody>`;
+    list.map((e) => `<tr><td>${when(sec(e.ts_utc))}</td><td>${esc(e.chamber || "machine")}</td><td>${pill(label(e.type), kindOf(e))}</td><td class="wrap">${esc(e.note)}${e.value != null ? ` (${esc(e.value)})` : ""}</td></tr>`).join("") + "</tbody>"
+    : `<tbody><tr><td class="hint">No alarms, guardrail events, harness starts or safety guard reports in this time range.</td></tr></tbody>`;
 }
 
 // ---------------------------------------------------------------- compare
