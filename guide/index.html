@@ -497,14 +497,21 @@ Invoke-RestMethod -Method Post -Uri https://localhost:8443/intervals -SkipCertif
   </div>
   <p>Run these one at a time in a PowerShell terminal opened in the repository folder (the one that contains <code>RL</code> and <code>docs</code>). After each one, copy everything it printed and send it back. This section changes as the diagnosis goes on; refresh the page to see the next step.</p>
   <div class="note" style="border:2px solid currentColor;border-radius:8px;padding:12px 14px;margin:12px 0">
-    <p><b>Latest message (7 Oct): STOP_PROCESS is solved. Now Supabase.</b> The 404 means "table not found": this laptop's code still looks for the old tables (<code>readings_v4</code>…), which were archived this morning. The new code uses the new tables, so the fix is getting the new code onto this laptop.</p>
-    <p><b>1. Check whether the new code is here</b> (no terminal). In File Explorer open <code>RND_AI_DynamicAlgo\RL\harness\log\</code>. Is there a file named <b>tables.py</b>?</p>
+    <p><b>Latest message (7 Oct): tables.py is missing, so this laptop still has the old code.</b> Get the new code with <b>one</b> of these two ways. Both work through windows and folders only.</p>
+    <p><b>Way A: pull with the app that copied it.</b> Press the Windows key and type <b>GitHub Desktop</b>.</p>
     <ul>
-      <li><b>No:</b> the update did not happen yet. Pull it: GitHub Desktop → <b>Fetch origin</b> → <b>Pull origin</b>, or VS Code → Source Control → <b>…</b> → <b>Pull</b>. Then check again for <b>tables.py</b>.</li>
-      <li><b>Yes:</b> the code is new. Go to step 2.</li>
+      <li>If it opens: top left, <b>Current repository</b> → choose <b>RND_AI_DynamicAlgo</b> → press <b>Fetch origin</b> → when the button changes, press <b>Pull origin</b>.</li>
+      <li>If there is no GitHub Desktop, try <b>VS Code</b>: File → Open Folder → <b>RND_AI_DynamicAlgo</b> → Source Control (Ctrl+Shift+G) → <b>…</b> → <b>Pull</b>.</li>
     </ul>
-    <p><b>2. Run the machine check again</b> (D6 below), and send back the whole <b>data</b> / <b>Supabase</b> line it prints.</p>
-    <p>If the pull app shows an error or says files would be overwritten, send its exact message and stop. Your <code>machine.yaml</code> is not in the repository, so the pull never changes it.</p>
+    <p><b>Way B: if neither app works, copy the new files over the old ones.</b></p>
+    <ol>
+      <li>Open <b>https://github.com/virgohomeio/RND_AI_DynamicAlgo</b> (signed in) → green <b>Code</b> button → <b>Download ZIP</b>.</li>
+      <li>Right-click the downloaded ZIP → <b>Extract All</b>.</li>
+      <li>Open the extracted folder. Inside it, select <b>RL</b> and <b>docs</b> → Copy.</li>
+      <li>Open this laptop's <b>RND_AI_DynamicAlgo</b> folder → Paste → choose <b>Replace the files in the destination</b>.</li>
+    </ol>
+    <p>Way B keeps your fixed <code>machine.yaml</code>: it is not in the download, so nothing replaces it.</p>
+    <p><b>Then:</b> check that <code>RL\harness\log\tables.py</code> is there now, run the machine check (D6 below), and send back the <b>Supabase</b> line. If anything shows an error, send its exact message.</p>
   </div>
   <ol class="steps">
     <li class="step"><span class="n">D0</span><div class="body">
