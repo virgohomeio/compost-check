@@ -497,10 +497,12 @@ Invoke-RestMethod -Method Post -Uri https://localhost:8443/intervals -SkipCertif
   </div>
   <p>Run these one at a time in a PowerShell terminal opened in the repository folder (the one that contains <code>RL</code> and <code>docs</code>). After each one, copy everything it printed and send it back. This section changes as the diagnosis goes on; refresh the page to see the next step.</p>
   <div class="note" style="border:2px solid currentColor;border-radius:8px;padding:12px 14px;margin:12px 0">
-    <p><b>Latest message (7 Oct):</b> "Test-Path is not recognized" means this window is the <b>Command Prompt</b>, not PowerShell. Every command in this guide is for PowerShell. Switch in the same window by typing:</p>
-    <div class="cmd"><pre>powershell</pre><button type="button">Copy</button></div>
-    <p>The prompt changes to start with <code>PS</code>. Then run <b>D0</b> again and send back what <code>Test-Path .git</code> and <code>where.exe git</code> print.</p>
-    <p><i>Earlier:</i> "git is not recognized" means this laptop has no working Git, so the earlier <code>git pull</code> never ran and the code here is old. That explains both machine-check failures: Supabase 404 (old table names) and STOP_PROCESS (old settings).</p>
+    <p><b>Latest message (7 Oct):</b> the terminal is inside <code>RL</code>, but Git keeps its <code>.git</code> folder one level up, in <code>RND_AI_DynamicAlgo</code>. So the earlier <code>False</code> may have looked in the wrong place. From <code>PS ...\RND_AI_DynamicAlgo\RL&gt;</code> run:</p>
+    <div class="cmd"><pre>Test-Path ..\.git</pre><button type="button">Copy</button></div>
+    <p><b>If it says True</b>, the folder is a Git copy and the laptop only cannot find the <code>git</code> program. Find it with this, and send back what it prints:</p>
+    <div class="cmd"><pre>Get-ChildItem "C:\Program Files\Git\cmd\git.exe", "$env:LOCALAPPDATA\Programs\Git\cmd\git.exe" -ErrorAction SilentlyContinue</pre><button type="button">Copy</button></div>
+    <p><b>If it says False</b>, the code came as a ZIP. Send that back and the next message here will be the re-download steps.</p>
+    <p><i>Why:</i> the machine check failed twice. Supabase 404: this laptop's code is from before today and writes to the old tables, which were archived this morning. STOP_PROCESS refused: a setting in this laptop's <code>machine.yaml</code> (D3 shows it). New code plus that setting gives READY.</p>
   </div>
   <ol class="steps">
     <li class="step"><span class="n">D0</span><div class="body">
