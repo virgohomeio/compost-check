@@ -490,7 +490,52 @@ Invoke-RestMethod -Method Post -Uri https://localhost:8443/intervals -SkipCertif
   </table></div>
 </section>
 
-<footer>Settings this guide relies on, in <code>RL\harness\config\machine.yaml</code>: <code>policy: random</code>, <code>scores_drive_decisions: false</code>, <code>arbitration: fed_chamber_wins</code>. Data schema v4. Written 2 Oct 2026.</footer>
+<section class="phase" id="diagnosis">
+  <div class="phase-head">
+    <span class="eyebrow">Temporary · connecting a second laptop</span>
+    <h2>Laptop diagnosis</h2>
+  </div>
+  <p>Run these one at a time in a PowerShell terminal opened in the repository folder (the one that contains <code>RL</code> and <code>docs</code>). After each one, copy everything it printed and send it back. This section changes as the diagnosis goes on; refresh the page to see the next step.</p>
+  <ol class="steps">
+    <li class="step"><span class="n">D1</span><div class="body">
+      <h3>Which code this laptop has</h3>
+      <div class="cmd"><pre>git log -1 --oneline
+git status --short</pre><button type="button">Copy</button></div>
+      <p>The first line should start with <code>6b1a715</code> or a later commit. Anything older means the last pull did not happen.</p>
+    </div></li>
+    <li class="step"><span class="n">D2</span><div class="body">
+      <h3>Get the latest code</h3>
+      <div class="cmd"><pre>git pull --rebase --autostash
+git log -1 --oneline</pre><button type="button">Copy</button></div>
+      <p>If it prints an error, send the whole message and stop here.</p>
+    </div></li>
+    <li class="step"><span class="n">D3</span><div class="body">
+      <h3>The settings the harness will use</h3>
+      <div class="cmd"><pre>findstr /n "serial port stop_process start_process firmware_modes scores_drive ptc_guard gas_saturation" RL\harness\config\machine.yaml</pre><button type="button">Copy</button></div>
+      <p>Expected: <code>stop_process_on_start: false</code>, <code>start_process_on_exit: false</code>, <code>firmware_modes_only: true</code>, <code>scores_drive_decisions: false</code>, the machine's serial and this laptop's COM port.</p>
+    </div></li>
+    <li class="step"><span class="n">D4</span><div class="body">
+      <h3>Which port the composter is on</h3>
+      <div class="cmd"><pre>Get-PnpDevice -Class Ports -PresentOnly | Select-Object FriendlyName, Status</pre><button type="button">Copy</button></div>
+    </div></li>
+    <li class="step"><span class="n">D5</span><div class="body">
+      <h3>Can this laptop reach Supabase</h3>
+      <div class="cmd"><pre>cd RL
+python -c "from harness.config import load_supabase_config as L; import urllib.request as u; s=L(); k=s.publishable_key; r=u.Request(s.url+'/rest/v1/sensor_readings?select=machine,day,time&amp;order=day.desc,time.desc&amp;limit=1', headers={'apikey':k,'Authorization':'Bearer '+k}); print(u.urlopen(r, timeout=20).read().decode())"
+cd ..</pre><button type="button">Copy</button></div>
+      <p>Expected: one row with a machine, day and time.</p>
+    </div></li>
+    <li class="step"><span class="n">D6</span><div class="body">
+      <h3>Machine check again</h3>
+      <div class="cmd"><pre>cd RL
+python -m harness.tools.machine_check --config harness\config\machine.yaml
+cd ..</pre><button type="button">Copy</button></div>
+      <p>Lids closed, composter plugged into this laptop only. Expected: READY.</p>
+    </div></li>
+  </ol>
+</section>
+
+<footer>Settings this guide relies on, in <code>RL\harness\config\machine.yaml</code>: <code>policy: random</code>, <code>scores_drive_decisions: false</code>, <code>arbitration: fed_chamber_wins</code>. Supabase tables: sensor_readings, machine_status, decisions, events, scores, feed_weeks, blocks. Written 2 Oct 2026.</footer>
 </div>
 
 <script>
