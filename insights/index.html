@@ -291,13 +291,13 @@ button:focus-visible, select:focus-visible, input:focus-visible, a:focus-visible
 </main>
 
 <script src="https://cdn.jsdelivr.net/npm/uplot@1.6.32/dist/uPlot.iife.min.js"></script>
+<script src="../study-tables.js"></script>
 <script>
 // Reads the shared Supabase project with the publishable key, which can only
 // read and add rows; this page only reads. Same pair as
 // RL/harness/config/supabase.yaml and the scoring pages.
 const SUPABASE_URL = "https://apmncybxykyvacpwccyx.supabase.co";
 const SUPABASE_KEY = "sb_publishable_A31poHKFHwYld6Fy2zjPRQ_-GfIeIWA";
-const SCHEMA = "v4";
 const MACHINES = ["LL01-00000000285"];
 const HEADERS = { apikey: SUPABASE_KEY, Authorization: `Bearer ${SUPABASE_KEY}` };
 const ACTIONS = ["A0", "A1", "A2", "A3", "A4"];
@@ -357,22 +357,21 @@ async function get(path, extra) {
   if (!res.ok) throw new Error(`${res.status}`);
   return res;
 }
-async function getAll(path, cap = 60000) {
-  const rows = [];
-  for (let off = 0; off < cap; off += 1000) {
-    const page = await (await get(`${path}&limit=1000&offset=${off}`)).json();
-    rows.push(...page);
-    if (page.length < 1000) break;
-  }
-  return rows;
-}
+// Paths name a study file ("@readings?serial=eq.…&ts_utc=gte.…"); study-tables.js
+// reads its readable table (sensor_readings, …) and returns study rows.
+const T = (file) => `@${file}`;
+const getJson = async (p) => (await get(p)).json();
+const split = (path) => { const i = path.indexOf("?"); return [path.slice(1, i), path.slice(i + 1)]; };
+async function getAll(path, cap = 60000) { const [f, q] = split(path); return StudyTables.fetchRows(getJson, f, q, cap); }
+async function rowsOf(path) { const [f, q] = split(path); return StudyTables.fetchRows(getJson, f, q); }
 async function count(path) {
-  const res = await get(`${path}&select=ts_utc&limit=1`, { Prefer: "count=exact" });
+  const [f, q] = split(path);
+  const t = StudyTables.translate(f, q);
+  const res = await get(`${t.name}?${t.query}&select=machine&limit=1`, { Prefer: "count=exact" });
   const r = res.headers.get("Content-Range") || "";
   return Number(r.split("/")[1] || 0);
 }
 const S = () => `serial=eq.${encodeURIComponent(serial())}`;
-const T = (table) => `${table}_${SCHEMA}`;
 
 let data = null;
 let loading = null;
@@ -819,7 +818,7 @@ async function renderCompare() {
   box.innerHTML = `<p class="empty">Looking for machines…</p>`;
   try {
     const since = new Date(Date.now() - (hours || 24 * 365) * H * 1000).toISOString();
-    const rows = await (await get(`${T("machine_readings")}?select=serial&ts_utc=gte.${encodeURIComponent(since)}&order=ts_utc.desc&limit=5000`)).json();
+    const rows = await rowsOf(`${T("machine_readings")}?select=serial&ts_utc=gte.${encodeURIComponent(since)}&order=ts_utc.desc&limit=5000`);
     const serials = [...new Set(rows.map((r) => r.serial))];
     if (serials.length < 2) {
       box.innerHTML = `<p class="note">Comparison needs at least two machines logging in this time range; ${serials.length ? `only ${esc(serials[0])} has data` : "none has data"}. The study plan has four bench machines. Once a second one logs (run the harness or collect.py on it), its lines appear here beside this one.</p>`;

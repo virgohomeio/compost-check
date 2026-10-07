@@ -255,6 +255,7 @@ button:focus-visible, input:focus-visible, select:focus-visible, textarea:focus-
   </div>
 </div>
 
+<script src="../study-tables.js"></script>
 <script>
 // Shared Supabase project and its publishable key, the same pair as
 // RL/harness/config/supabase.yaml. The key can only insert and read rows in
@@ -262,7 +263,6 @@ button:focus-visible, input:focus-visible, select:focus-visible, textarea:focus-
 // anything, which is why it can sit in a public page.
 const SUPABASE_URL = "https://apmncybxykyvacpwccyx.supabase.co";
 const SUPABASE_KEY = "sb_publishable_A31poHKFHwYld6Fy2zjPRQ_-GfIeIWA";
-const SCHEMA = "v4";
 const MACHINES = ["LL01-00000000285"];
 const QUEUE_KEY = "p150-check-queue";
 
@@ -376,13 +376,16 @@ function buildFeed() {
 }
 
 // ---- sending, with an offline queue
-async function send(table, row) {
-  const key = table === "observations" ? "obs_id" : "event_id";
-  const res = await fetch(`${SUPABASE_URL}/rest/v1/${table}_${SCHEMA}?on_conflict=${key}`, {
+async function send(file, row) {
+  // a study row (observations, events) goes to its readable table (scores, events)
+  const [name, conv] = StudyTables.toTable(file, row);
+  if (!name) return;
+  const key = StudyTables.tables[name].key.join(",");
+  const res = await fetch(`${SUPABASE_URL}/rest/v1/${name}?on_conflict=${key}`, {
     method: "POST",
     headers: { apikey: SUPABASE_KEY, Authorization: `Bearer ${SUPABASE_KEY}`,
       "Content-Type": "application/json", Prefer: "resolution=ignore-duplicates,return=minimal" },
-    body: JSON.stringify([row]),
+    body: JSON.stringify([conv]),
   });
   if (!res.ok) {
     const text = await res.text();
@@ -459,10 +462,12 @@ async function loadRecent() {
   try {
     const q = `select=ts_utc,chamber,squeeze,moisture_class,smell_level,smell_descriptor,missed,observer` +
       `&serial=eq.${encodeURIComponent(s)}&order=ts_utc.desc&limit=8`;
-    const res = await fetch(`${SUPABASE_URL}/rest/v1/observations_${SCHEMA}?${q}`,
-      { headers: { apikey: SUPABASE_KEY, Authorization: `Bearer ${SUPABASE_KEY}` }, cache: "no-store" });
-    if (!res.ok) throw new Error(res.status);
-    const rows = await res.json();
+    const rows = await StudyTables.fetchRows(async (p) => {
+      const res = await fetch(`${SUPABASE_URL}/rest/v1/${p}`,
+        { headers: { apikey: SUPABASE_KEY, Authorization: `Bearer ${SUPABASE_KEY}` }, cache: "no-store" });
+      if (!res.ok) throw new Error(res.status);
+      return res.json();
+    }, "observations", q);
     body.textContent = "";
     if (!rows.length) {
       body.innerHTML = '<tr><td colspan="5" class="hint">No scores yet for this machine. The first one you save appears here.</td></tr>';

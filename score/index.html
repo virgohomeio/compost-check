@@ -357,6 +357,7 @@ button:focus-visible, input:focus-visible, select:focus-visible, textarea:focus-
   </div>
 </div>
 
+<script src="../study-tables.js"></script>
 <script>
 // Shared Supabase project and its publishable key, the same pair as
 // RL/harness/config/supabase.yaml. The key can only insert and read rows in
@@ -365,7 +366,6 @@ button:focus-visible, input:focus-visible, select:focus-visible, textarea:focus-
 // can sit in a public page. Rows match what the harness API writes.
 const SUPABASE_URL = "https://apmncybxykyvacpwccyx.supabase.co";
 const SUPABASE_KEY = "sb_publishable_A31poHKFHwYld6Fy2zjPRQ_-GfIeIWA";
-const SCHEMA = "v4";
 const PHOTO_BUCKET = "study-photos";
 const MAX_PHOTO_BYTES = 15 * 1024 * 1024;
 const PHOTO_TYPES = { "image/jpeg": ".jpg", "image/png": ".png", "image/webp": ".webp",
@@ -523,13 +523,16 @@ function buildService() {
 const BUILD = { score: buildScore, feed: buildFeed, water: buildWater, unload: buildUnload, service: buildService };
 
 // ---- sending, with an offline queue
-async function insert(table, rows) {
-  const key = table === "observations" ? "obs_id" : "event_id";
-  const res = await fetch(`${SUPABASE_URL}/rest/v1/${table}_${SCHEMA}?on_conflict=${key}`, {
+async function insert(file, rows) {
+  // study rows (observations, events) go to their readable table (scores, events)
+  const conv = rows.map((r) => StudyTables.toTable(file, r)).filter(([n]) => n);
+  if (!conv.length) return;
+  const name = conv[0][0], key = StudyTables.tables[name].key.join(",");
+  const res = await fetch(`${SUPABASE_URL}/rest/v1/${name}?on_conflict=${key}`, {
     method: "POST",
     headers: Object.assign({ "Content-Type": "application/json",
       Prefer: "resolution=ignore-duplicates,return=minimal" }, HEADERS),
-    body: JSON.stringify(rows),
+    body: JSON.stringify(conv.map(([, r]) => r)),
   });
   if (!res.ok) throw failure(res.status, await res.text());
 }
@@ -624,6 +627,7 @@ async function get(path) {
   if (!res.ok) throw new Error(String(res.status));
   return res.json();
 }
+const study = (file, query) => StudyTables.fetchRows(get, file, query);
 const when = (iso) => new Date(iso).toLocaleString([], { month: "short", day: "numeric", hour: "2-digit", minute: "2-digit" });
 const ago = (iso) => {
   const s = Math.max(0, (Date.now() - new Date(iso).getTime()) / 1000);
@@ -664,7 +668,7 @@ async function loadRecent() {
   const body = $("recent");
   if (!serial()) { body.innerHTML = '<tr><td colspan="6" class="hint">Choose a machine to see its latest scores.</td></tr>'; return; }
   try {
-    const rows = await get(`observations_${SCHEMA}?select=ts_utc,chamber,squeeze,moisture_class,smell_level,` +
+    const rows = await study("observations", `select=ts_utc,chamber,squeeze,moisture_class,smell_level,` +
       `smell_descriptor,missed,observer,photo_path&${S()}&order=ts_utc.desc&limit=10`);
     body.textContent = "";
     if (!rows.length) {
@@ -695,11 +699,11 @@ async function loadStatus() {
   try {
     const since = new Date(Date.now() - 24 * 3600 * 1000).toISOString();
     const [machine, readings, decisions, scores, events] = await Promise.all([
-      get(`machine_readings_${SCHEMA}?${S()}&order=ts_utc.desc&limit=1`),
-      get(`readings_${SCHEMA}?${S()}&order=ts_utc.desc&limit=4`),
-      get(`decisions_${SCHEMA}?${S()}&order=ts_utc.desc&limit=6`),
-      get(`observations_${SCHEMA}?${S()}&missed=eq.false&order=ts_utc.desc&limit=10`),
-      get(`events_${SCHEMA}?${S()}&ts_utc=gte.${encodeURIComponent(since)}&order=ts_utc.desc&limit=60`),
+      study("machine_readings", `${S()}&order=ts_utc.desc&limit=1`),
+      study("readings", `${S()}&order=ts_utc.desc&limit=4`),
+      study("decisions", `${S()}&order=ts_utc.desc&limit=6`),
+      study("observations", `${S()}&missed=eq.false&order=ts_utc.desc&limit=10`),
+      study("events", `${S()}&ts_utc=gte.${encodeURIComponent(since)}&order=ts_utc.desc&limit=60`),
     ]);
     const m = machine[0];
     const latest = (rows, ch) => rows.find((r) => r.chamber === ch);
