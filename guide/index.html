@@ -140,7 +140,7 @@ nav.pages a:focus-visible { outline: 2px solid var(--moss); outline-offset: 2px;
     <a href="https://virgohomeio.github.io/compost-check/score/" target="_blank" rel="noopener">Full check</a>
     <a href="https://virgohomeio.github.io/compost-check/insights/" target="_blank" rel="noopener">Insights</a>
   </div>
-  <p class="where">In the commands, replace <b class="ph">&lt;PORT&gt;</b> with your machine's port and <b class="ph">&lt;SERIAL&gt;</b> with its serial number. Step 2 and step 3 show you both.</p>
+  <p class="where">In the commands, replace <b class="ph">&lt;PORT&gt;</b> with your machine's port and <b class="ph">&lt;SERIAL&gt;</b> with its serial number. Step 2 and step 3 show you both. <b class="ph">&lt;NUM&gt;</b> is the last three digits of the serial, for example <code>312</code> for <code>LL01-00000000312</code>.</p>
 </header>
 
 <!-- 0 -->
@@ -161,12 +161,12 @@ nav.pages a:focus-visible { outline: 2px solid var(--moss); outline-offset: 2px;
       <div class="cmd"><pre>git clone https://github.com/virgohomeio/RND_AI_DynamicAlgo.git
 cd RND_AI_DynamicAlgo</pre><button type="button">Copy</button></div>
       <p><b>With GitHub Desktop</b> (no commands): install it from desktop.github.com, sign in, then File → Clone repository → URL → <code>https://github.com/virgohomeio/RND_AI_DynamicAlgo</code> → Clone.</p>
-      <p><b>Getting updates later:</b> <code>git pull</code> in PowerShell, or Fetch origin → Pull origin in GitHub Desktop. If neither works, download the ZIP from the repository page (Code → Download ZIP), extract it, and copy its <code>RL</code> and <code>docs</code> folders over this laptop's, choosing Replace. Your <code>machine.yaml</code>, the unlock and the keys are not in the download, so they stay.</p>
+      <p><b>Getting updates later:</b> <code>git pull</code> in PowerShell, or Fetch origin → Pull origin in GitHub Desktop. If neither works, download the ZIP from the repository page (Code → Download ZIP), extract it, and copy its <code>RL</code> and <code>docs</code> folders over this laptop's, choosing Replace. Your <code>machine_<b class="ph">&lt;NUM&gt;</b>.yaml</code>, the unlock and the keys are not in the download, so they stay.</p>
     </div></li>
 
     <li class="step"><span class="n">ii</span><div class="body">
       <h3>The settings file: what it must say</h3>
-      <p>Each laptop has its own <code>RL\harness\config\machine.yaml</code> (step 4 makes it). It never goes to GitHub, so a pull never brings these settings: check them by hand on every laptop. Open the file in Notepad and make these lines read as below. Lines under <code>transport:</code> and <code>firmware:</code> keep their two spaces in front; every other line has none. If a line is missing, add it at the end of the file.</p>
+      <p>Each machine has its own settings file on each laptop: <code>RL\harness\config\machine_<b class="ph">&lt;NUM&gt;</b>.yaml</code>, named after the last three digits of its serial, so <code>machine_312.yaml</code> for <code>LL01-00000000312</code> (step 4 makes it). It never goes to GitHub, so a pull never brings these settings: check them by hand on every laptop. Open the file in Notepad and make these lines read as below. Lines under <code>transport:</code> and <code>firmware:</code> keep their two spaces in front; every other line has none. If a line is missing, add it at the end of the file.</p>
       <div class="cmd"><pre>serial: <b class="ph">&lt;SERIAL&gt;</b>
 transport:
   uart: {port: <b class="ph">&lt;PORT&gt;</b>, baud: 115200, timeout_s: 0.5}
@@ -200,7 +200,8 @@ firmware_modes_only: true</pre><button type="button">Copy</button></div>
         <thead><tr><th></th><th>Do</th></tr></thead>
         <tbody>
           <tr><td><b>New laptop</b></td><td>i (get the code), step 1 (packages), step 2 (port), step 4 with the lines in ii, step 5 (unlock), step 6 (keys), step 7 (tests), then step 8 (machine check)</td></tr>
-          <tr><td><b>New machine</b> on a laptop already set up</td><td>step 2 (its port), step 3 (its serial), change <code>serial</code> and <code>port</code> in <code>machine.yaml</code>, then step 8 (machine check)</td></tr>
+          <tr><td><b>New machine</b> on a laptop already set up</td><td>step 2 (its port), step 3 (its serial), copy an existing <code>machine_<b class="ph">&lt;NUM&gt;</b>.yaml</code> to the new machine's name (step 4), change its <code>serial</code> and <code>port</code>, then step 8 (machine check)</td></tr>
+          <tr><td><b>Two or more machines on one laptop</b></td><td>Each machine runs in its own windows with its own file: one harness and one safety guard per machine (steps 10 and 11 with that machine's <code>machine_<b class="ph">&lt;NUM&gt;</b>.yaml</code>). Add <code>--no-api</code> to every harness after the first: the laptop's small local page can only run once. The Compost Control pages do not need it</td></tr>
           <tr><td><b>Same machine, other laptop</b></td><td>stop the harness and the safety guard on the first laptop, move the USB cable, then step 8 on the second. The run picks up where it was</td></tr>
         </tbody>
       </table></div>
@@ -245,10 +246,10 @@ pip install -r RL\requirements.txt</pre><button type="button">Copy</button></div
 
     <li class="step"><span class="n">4</span><div class="body">
       <h3>Create this laptop's settings file <span class="tag once">once per laptop</span></h3>
-      <p class="skip"><b>Can skip</b>if <code>RL\harness\config\machine.yaml</code> already exists on this laptop for this machine.</p>
-      <p>Each laptop has its own <code>machine.yaml</code>. It is never shared through GitHub, because it holds this laptop's port. Start from the shared template:</p>
-      <div class="cmd"><pre>Copy-Item RL\harness\config\machine.example.yaml RL\harness\config\machine.yaml</pre><button type="button">Copy</button></div>
-      <p>Open <code>RL\harness\config\machine.yaml</code> in Notepad and set the lines shown in <b>ii</b> at the top of this guide: <code>serial</code> from step 3, <code>port</code> from step 2, and the study values exactly as shown.</p>
+      <p class="skip"><b>Can skip</b>if <code>RL\harness\config\machine_<b class="ph">&lt;NUM&gt;</b>.yaml</code> already exists on this laptop for this machine.</p>
+      <p>Each machine gets its own file on this laptop, named after the last three digits of its serial. It is never shared through GitHub, because it holds this laptop's port. Start from the shared template, or copy another machine's file and change its <code>serial</code> and <code>port</code>:</p>
+      <div class="cmd"><pre>Copy-Item RL\harness\config\machine.example.yaml RL\harness\config\machine_<b class="ph">&lt;NUM&gt;</b>.yaml</pre><button type="button">Copy</button></div>
+      <p>Open <code>RL\harness\config\machine_<b class="ph">&lt;NUM&gt;</b>.yaml</code> in Notepad and set the lines shown in <b>ii</b> at the top of this guide: <code>serial</code> from step 3, <code>port</code> from step 2, and the study values exactly as shown.</p>
       <ul>
         <li>Leave <code>seed</code> and <code>decision_times_local</code> as they are, so a run can move between laptops without breaking its cycle.</li>
         <li>The harness checks the serial against the machine at start and refuses to run if they differ.</li>
@@ -305,7 +306,7 @@ python -m harness.api.certs --out harness\secrets</pre><button type="button">Cop
       <h3>Check the machine</h3>
       <p>Fit both chambers, empty, and close both lids. Then run the check. It confirms every sensor answers, every actuator responds under laptop control, and the data can be saved and uploaded.</p>
       <p class="where">Run in <b>RND_AI_DynamicAlgo\RL</b></p>
-      <div class="cmd"><pre>python -m harness.tools.machine_check --config harness\config\machine.yaml</pre><button type="button">Copy</button></div>
+      <div class="cmd"><pre>python -m harness.tools.machine_check --config harness\config\machine_<b class="ph">&lt;NUM&gt;</b>.yaml</pre><button type="button">Copy</button></div>
       <ul>
         <li>The blower, intake fan, each pad heater, the PTC and each mixer run for a few seconds each. Stay beside the machine; the mixers turn.</li>
         <li>Every line says PASS, WARN, FAIL or SKIP. It ends with <b>READY</b> or <b>NOT READY</b>.</li>
@@ -333,7 +334,7 @@ python -m harness.api.certs --out harness\secrets</pre><button type="button">Cop
     <li class="step"><span class="n">10</span><div class="body">
       <h3>Start a read-only run for about 5 minutes</h3>
       <p class="where">Run in <b>RND_AI_DynamicAlgo\RL</b></p>
-      <div class="cmd"><pre>python -m harness.run --config harness\config\machine.yaml --read-only --verbose --hours 0.08</pre><button type="button">Copy</button></div>
+      <div class="cmd"><pre>python -m harness.run --config harness\config\machine_<b class="ph">&lt;NUM&gt;</b>.yaml --read-only --verbose --hours 0.08</pre><button type="button">Copy</button></div>
       <ul>
         <li>The harness reads and logs, and uploads the readings, but makes no decisions and sends nothing to the machine. The firmware keeps running it.</li>
         <li>Open <a href="https://virgohomeio.github.io/compost-check/insights/" target="_blank" rel="noopener">Insights</a> and pick your machine, or add <code>?machine=&lt;SERIAL&gt;</code> to the address. New readings should appear within a few minutes.</li>
@@ -346,9 +347,9 @@ python -m harness.api.certs --out harness\secrets</pre><button type="button">Cop
     <li class="step"><span class="n">11</span><div class="body">
       <h3>Start the real run</h3>
       <p class="where">Run in <b>RND_AI_DynamicAlgo\RL</b></p>
-      <div class="cmd"><pre>python -m harness.run --config harness\config\machine.yaml --verbose</pre><button type="button">Copy</button></div>
+      <div class="cmd"><pre>python -m harness.run --config harness\config\machine_<b class="ph">&lt;NUM&gt;</b>.yaml --verbose</pre><button type="button">Copy</button></div>
       <p>For a run you will leave, also start the <b>safety guard</b> in a <b>second</b> terminal. It is a separate safety process: if the harness stops answering, it switches everything off and hands the machine back to its firmware. It reports to Supabase, so Insights (Health tab) shows from any device whether it is on, and when it stepped in.</p>
-      <div class="cmd"><pre>python -m harness.run --config harness\config\machine.yaml --watchdog</pre><button type="button">Copy</button></div>
+      <div class="cmd"><pre>python -m harness.run --config harness\config\machine_<b class="ph">&lt;NUM&gt;</b>.yaml --watchdog</pre><button type="button">Copy</button></div>
       <ul>
         <li>The harness pauses the firmware's program and runs the blower, heaters and mixers itself.</li>
         <li>It picks one of A0 to A4 at random for each chamber at each 4-hourly decision.</li>
@@ -418,7 +419,7 @@ python -m harness.api.certs --out harness\secrets</pre><button type="button">Cop
           <tr><td>What it is for</td><td>Curing chamber: air on, heat off</td><td>Light household</td><td>Between the two modes</td><td>Heavy household</td><td>Big wet feed, or too wet</td></tr>
     </tbody>
   </table></div>
-  <div class="note"><p><strong>In use now: A1 and A3 only.</strong> <code>firmware_modes_only: true</code> in <code>machine.yaml</code> limits every decision to the two firmware modes, 50 % each, until further notice. A4 needs an odour smoke test of the enclosure before it is used.</p></div>
+  <div class="note"><p><strong>In use now: A1 and A3 only.</strong> <code>firmware_modes_only: true</code> in <code>machine_<b class="ph">&lt;NUM&gt;</b>.yaml</code> limits every decision to the two firmware modes, 50 % each, until further notice. A4 needs an odour smoke test of the enclosure before it is used.</p></div>
   <p>Differences from the firmware: the PTC switches off at 62 °C instead of 70, because 70 overshot to 76–88 °C; heavy's mix phases are 24 s / 12 s where the firmware source uses 12 s / 6 s.</p>
 </section>
 
@@ -465,8 +466,8 @@ python -m harness.api.certs --out harness\secrets</pre><button type="button">Cop
       <tr><td>You press Ctrl+C once</td><td>The harness finishes the current step, sends what is left to Supabase, puts the machine in a safe state and hands it back to the firmware.</td></tr>
       <tr><td>The laptop crashes or the harness dies</td><td>The safety guard notices the harness has stopped answering, sends the safe state and hands the machine back to the firmware.</td></tr>
       <tr><td>Another laptop takes over the same machine</td><td>First stop this laptop's harness (Ctrl+C) and its safety guard, and move the USB cable: only one laptop can drive a machine. Then do steps 1 to 7 there with the same serial, and step 11. It reads Supabase and carries on: the actions already chosen for the current 4-hour block stay, the sensor history and latest scores are reloaded, and the next decision is the one the old laptop would have made.</td></tr>
-      <tr><td>A laptop moves to a different machine</td><td>Change <code>serial</code> and <code>port</code> in <code>machine.yaml</code>. Each machine keeps its own cycle under its own serial, so neither machine's cycle is disturbed.</td></tr>
-      <tr><td>You change <code>machine.yaml</code> during a run</td><td>No restart needed. The change applies at the next 4-hourly decision.</td></tr>
+      <tr><td>A laptop moves to a different machine</td><td>Use that machine's own <code>machine_<b class="ph">&lt;NUM&gt;</b>.yaml</code>, or make one (step 4). Each machine keeps its own cycle under its own serial, so neither machine's cycle is disturbed.</td></tr>
+      <tr><td>You change <code>machine_<b class="ph">&lt;NUM&gt;</b>.yaml</code> during a run</td><td>No restart needed. The change applies at the next 4-hourly decision.</td></tr>
     </tbody>
   </table></div>
   <p>Only one laptop can drive a machine at a time. Stop the old one before starting the new one.</p>
@@ -490,7 +491,7 @@ python -m Machine_Learning train --since &lt;STUDY START DATE&gt; --out runs\r1<
 
     <li class="step"><span class="n">15</span><div class="body">
       <h3>Switch the machine to the learned policy</h3>
-      <p>In <code>RL\harness\config\machine.yaml</code>, replace the <code>policy:</code> line with:</p>
+      <p>In <code>RL\harness\config\machine_<b class="ph">&lt;NUM&gt;</b>.yaml</code>, replace the <code>policy:</code> line with:</p>
       <div class="cmd"><pre>policy: {kind: loaded, path: runs/r1/policy_&lt;version&gt;.json, epsilon: 0.1}</pre><button type="button">Copy</button></div>
       <p>It applies at the next decision. One decision in ten stays random so the data keeps growing.</p>
     </div></li>
@@ -532,9 +533,9 @@ Invoke-RestMethod -Method Post -Uri https://localhost:8443/intervals -SkipCertif
     <tbody>
       <tr><td>No new port appears</td><td>Machine off, unplugged or a bad cable. Try another cable.</td></tr>
       <tr><td>"Access denied" on the port</td><td>Another program has it. Close other scripts and terminals.</td></tr>
-      <tr><td>"machine serial … does not match config"</td><td>The serial in <code>machine.yaml</code> is for a different machine. Fix it from step 3.</td></tr>
+      <tr><td>"machine serial … does not match config"</td><td>The serial in <code>machine_<b class="ph">&lt;NUM&gt;</b>.yaml</code> is for a different machine. Fix it from step 3.</td></tr>
       <tr><td>"placeholders are not confirmed"</td><td>Control is still locked on this laptop. See step 5.</td></tr>
-      <tr><td>"the firmware refused STOP_PROCESS"</td><td>In this laptop's <code>machine.yaml</code>, under <code>firmware:</code>, set <code>stop_process_on_start: false</code> and <code>start_process_on_exit: false</code> (step 4).</td></tr>
+      <tr><td>"the firmware refused STOP_PROCESS"</td><td>In this laptop's <code>machine_<b class="ph">&lt;NUM&gt;</b>.yaml</code>, under <code>firmware:</code>, set <code>stop_process_on_start: false</code> and <code>start_process_on_exit: false</code> (step 4).</td></tr>
       <tr><td>"Access denied" on the port while another laptop ran the machine</td><td>The other laptop still holds the cable. Stop its harness and safety guard first.</td></tr>
       <tr><td>A test fails</td><td>Don't start. Save the output.</td></tr>
       <tr><td>Nothing new on Insights after 5 minutes</td><td>Check the terminal for upload errors. Rows are still saved locally and sent later.</td></tr>
@@ -543,7 +544,7 @@ Invoke-RestMethod -Method Post -Uri https://localhost:8443/intervals -SkipCertif
     </tbody>
   </table></div>
 </section>
-<footer>Settings this guide relies on, in <code>RL\harness\config\machine.yaml</code>: <code>policy: random</code>, <code>scores_drive_decisions: false</code>, <code>arbitration: fed_chamber_wins</code>. Supabase tables: sensor_readings, machine_status, decisions, events, scores, feed_weeks, blocks. Written 2 Oct 2026.</footer>
+<footer>Settings this guide relies on, in <code>RL\harness\config\machine_<b class="ph">&lt;NUM&gt;</b>.yaml</code>: <code>policy: random</code>, <code>scores_drive_decisions: false</code>, <code>arbitration: fed_chamber_wins</code>. Supabase tables: sensor_readings, machine_status, decisions, events, scores, feed_weeks, blocks. Written 2 Oct 2026.</footer>
 </div>
 
 <script>
