@@ -78,6 +78,8 @@ section.card { background: var(--panel); border: 1px solid var(--line); border-r
   padding: 16px; display: grid; gap: 14px; min-width: 0; }
 section.card h2 { margin: 0; font-size: 17px; text-wrap: balance; }
 .hint { font-size: 13px; color: var(--muted); margin: 0; max-width: 75ch; }
+.tab-empty { font-size: 14px; padding: 12px 14px; border-radius: var(--radius); background: var(--panel);
+  border: 1px dashed var(--line); color: var(--muted); margin: 0; }
 .note { font-size: 13px; padding: 10px 12px; border-radius: 8px; background: var(--warn-soft); color: var(--ink); margin: 0; }
 .status-line { font-size: 13px; color: var(--muted); }
 
@@ -137,6 +139,37 @@ button.linkish { background: none; border: 0; padding: 0; color: var(--accent); 
 button.print { padding: 8px 12px; border-radius: 8px; border: 1px solid var(--line); background: var(--panel); color: var(--ink); font: 600 13px var(--sans); cursor: pointer; }
 
 button:focus-visible, select:focus-visible, input:focus-visible, a:focus-visible { outline: 3px solid var(--accent); outline-offset: 2px; }
+.verdict { font-size: 16px; color: var(--ink); margin: 0; max-width: 75ch; text-wrap: pretty; }
+.verdict .action { vertical-align: 1px; }
+details.more { border: 1px solid var(--line); border-radius: var(--radius); background: var(--panel); padding: 0 16px; min-width: 0; }
+details.more > summary { cursor: pointer; list-style: none; padding: 14px 0; font: 600 15px var(--sans); display: flex; gap: 10px; align-items: baseline; }
+details.more > summary::-webkit-details-marker { display: none; }
+details.more > summary::before { content: "\25B8"; color: var(--muted); font-size: 13px; }
+details.more[open] > summary::before { content: "\25BE"; }
+details.more > summary .count { font-weight: 400; font-size: 13px; color: var(--muted); }
+details.more > summary:focus-visible { outline: 3px solid var(--accent); outline-offset: 2px; }
+details.more > .body { display: grid; gap: 14px; padding: 0 0 16px; min-width: 0; }
+section.card details.more { border: 0; padding: 0; }
+.key { margin: 0; padding-left: 18px; font-size: 14px; display: grid; gap: 6px; }
+.checks { display: grid; gap: 2px; }
+.checks h3 { margin: 12px 0 2px; font-size: 11px; font-weight: 700; letter-spacing: .05em; text-transform: uppercase; color: var(--muted); display: flex; gap: 10px; align-items: baseline; }
+.checks h3 .hint { text-transform: none; letter-spacing: 0; font-weight: 400; font-size: 12px; }
+.check { display: grid; grid-template-columns: 78px 1fr; gap: 2px 10px; align-items: baseline; padding: 6px 0; border-bottom: 1px solid var(--grid); font-size: 14px; }
+.check .line { display: flex; flex-wrap: wrap; gap: 2px 12px; align-items: baseline; min-width: 0; }
+.check .name { font-weight: 600; }
+.check .val { font-variant-numeric: tabular-nums; }
+.check .all { color: var(--muted); font-size: 13px; }
+.check .why { grid-column: 2; color: var(--muted); font-size: 13px; }
+.lid { max-width: 1100px; margin: 10px auto 0; border-radius: var(--radius); }
+.lid.open, .lid.was-open { display: flex; flex-wrap: wrap; gap: 4px 16px; align-items: baseline; padding: 12px 16px; }
+.lid.open { background: var(--bad-soft); border: 2px solid var(--bad); color: var(--ink); }
+.lid.open strong { font: 800 24px var(--sans); color: var(--bad); letter-spacing: .02em; }
+.lid.was-open { background: var(--warn-soft); border: 1px solid var(--warn); color: var(--ink); }
+.lid.was-open strong { font: 700 17px var(--sans); color: var(--warn); }
+.lid span { font-size: 14px; }
+.lid.closed { font-size: 13px; color: var(--good); font-weight: 600; }
+.lid.closed::before { content: ""; display: inline-block; width: 9px; height: 9px; border-radius: 50%; background: var(--good); margin-right: 7px; }
+.lid.closed span { font-size: 13px; font-weight: 400; color: var(--muted); }
 [hidden] { display: none !important; }
 @media print {
   header.top, nav.tabs, .no-print { display: none !important; }
@@ -164,6 +197,7 @@ button:focus-visible, select:focus-visible, input:focus-visible, a:focus-visible
       <button type="button" class="print" id="refresh">Refresh</button>
     </div>
   </div>
+  <div class="lid" id="lid" role="status" aria-live="polite" hidden></div>
 </header>
 
 <main>
@@ -187,87 +221,96 @@ button:focus-visible, select:focus-visible, input:focus-visible, a:focus-visible
   </section>
 
   <!-- ===================== Policy ===================== -->
+  <p class="tab-empty" id="empty-policy" hidden></p>
   <section class="card" data-panel="policy" hidden>
-    <h2>Current policy</h2>
-    <div class="cards2" id="policy-cards"></div>
+    <h2>Now</h2>
+    <div class="cards2" id="policy-now"></div>
+    <p class="verdict" id="verdict-policy"></p>
   </section>
   <section class="card" data-panel="policy" hidden>
-    <h2>What the actions mean</h2>
-    <p class="hint">Every 4 hours each chamber gets one action. A1 and A3 are the firmware's own light and heavy modes; A0, A2 and A4 are built from them for the study. Mixing starts after 20.7 min of idle time in every action. Differences from the firmware: the PTC switches off at 62 °C instead of 70 (70 overshot to 76–88 °C), and heavy's mix phases are 24 s / 12 s where the firmware source uses 12 s / 6 s.</p>
-    <div class="scroll"><table class="t">
-      <thead><tr><th>Setting</th><th><b>A0</b> dormant</th><th><b>A1</b> light</th><th><b>A2</b> middle</th><th><b>A3</b> heavy</th><th><b>A4</b> boost</th></tr></thead>
-      <tbody>
-        <tr><td>Source</td><td>Built from light</td><td><b>Firmware light mode</b></td><td>Built: halfway</td><td><b>Firmware heavy mode</b></td><td>Built from heavy</td></tr>
-        <tr><td>Blower on / off</td><td>47.5 s / 930 s</td><td>47.5 s / 930 s</td><td>47.5 s / 329 s</td><td>47.5 s / 186 s</td><td>47.5 s / 71 s</td></tr>
-        <tr><td>Air time</td><td>4.9 %</td><td>4.9 %</td><td>12.6 %</td><td>20.3 %</td><td>40 %</td></tr>
-        <tr><td>Blower power</td><td>30 %</td><td>30 %</td><td>30 %</td><td>30 %</td><td>30 %</td></tr>
-        <tr><td>Pad heaters</td><td><b>off</b></td><td>to 70 °C</td><td>to 70 °C</td><td>to 70 °C</td><td>to 70 °C</td></tr>
-        <tr><td>Blower PTC</td><td><b>off</b></td><td>off 62, on below 58 °C</td><td>off 62, on below 58 °C</td><td>off 62, on below 58 °C</td><td>off 62, on below 58 °C</td></tr>
-        <tr><td>Mix phases</td><td>12 s / 6 s</td><td>12 s / 6 s</td><td>18 s / 9 s</td><td>24 s / 12 s</td><td>24 s / 12 s</td></tr>
-        <tr><td>What it is for</td><td class="wrap">Curing chamber: air on, heat off</td><td class="wrap">Light household</td><td class="wrap">Between the two modes</td><td class="wrap">Heavy household</td><td class="wrap">Big wet feed, or too wet</td></tr>
-        <tr id="actions-in-use"><td>Allowed at the last decision</td><td>–</td><td>–</td><td>–</td><td>–</td><td>–</td></tr>
-      </tbody>
-    </table></div>
-    <p class="hint" id="actions-in-use-note"></p>
-  </section>
-  <section class="card" data-panel="policy" hidden>
-    <h2>Actions over time and what they asked for</h2>
-    <p class="hint">Actions run for 4 hours per chamber. The blower and its heater are shared by both chambers: when the chambers ask for different air, one setting is applied to both, shown as "applied".</p>
-    <div class="chart-grid" id="policy-charts"></div>
-  </section>
-  <section class="card" data-panel="policy" hidden>
-    <h2>Predictions</h2>
-    <div id="predictions"></div>
-  </section>
-  <section class="card" data-panel="policy" hidden>
-    <h2>How each decision was made</h2>
-    <p class="hint">Every decision in the time range, newest first: the actions it could choose from, the chance it gave each one (the bars), what it picked, and why the set was narrowed.</p>
+    <h2>What it did</h2>
+    <div class="chart-grid" id="policy-action-chart"></div>
+    <p class="hint" id="decisions-constant"></p>
+    <p class="hint">Every decision in the range, newest first: what it picked, the chance it gave each action it could choose from (the bars), and why the set was narrowed.</p>
     <div class="scroll"><table class="t" id="decisions-table"></table></div>
   </section>
-  <section class="card" data-panel="policy" hidden>
-    <h2>What the policy saw</h2>
-    <p class="hint">The inputs recorded with each decision, by chamber: moisture signals, feeding signals and where the chamber is in its cycle.</p>
-    <div class="chart-grid small" id="feature-charts"></div>
-  </section>
+  <details class="more" data-panel="policy" data-key="policy-asked" hidden>
+    <summary>Blower and heaters: asked vs applied <span class="count"></span></summary>
+    <div class="body">
+      <p class="hint">Actions run for 4 hours per chamber. The blower and its heater are shared by both chambers: when the chambers ask for different air, one setting is applied to both, shown as "applied".</p>
+      <div class="chart-grid" id="policy-charts"></div>
+    </div>
+  </details>
+  <details class="more" data-panel="policy" data-key="policy-saw" hidden>
+    <summary>What the policy saw <span class="count"></span></summary>
+    <div class="body">
+      <p class="hint">The inputs recorded with each decision, by chamber: moisture signals, feeding signals and where the chamber is in its cycle.</p>
+      <div class="chart-grid small" id="feature-charts"></div>
+    </div>
+  </details>
+  <details class="more" data-panel="policy" data-key="policy-key" hidden>
+    <summary>Action key <span class="count"></span></summary>
+    <div class="body">
+      <ul class="key" id="action-key"></ul>
+      <p class="hint" id="action-key-toggle"></p>
+      <p class="hint">The full table, and the differences from the firmware, are in the <a href="../guide/#the-five-actions">Guide: The five actions</a>.</p>
+    </div>
+  </details>
 
   <!-- ===================== Progress ===================== -->
+  <p class="tab-empty" id="empty-progress" hidden></p>
   <section class="card" data-panel="progress" hidden>
-    <h2>Study progress</h2>
-    <p class="hint">Per chamber, against the study plan: weeks 1 to 5 need about 210 decisions (6 a day) and 50 scores (2 a working day); week 12 about 504 decisions and 120 scores. Counts are for all time on this machine, whatever the range above.</p>
+    <h2>On plan?</h2>
+    <p class="verdict" id="verdict-progress"></p>
     <div class="tiles" id="progress-tiles"></div>
   </section>
   <section class="card" data-panel="progress" hidden>
-    <h2>Exploration coverage</h2>
+    <h2>Coverage</h2>
+    <p class="verdict" id="verdict-coverage"></p>
     <p class="hint">How often each action was tried, by chamber and by whether the chamber had been fed in the last 24 hours. Learning needs every action tried in every situation; an empty cell is a gap.</p>
     <div class="scroll"><table class="t grid" id="coverage"></table></div>
+    <p class="hint" id="coverage-toggle"></p>
   </section>
-  <section class="card" data-panel="progress" hidden>
-    <h2>Scoring</h2>
-    <p class="hint">Scores entered per day and chamber; the plan asks for 2 a day, after the 09:00 and 15:00 mixes.</p>
-    <div class="chart-grid" id="scoring-charts"></div>
-    <div class="scroll"><table class="t" id="missed-table"></table></div>
-  </section>
-  <section class="card" data-panel="progress" hidden>
-    <h2>What happened after each action</h2>
-    <p class="hint">For each action, the next squeeze score of that chamber within 30 hours. Early evidence of which settings keep the compost in the good band.</p>
-    <div class="scroll"><table class="t grid" id="outcomes"></table></div>
-  </section>
-  <section class="card" data-panel="progress" hidden>
-    <h2>Reward and sensors against scores</h2>
-    <p class="hint">Left: the study's reward for every score (+1 good, −1 too dry, −2 too wet or sour), the number a learned policy will try to raise. Right: each score against the chamber's vapour pressure in the hour before it, the test of whether the sensors can tell moisture.</p>
-    <div class="chart-grid" id="reward-charts"></div>
-  </section>
+  <details class="more" data-panel="progress" data-key="progress-scoring" hidden>
+    <summary>Scoring <span class="count"></span></summary>
+    <div class="body">
+      <p class="hint">Scores entered per day and chamber; the plan asks for 2 a day, after the 09:00 and 15:00 mixes.</p>
+      <div class="chart-grid" id="scoring-charts"></div>
+      <div class="scroll" id="missed-box" hidden><table class="t" id="missed-table"></table></div>
+    </div>
+  </details>
+  <details class="more" data-panel="progress" data-key="progress-outcomes" hidden>
+    <summary>What happened after each action <span class="count"></span></summary>
+    <div class="body">
+      <p class="hint">For each action, the next squeeze score of that chamber within 30 hours. Early evidence of which settings keep the compost in the good band.</p>
+      <div class="scroll"><table class="t grid" id="outcomes"></table></div>
+    </div>
+  </details>
+  <details class="more" data-panel="progress" data-key="progress-reward" hidden>
+    <summary>Reward and sensors against scores <span class="count"></span></summary>
+    <div class="body">
+      <p class="hint">Left: the study's reward for every score (+1 good, &minus;1 too dry, &minus;2 too wet or sour), the number a learned policy will try to raise. Right: each score against the chamber's vapour pressure in the hour before it, the test of whether the sensors can tell moisture.</p>
+      <div class="chart-grid" id="reward-charts"></div>
+    </div>
+  </details>
 
   <!-- ===================== Health ===================== -->
+  <p class="tab-empty" id="empty-health" hidden></p>
   <section class="card" data-panel="health" hidden>
     <h2>Data health</h2>
-    <p class="hint">How complete and believable the data is. Status is judged on the latest logging session, so a problem fixed since is not still flagged; the whole time range is shown beside it. A reading is expected every 42 seconds while something is logging the machine.</p>
-    <div class="scroll"><table class="t" id="health-table"></table></div>
+    <p class="verdict" id="verdict-health"></p>
+    <p class="hint">Status is judged on the latest logging session, so a problem fixed since is not still flagged; the whole range is shown beside it. A reading is expected every 42 seconds while something is logging the machine.</p>
+    <div class="checks" id="health-checks"></div>
   </section>
   <section class="card" data-panel="health" hidden>
     <h2>Alarms and safety</h2>
     <div class="tiles" id="alarm-tiles"></div>
-    <div class="scroll"><table class="t" id="alarm-table"></table></div>
+    <p class="hint" id="alarm-none" hidden></p>
+    <div class="scroll" id="alarm-box"><table class="t" id="alarm-table"></table></div>
+    <details class="more" data-key="health-power" id="power-cycles" hidden>
+      <summary><span class="count"></span></summary>
+      <div class="body"><div class="scroll"><table class="t" id="power-cycle-table"></table></div></div>
+    </details>
   </section>
 
   <!-- ===================== Compare ===================== -->
@@ -335,8 +378,11 @@ $("serial-other").addEventListener("change", () => { store("p150-serial", serial
 StudyTables.fillMachines(SUPABASE_URL, SUPABASE_KEY, $("serial"), $("serial-other"), Boolean(saved),
   () => { store("p150-serial", serial()); reload(); });
 
-let hours = Number(store("p150-insights-range") ?? 72);
-if (![0.25, 0.5, 1, 6, 12, 24, 72, 168, 0].includes(hours)) hours = 72;
+// ?range=<hours> in the address picks the time range (0 = all time), as ?machine= picks the machine.
+const RANGES = [0.25, 0.5, 1, 6, 12, 24, 72, 168, 0];
+const qRange = new URLSearchParams(location.search).get("range");
+let hours = qRange != null ? Number(qRange) : Number(store("p150-insights-range") ?? 72);
+if (!RANGES.includes(hours)) hours = 72;
 function markRange() { document.querySelectorAll("#range button").forEach((b) => b.setAttribute("aria-pressed", String(Number(b.dataset.v) === hours))); }
 markRange();
 document.querySelectorAll("#range button").forEach((b) => b.addEventListener("click", () => {
@@ -349,10 +395,35 @@ function showTab(t) {
   tab = t;
   document.querySelectorAll("#tabs button").forEach((b) => b.setAttribute("aria-selected", String(b.dataset.tab === t)));
   document.querySelectorAll("[data-panel]").forEach((p) => { p.hidden = p.dataset.panel !== t; });
+  document.querySelectorAll(".tab-empty").forEach((p) => { p.hidden = true; });
   history.replaceState(null, "", `#${t}`);
   render();
 }
 document.querySelectorAll("#tabs button").forEach((b) => b.addEventListener("click", () => showTab(b.dataset.tab)));
+
+// ---------------------------------------------------------------- empty states: one banner per tab
+const RANGE_WORDS = () => !hours ? "all time"
+  : hours >= 24 ? `the last ${hours / 24} day${hours > 24 ? "s" : ""}`
+  : hours < 1 ? `the last ${Math.round(hours * 60)} min` : `the last ${hours} h`;
+// Show the tab's banner and hide its cards; the renderer returns right after calling this.
+function emptyState(t, html) {
+  const p = $(`empty-${t}`); p.innerHTML = html; p.hidden = false;
+  document.querySelectorAll(`[data-panel="${t}"]`).forEach((s) => { s.hidden = true; });
+}
+function clearEmpty(t) {
+  $(`empty-${t}`).hidden = true;
+  document.querySelectorAll(`[data-panel="${t}"]`).forEach((s) => { s.hidden = false; });
+}
+// Newest row of a study file for this machine, whatever the range; null if none or unreachable.
+async function lastOnRecord(file) {
+  try {
+    const r = await rowsOf(`${T(file)}?select=ts_utc&${S()}&order=ts_utc.desc&limit=1`);
+    return r.length ? sec(r[0].ts_utc) : null;
+  } catch (e) { return null; }
+}
+const onRecord = (t) => t == null ? "none on record" : when(t);
+// End a sentence once: times in some locales already end "a.m.".
+const dot = (s) => /\.$/.test(s) ? s : s + ".";
 
 // ---------------------------------------------------------------- data
 async function get(path, extra) {
@@ -390,6 +461,7 @@ async function load() {
   return { readings, machine, decisions, events, observations, from: hours ? Date.now() / 1000 - hours * H : null, loadedAt: Date.now() / 1000 };
 }
 async function reload() {
+  if (serial() !== lidSerial) pollLid();
   $("status-line").textContent = "Loading…";
   const btn = $("refresh");
   btn.disabled = true; btn.textContent = "Refreshing…";
@@ -411,7 +483,7 @@ async function reload() {
 // ---------------------------------------------------------------- charts
 let plots = [];
 let pending = [];
-function destroyPlots() { plots.forEach((p) => p.destroy()); plots = []; pending = []; }
+function destroyPlots() { plots.forEach((p) => p.destroy()); plots = []; pending = []; built = new Set(); }
 // Charts are drawn one frame after their cards are placed: a card measured
 // while it was still alone in its row would keep that full width after the
 // row splits into columns, and lose its right half.
@@ -438,6 +510,10 @@ function timeChart(box, panel) {
     plotBox.outerHTML = `<p class="empty">${esc(panel.empty || "No values in this time range.")}</p>`;
     return;
   }
+  // A range narrower than an hour (one point, say) would stretch the axis across years: show a day instead.
+  let xmin = Infinity, xmax = -Infinity;
+  for (const x of panel.xs) { if (x < xmin) xmin = x; if (x > xmax) xmax = x; }
+  const xRange = xmax - xmin < H ? [xmin - 12 * H, xmax + 12 * H] : null;
   const ink = cssVar("--muted"), grid = cssVar("--grid"), colors = COLORS();
   const yAxis = { stroke: ink, grid: { stroke: grid, width: 1 }, ticks: { stroke: grid }, size: 54 };
   if (panel.yNames) { const n = panel.yNames; yAxis.splits = () => n.map((_, i) => i); yAxis.values = (u, v) => v.map((x) => n[x] ?? ""); }
@@ -448,7 +524,7 @@ function timeChart(box, panel) {
   const opts = {
     width: Math.max(240, plotBox.clientWidth), height: panel.height || 200,
     cursor: { drag: { x: true, y: false } },
-    scales: { x: { time: true }, y: panel.yNames ? { range: [-0.3, panel.yNames.length - 0.7] } : (panel.yRange ? { range: panel.yRange } : {}) },
+    scales: { x: xRange ? { time: true, range: xRange } : { time: true }, y: panel.yNames ? { range: [-0.3, panel.yNames.length - 0.7] } : (panel.yRange ? { range: panel.yRange } : {}) },
     axes: [{ stroke: ink, grid: { stroke: grid, width: 1 }, ticks: { stroke: grid } }, yAxis],
     series: [{ label: "Time", value: (u, v) => v == null ? "–" : when(v) }].concat(panel.series.map((s, i) => ({
       label: s.label, stroke: s.color || colors[i % 5], width: s.dash ? 1.5 : 2, dash: s.dash, spanGaps: !!panel.spanGaps,
@@ -470,6 +546,44 @@ function timeChart(box, panel) {
   });
 }
 
+// ---------------------------------------------------------------- "More" sections
+// Charts inside a closed <details> have no width, so a section's charts are
+// built on its first open in each render cycle. destroyPlots() forgets what
+// was built, so a re-render builds open sections again.
+const onOpen = {};
+let built = new Set();
+function runOpen(key) {
+  if (built.has(key) || !onOpen[key]) return;
+  built.add(key);
+  onOpen[key]();
+}
+// Register how to fill the section's charts; fills now if it is already open.
+function more(key, build) {
+  onOpen[key] = build;
+  const d = document.querySelector(`details.more[data-key="${key}"]`);
+  if (d && d.open) runOpen(key);
+}
+function summaryCount(key, text) {
+  const el = document.querySelector(`details.more[data-key="${key}"] .count`);
+  if (el) el.textContent = text;
+}
+document.querySelectorAll("details.more").forEach((d) => {
+  const key = d.dataset.key;
+  if (store(`p150-insights-open:${key}`) === "1") d.open = true;
+  d.addEventListener("toggle", () => { store(`p150-insights-open:${key}`, d.open ? "1" : "0"); if (d.open) runOpen(key); });
+});
+
+// A BME688 reading is plotted only when it is one. A failing sensor sends a
+// frame of zeros (temperature, humidity, pressure and gas all 0): the harness
+// stores it marked "out of range" (valid_mask o/i/f, air sensor first), and
+// collect.py and read_sensors.py store it marked ok, so both are checked.
+const zero = (v) => v != null && Number(v) === 0;
+function airOk(r) {
+  const m = String(r.valid_mask || "")[0];
+  if (m && m !== "o") return false;
+  return !(zero(r.bme_temp_c) && zero(r.bme_rh_pct));
+}
+
 function tickTable() {
   const ticks = new Map();
   const at = (iso) => { const t = sec(iso); if (!ticks.has(t)) ticks.set(t, { L: null, R: null, M: null }); return ticks.get(t); };
@@ -484,7 +598,8 @@ function tickTable() {
     if (prev != null && t - prev > 3 * TICK_S) xs.push(prev + TICK_S);
     xs.push(t);
   });
-  const col = (src, c, f) => xs.map((t) => { const k = ticks.get(t); const r = k ? k[src] : null; const v = r ? r[c] : null;
+  // ok(row): when given, a row it rejects is a gap in the line, not a value.
+  const col = (src, c, f, ok) => xs.map((t) => { const k = ticks.get(t); const r = k ? k[src] : null; const v = r && (!ok || ok(r)) ? r[c] : null;
     return v == null ? null : f ? f(v) : (typeof v === "boolean" ? (v ? 1 : 0) : Number(v)); });
   return { xs, col };
 }
@@ -512,8 +627,8 @@ function renderSensors() {
   const markers = eventMarkers();
   const P = (title, unit, series, extra) => timeChart(box, Object.assign({ title, unit, xs, series, markers,
     empty: "No sensor data in this time range. Charts fill in while the harness or collect.py logs the machine." }, extra || {}));
-  P("BME humidity", "%RH", [{ label: "Left", values: col("L", "bme_rh_pct") }, { label: "Right", values: col("R", "bme_rh_pct") }]);
-  P("BME temperature", "°C", [{ label: "Left", values: col("L", "bme_temp_c") }, { label: "Right", values: col("R", "bme_temp_c") }]);
+  P("BME humidity", "%RH", [{ label: "Left", values: col("L", "bme_rh_pct", null, airOk) }, { label: "Right", values: col("R", "bme_rh_pct", null, airOk) }]);
+  P("BME temperature", "°C", [{ label: "Left", values: col("L", "bme_temp_c", null, airOk) }, { label: "Right", values: col("R", "bme_temp_c", null, airOk) }]);
   P("Currents", "A", [{ label: "Machine (AC)", values: col("M", "machine_current_a") },
     { label: "Left motor", values: col("L", "motor_current_a") }, { label: "Right motor", values: col("R", "motor_current_a") }]);
   P("Temperatures", "°C", [{ label: "Left pad", values: col("L", "pad_ntc_c") }, { label: "Right pad", values: col("R", "pad_ntc_c") },
@@ -551,84 +666,128 @@ const REASON_TEXT = { none: "nothing narrowed: all five allowed", last_wet: "las
   firmware_modes: "firmware modes only: A1 light or A3 heavy", firmware_last_dry: "firmware modes only, last score dry: A1 light",
   firmware_last_wet: "firmware modes only, last score wet: A3 heavy" };
 
-function renderPolicy() {
-  const dec = data.decisions, ch = byChamber(dec);
-  // "In use now": the actions the latest decision was allowed to choose from
-  const lastDec = dec[dec.length - 1];
-  const inUse = lastDec && lastDec.allowed_set ? String(lastDec.allowed_set).split("|") : null;
-  $("actions-in-use").innerHTML = "<td>Allowed at the last decision</td>" + ACTIONS.map((a) =>
-    `<td>${!inUse ? "–" : inUse.includes(a) ? pill("yes", "ok") : pill("no", "plain")}</td>`).join("");
-  $("actions-in-use-note").textContent = inUse
-    ? `From the latest decision (${when(sec(lastDec.ts_utc))}): ${REASON_TEXT[lastDec.restrict_reason] || lastDec.restrict_reason}.`
-    : "No decision in this time range yet.";
-  // 5. current policy cards
-  $("policy-cards").innerHTML = ["L", "R"].map((c) => {
-    const d = ch[c][ch[c].length - 1];
-    if (!d) return `<div class="box"><h3>Chamber ${c}</h3><p class="empty">No decisions in this time range. Decisions are made only while the harness controls the machine.</p></div>`;
-    const steer = d.scores_steer == null ? "not recorded" : d.scores_steer ? "yes" : "no, scores are recorded only";
-    return `<div class="box"><h3>Chamber ${c} <span class="action">${esc(d.action)}</span> ${esc(ACTION_NAMES[d.action] || "")}</h3>
-      <dl class="kv"><dt>Since</dt><dd>${when(sec(d.ts_utc))} (${ago(sec(d.ts_utc))})</dd>
-      <dt>Policy</dt><dd>${esc(d.policy_version)} · ${esc(d.arm)} arm · stage ${esc(d.stage)}</dd>
-      <dt>Scores steer it</dt><dd>${esc(steer)}</dd>
-      <dt>Choice</dt><dd>${esc(d.allowed_set)} · picked with ${Math.round(Number(d.action_prob) * 100)} % chance</dd>
-      <dt>Narrowed by</dt><dd>${esc(REASON_TEXT[d.restrict_reason] || d.restrict_reason)}</dd>
-      <dt>Next decision</dt><dd>${nextDecision().toLocaleString([], { weekday: "short", hour: "2-digit", minute: "2-digit" })} (scheduled; the harness must be running)</dd></dl></div>`;
-  }).join("");
+// Actions the decisions in range were allowed to choose from; all five when there are none.
+function actionsInUse(decisions) {
+  const s = new Set();
+  decisions.forEach((d) => String(d.allowed_set || "").split("|").forEach((a) => { if (ACTIONS.includes(a)) s.add(a); }));
+  return s.size ? ACTIONS.filter((a) => s.has(a)) : ACTIONS.slice();
+}
+let showAllActions = false;   // session only: the "Show all five actions" toggle
+const actionsShown = () => showAllActions ? ACTIONS.slice() : actionsInUse(data.decisions);
+function actionsToggle() {
+  const inUse = actionsInUse(data.decisions);
+  if (inUse.length === ACTIONS.length) return "";
+  return `<button type="button" class="linkish actions-toggle">${showAllActions
+    ? "Show only the actions in use" : `Show all five actions (${inUse.join(", ")} in use)`}</button>`;
+}
+document.addEventListener("click", (e) => {
+  if (e.target.classList && e.target.classList.contains("actions-toggle")) { showAllActions = !showAllActions; render(); }
+});
+const actionPill = (a) => `<span class="action">${esc(a)}</span>`;
+const actionWords = (set) => String(set || "").split("|").filter(Boolean).map((a) => ACTION_NAMES[a] || a);
+const orList = (xs) => xs.length < 2 ? xs.join("") : `${xs.slice(0, -1).join(", ")} or ${xs[xs.length - 1]}`;
+// Plain words for the decision fields (spec M6).
+const PLAIN = {
+  policy: (v) => v === "random" ? "drawn at random" : /^matched/.test(v || "") ? "the matched firmware mode" : `learned policy ${v || "?"}`,
+  arm: { explore: "exploring", learned: "learned policy", matched: "matched mode" },
+  steer: (v) => v == null ? "whether scores steer decisions is not recorded"
+    : v ? "scores steer decisions" : "scores are recorded but do not steer decisions",
+};
+// One line per action for the key on the Policy tab; the full table is the Guide's.
+const ACTION_KEY = {
+  A0: "built from light; air 4.9 % of the time, pad heaters and blower PTC off. Curing chamber: air on, heat off",
+  A1: "the firmware's light mode; air 4.9 % of the time, pads to 70 \u00b0C, blower PTC on. Light household",
+  A2: "built halfway; air 12.6 % of the time, pads to 70 \u00b0C, blower PTC on. Between the two modes",
+  A3: "the firmware's heavy mode; air 20.3 % of the time, pads to 70 \u00b0C, blower PTC on, longer mix phases. Heavy household",
+  A4: "built from heavy; air 40 % of the time, pads to 70 \u00b0C, blower PTC on. Big wet feed, or too wet",
+};
 
-  // 1-2. actions and asks over time, as steps held until "now"
-  const box = $("policy-charts"); box.textContent = "";
+async function renderPolicy() {
+  const dec = data.decisions, ch = byChamber(dec);
+  if (!dec.length) {
+    const last = await lastOnRecord("decisions");
+    if (tab !== "policy") return;
+    emptyState("policy", `No decisions for <b>${esc(serial())}</b> in ${RANGE_WORDS()}. Decisions are made only while the harness controls the machine. Last decision on record: ${dot(onRecord(last))}`);
+    return;
+  }
+  clearEmpty("policy");
+  const latest = dec[dec.length - 1];
+
+  // Now: one sentence per chamber from its latest decision in range, then one line for the machine
+  $("policy-now").innerHTML = ["L", "R"].map((c) => {
+    const d = ch[c][ch[c].length - 1];
+    if (!d) return `<div class="box"><h3>Chamber ${c}</h3><p class="empty">No decision for this chamber in ${RANGE_WORDS()}.</p></div>`;
+    const reason = REASON_TEXT[d.restrict_reason] || d.restrict_reason || "";
+    return `<div class="box"><h3>Chamber ${c}</h3><p class="verdict">${actionPill(d.action)} ${esc(ACTION_NAMES[d.action] || "")} since ${when(sec(d.ts_utc))} (${ago(sec(d.ts_utc))}), ${esc(PLAIN.policy(d.policy_version))} from ${esc(orList(actionWords(d.allowed_set)))}.${reason ? ` ${esc(reason.charAt(0).toUpperCase() + reason.slice(1))}.` : ""}</p></div>`;
+  }).join("");
+  const learned = !/^(random|matched)/.test(latest.policy_version || "");
+  $("verdict-policy").textContent = `Next decision ${nextDecision().toLocaleString([], { weekday: "short", hour: "2-digit", minute: "2-digit" })} (scheduled; the harness must be running) \u00b7 ${PLAIN.policy(latest.policy_version)} \u00b7 ${PLAIN.arm[latest.arm] || latest.arm || ""} \u00b7 stage ${latest.stage} \u00b7 ${PLAIN.steer(latest.scores_steer)}.`
+    + (learned ? "" : " No learned policy yet; this line changes when training exports one.");
+
+  // What it did: the action in force, then every decision
   const now = Math.floor(Date.now() / 1000);
   const xs = [...new Set(dec.map((d) => sec(d.ts_utc)))].sort((a, b) => a - b);
-  if (xs.length) xs.push(now);
+  xs.push(now);
   const held = (c, f) => { let cur = null; const rows = ch[c];
     return xs.map((t) => { const r = rows.filter((x) => sec(x.ts_utc) <= t).pop(); if (r) cur = f(r); return cur; }); };
   const machineAt = (f) => { let cur = null; return xs.map((t) => { const r = dec.filter((x) => sec(x.ts_utc) <= t).pop(); if (r) cur = f(r); return cur; }); };
-  const empty = "No decisions in this time range. The harness makes one per chamber every 4 hours while it controls the machine.";
-  timeChart(box, { title: "Action in force", unit: "A0 to A4", xs, step: true, yNames: ACTIONS, empty,
+  const abox = $("policy-action-chart"); abox.textContent = "";
+  timeChart(abox, { title: "Action in force", unit: "A0 to A4", xs, step: true, yNames: ACTIONS,
     series: ["L", "R"].map((c) => ({ label: `Chamber ${c}`, values: held(c, (r) => ACTIONS.indexOf(r.action)),
       fmt: (v) => `${ACTIONS[v]} ${ACTION_NAMES[ACTIONS[v]]}` })) });
-  timeChart(box, { title: "Blower duty: asked vs applied", unit: "% of time on", xs, step: true, empty,
-    series: [{ label: "Left asked", values: held("L", (r) => ACTION_ASK[r.action]?.duty ?? null) },
-      { label: "Right asked", values: held("R", (r) => ACTION_ASK[r.action]?.duty ?? null) },
-      { label: "Applied (shared)", values: machineAt((r) => r.duty_pct == null ? null : Number(r.duty_pct)) }] });
-  timeChart(box, { title: "Heaters: asked vs applied", unit: "on or off", xs, step: true, yNames: ["off", "on"], empty,
-    series: [{ label: "Left pad", values: held("L", (r) => Number(r.pad_on_frac) > 0 ? 1 : 0) },
-      { label: "Right pad", values: held("R", (r) => Number(r.pad_on_frac) > 0 ? 1 : 0) },
-      { label: "Blower PTC (shared)", values: machineAt((r) => Number(r.ptc_on_frac) > 0 ? 1 : 0) }] });
 
-  // 6. predictions
-  const latest = dec[dec.length - 1];
-  const learned = dec.some((d) => d.arm === "learned" || (d.policy_version && !/^(random|matched)/.test(d.policy_version)));
-  $("predictions").innerHTML = learned
-    ? `<p class="hint">The learned policy's chances for each action at its latest decisions are in the table below. Values it predicts for each action will appear here once the policy file exports them.</p>`
-    : `<p class="note">No learned policy is running yet, so there is nothing to predict. Today's policy is <b>${esc(latest ? latest.policy_version : "random")}</b>: every allowed action gets an equal chance. After a few weeks of decisions and scores, training produces a learned policy; this panel then shows which action it expects to keep each chamber in the good band, and how sure it is.</p>`;
-
-  // 3 + 7. decisions table with the full spread
+  const shown = actionsShown();
+  const varies = (k) => new Set(dec.map((d) => String(d[k]))).size > 1;
+  const col = { policy: varies("policy_version"), steer: varies("scores_steer") };
+  $("decisions-constant").textContent = (col.policy || col.steer) ? ""
+    : `All ${dec.length} decision${dec.length === 1 ? "" : "s"}: ${PLAIN.policy(latest.policy_version)}, ${PLAIN.steer(latest.scores_steer)}.`;
   const rows = dec.slice().reverse().slice(0, 200);
-  $("decisions-table").innerHTML = rows.length ? `<thead><tr><th>When</th><th>Ch</th><th>Picked</th><th>Chance of each action</th><th>Narrowed by</th><th>Scores steer</th><th class="num">Last squeeze</th><th>Policy</th></tr></thead><tbody>` +
+  $("decisions-table").innerHTML = `<thead><tr><th>When</th><th>Ch</th><th>Picked</th><th>Chance of each action</th><th>Narrowed by</th>${col.steer ? "<th>Scores steer</th>" : ""}<th class="num">Last squeeze</th>${col.policy ? "<th>Policy</th>" : ""}</tr></thead><tbody>` +
     rows.map((r) => { const p = parseProbs(r); const allowed = String(r.allowed_set || "").split("|");
-      const bars = ACTIONS.map((a) => { const v = p[a]; const h = v == null ? 0 : Math.round(v * 100);
+      const bars = shown.map((a) => { const v = p[a]; const h = v == null ? 0 : Math.round(v * 100);
         return `<span class="${a === r.action ? "chosen" : ""}" title="${a}: ${v == null ? "not recorded" : h + " %"}"><i><b style="height:${allowed.includes(a) ? Math.max(h, v ? 4 : 0) : 0}%"></b></i>${a}${v == null ? "" : `<br>${h}%`}</span>`; }).join("");
-      return `<tr><td>${when(sec(r.ts_utc))}</td><td>${esc(r.chamber)}</td><td><span class="action">${esc(r.action)}</span></td>
+      return `<tr><td>${when(sec(r.ts_utc))}</td><td>${esc(r.chamber)}</td><td>${actionPill(r.action)}</td>
         <td><div class="probs">${bars}</div></td><td class="wrap">${esc(REASON_TEXT[r.restrict_reason] || r.restrict_reason)}</td>
-        <td>${r.scores_steer == null ? "–" : r.scores_steer ? "yes" : "no"}</td><td class="num">${r.last_squeeze ?? "–"}</td><td>${esc(r.policy_version)}</td></tr>`; }).join("") + "</tbody>"
-    : `<tbody><tr><td class="empty">${empty}</td></tr></tbody>`;
+        ${col.steer ? `<td>${r.scores_steer == null ? "\u2013" : r.scores_steer ? "yes" : "no"}</td>` : ""}<td class="num">${r.last_squeeze ?? "\u2013"}</td>${col.policy ? `<td>${esc(r.policy_version)}</td>` : ""}</tr>`; }).join("") + "</tbody>";
 
-  // 4. what it saw
-  const fbox = $("feature-charts"); fbox.textContent = "";
-  const fx = [...new Set(dec.map((d) => sec(d.ts_utc)))].sort((a, b) => a - b);
-  const F = (title, unit, col, extra) => timeChart(fbox, Object.assign({ title, unit, xs: fx, height: 160, points: true, lines: true, spanGaps: true, empty,
-    series: ["L", "R"].map((c) => ({ label: `Chamber ${c}`, values: fx.map((t) => { const r = ch[c].find((x) => sec(x.ts_utc) === t);
-      const v = r ? r[col] : null; return v == null ? null : extra && extra.map ? extra.map(v) : Number(v); }) })) }, extra || {}));
-  F("Vapour pressure, 1 h mean", "kPa", "vp_mean_1h_kpa");
-  F("Vapour pressure trend, 6 h", "kPa per h", "vp_slope_6h_kpa_h");
-  F("Exhaust temperature, 1 h mean", "°C", "exhaust_t_mean_1h_c");
-  F("Lid openings, last 24 h", "count", "lid_events_24h");
-  F("Hours since the lid was last opened", "h", "h_since_lid");
-  F("Humidity jump at the last feed", "kPa", "jump_last_kpa");
-  F("Fed or curing", "inferred role", "role_inferred", { yNames: ["curing", "fed"], map: (v) => v === "fed" ? 1 : 0, step: true });
-  F("Day in cycle", "days since unload", "day_in_cycle_inferred");
-  F("Mixer current at the last mix", "A", "motor_current_last_mix_a");
+  // More: blower and heaters, asked vs applied
+  summaryCount("policy-asked", `${dec.length} decision${dec.length === 1 ? "" : "s"}`);
+  more("policy-asked", () => {
+    const box = $("policy-charts"); box.textContent = "";
+    timeChart(box, { title: "Blower duty: asked vs applied", unit: "% of time on", xs, step: true,
+      series: [{ label: "Left asked", values: held("L", (r) => ACTION_ASK[r.action]?.duty ?? null) },
+        { label: "Right asked", values: held("R", (r) => ACTION_ASK[r.action]?.duty ?? null) },
+        { label: "Applied (shared)", values: machineAt((r) => r.duty_pct == null ? null : Number(r.duty_pct)) }] });
+    timeChart(box, { title: "Heaters: asked vs applied", unit: "on or off", xs, step: true, yNames: ["off", "on"],
+      series: [{ label: "Left pad", values: held("L", (r) => Number(r.pad_on_frac) > 0 ? 1 : 0) },
+        { label: "Right pad", values: held("R", (r) => Number(r.pad_on_frac) > 0 ? 1 : 0) },
+        { label: "Blower PTC (shared)", values: machineAt((r) => Number(r.ptc_on_frac) > 0 ? 1 : 0) }] });
+  });
+
+  // More: what the policy saw
+  summaryCount("policy-saw", "9 charts");
+  more("policy-saw", () => {
+    const fbox = $("feature-charts"); fbox.textContent = "";
+    const fx = [...new Set(dec.map((d) => sec(d.ts_utc)))].sort((a, b) => a - b);
+    const F = (title, unit, column, extra) => timeChart(fbox, Object.assign({ title, unit, xs: fx, height: 160, points: true, lines: true, spanGaps: true,
+      empty: "Not recorded in these decisions",
+      series: ["L", "R"].map((c) => ({ label: `Chamber ${c}`, values: fx.map((t) => { const r = ch[c].find((x) => sec(x.ts_utc) === t);
+        const v = r ? r[column] : null; return v == null ? null : extra && extra.map ? extra.map(v) : Number(v); }) })) }, extra || {}));
+    F("Vapour pressure, 1 h mean", "kPa", "vp_mean_1h_kpa");
+    F("Vapour pressure trend, 6 h", "kPa per h", "vp_slope_6h_kpa_h");
+    F("Exhaust temperature, 1 h mean", "\u00b0C", "exhaust_t_mean_1h_c");
+    F("Lid openings, last 24 h", "count", "lid_events_24h");
+    F("Hours since the lid was last opened", "h", "h_since_lid");
+    F("Humidity jump at the last feed", "kPa", "jump_last_kpa");
+    F("Fed or curing", "inferred role", "role_inferred", { yNames: ["curing", "fed"], map: (v) => v === "fed" ? 1 : 0, step: true });
+    F("Day in cycle", "days since unload", "day_in_cycle_inferred");
+    F("Mixer current at the last mix", "A", "motor_current_last_mix_a");
+  });
+
+  // More: action key, one line per action shown
+  summaryCount("policy-key", `${actionsInUse(dec).length} of 5 in use`);
+  $("action-key").innerHTML = shown.map((a) => `<li>${actionPill(a)} <b>${esc(ACTION_NAMES[a])}</b>: ${esc(ACTION_KEY[a])}.</li>`).join("");
+  $("action-key-toggle").innerHTML = actionsToggle();
 }
 
 // ---------------------------------------------------------------- progress
@@ -640,68 +799,101 @@ const grade = (o) => {   // the study's reward for one score (Machine_Learning/r
 const outcomeOf = (s) => s === 1 ? "good" : s === -1 ? "dry" : s === -2 ? "wet / sour" : null;
 
 async function renderProgress() {
-  // 8. progress tiles: all-time counts per chamber
-  const tiles = $("progress-tiles");
-  tiles.innerHTML = `<p class="empty">Counting…</p>`;
-  try {
-    const counts = await Promise.all(["L", "R"].flatMap((c) => [
-      count(`${T("decisions")}?${S()}&chamber=eq.${c}`),
-      count(`${T("observations")}?${S()}&chamber=eq.${c}&missed=eq.false`)]));
-    const tile = (k, v, target, sub) => `<div class="tile"><span class="k">${esc(k)}</span>
-      <span class="v">${v} <small>of ${target} ${esc(sub)}</small></span><div class="bar"><i style="width:${Math.min(100, pct(v, target))}%"></i></div>
-      <span class="hint">${pct(v, target)} % of the weeks 1-5 target</span></div>`;
-    tiles.innerHTML = ["L", "R"].map((c, i) =>
-      tile(`Chamber ${c} decisions`, counts[i * 2], TARGETS.stage1.decisions, "") +
-      tile(`Chamber ${c} scores`, counts[i * 2 + 1], TARGETS.stage1.scores, "")).join("");
-  } catch (e) { tiles.innerHTML = `<p class="empty">Could not count the data.</p>`; }
+  const dec = data.decisions, obs = data.observations;
+  if (!dec.length && !obs.length) {
+    const [ld, ls] = await Promise.all([lastOnRecord("decisions"), lastOnRecord("observations")]);
+    if (tab !== "progress") return;
+    emptyState("progress", `No decisions and no scores for <b>${esc(serial())}</b> in ${RANGE_WORDS()}. Decisions are made only while the harness controls the machine; scores come from the Compost Control pages. Last decision on record: ${onRecord(ld)}; last score on record: ${dot(onRecord(ls))}`);
+    return;
+  }
+  clearEmpty("progress");
+  const scoredIn = obs.filter((o) => !o.missed);
+  const perCh = (rows, c) => rows.filter((r) => r.chamber === c).length;
 
-  // 9. coverage: action x chamber x fed/curing
-  const dec = data.decisions;
-  const cell = (n, max) => `<td class="cell" style="background: rgba(var(--heat), ${max ? (0.08 + 0.6 * n / max).toFixed(2) : 0})">${n || "·"}</td>`;
+  // Coverage: action x chamber x fed/curing, for the actions shown
+  const shown = actionsShown();
+  const cell = (n, max) => `<td class="cell" style="background: rgba(var(--heat), ${max ? (0.08 + 0.6 * n / max).toFixed(2) : 0})">${n || "\u00b7"}</td>`;
   const rowsDef = ["L", "R"].flatMap((c) => ["fed", "curing"].map((role) => ({ c, role })));
-  const grid = rowsDef.map(({ c, role }) => ACTIONS.map((a) => dec.filter((d) => d.chamber === c && (d.role_inferred || "curing") === role && d.action === a).length));
+  const grid = rowsDef.map(({ c, role }) => shown.map((a) => dec.filter((d) => d.chamber === c && (d.role_inferred || "curing") === role && d.action === a).length));
   const gmax = Math.max(0, ...grid.flat());
-  $("coverage").innerHTML = `<thead><tr><th>Chamber, situation</th>${ACTIONS.map((a) => `<th class="num">${a} ${ACTION_NAMES[a]}</th>`).join("")}<th class="num">Total</th></tr></thead><tbody>` +
-    rowsDef.map((r, i) => `<tr><td>${r.c}, ${r.role === "fed" ? "fed in last 24 h" : "curing (not fed)"}</td>${grid[i].map((n) => cell(n, gmax)).join("")}<td class="num">${grid[i].reduce((a, b) => a + b, 0)}</td></tr>`).join("") +
-    `</tbody>` + (dec.length ? "" : `<caption class="hint" style="caption-side:bottom;text-align:left;padding-top:8px">No decisions in this time range yet.</caption>`);
+  const gaps = [];
+  rowsDef.forEach((r, i) => { const missing = shown.filter((a, j) => grid[i][j] === 0); if (missing.length) gaps.push(`${r.c} ${r.role} (${missing.join(", ")})`); });
+  $("verdict-coverage").textContent = !dec.length ? `No decisions in ${RANGE_WORDS()}, so no coverage yet.`
+    : `${rowsDef.length - gaps.length} of ${rowsDef.length} situations have had every action in use` + (gaps.length ? `; gaps: ${gaps.join("; ")}.` : ".");
+  $("coverage").innerHTML = `<thead><tr><th>Chamber, situation</th>${shown.map((a) => `<th class="num">${a} ${ACTION_NAMES[a]}</th>`).join("")}<th class="num">Total</th></tr></thead><tbody>` +
+    rowsDef.map((r, i) => `<tr><td>${r.c}, ${r.role === "fed" ? "fed in last 24 h" : "curing (not fed)"}</td>${grid[i].map((n) => cell(n, gmax)).join("")}<td class="num">${grid[i].reduce((a, b) => a + b, 0)}</td></tr>`).join("") + "</tbody>";
+  $("coverage-toggle").innerHTML = actionsToggle();
 
-  // 10. scoring per day + missed
-  const obs = data.observations;
+  // More: scoring per day, age of the last score, missed scores
   const days = [...new Set(obs.map((o) => o.ts_utc.slice(0, 10)))].sort();
-  const box = $("scoring-charts"); box.textContent = "";
-  const dayX = days.map((d) => sec(d + "T12:00:00Z"));
-  timeChart(box, { title: "Scores per day", unit: "count; plan is 2 a day", xs: dayX, points: true, lines: true,
-    empty: "No scores in this time range. Scores come from the Compost Control pages.",
-    series: ["L", "R"].map((c) => ({ label: `Chamber ${c}`, values: days.map((d) => obs.filter((o) => o.chamber === c && !o.missed && o.ts_utc.startsWith(d)).length) }))
-      .concat([{ label: "Plan", values: days.map(() => 2), color: cssVar("--muted"), dash: [6, 4] }]) });
-  const ageX = dec.map((d) => sec(d.ts_utc));
-  timeChart(box, { title: "Age of the last score at each decision", unit: "h; over 30 h counts as no score", xs: ageX, points: true,
-    empty: "No decisions in this time range.",
-    series: ["L", "R"].map((c) => ({ label: `Chamber ${c}`, values: dec.map((d) => d.chamber === c && d.last_score_age_h != null ? Number(d.last_score_age_h) : null) })) });
   const missed = obs.filter((o) => o.missed);
-  $("missed-table").innerHTML = missed.length ? `<thead><tr><th>When</th><th>Ch</th><th>Missed because</th><th>By</th></tr></thead><tbody>` +
-    missed.slice().reverse().map((o) => `<tr><td>${when(sec(o.ts_utc))}</td><td>${esc(o.chamber)}</td><td class="wrap">${esc(o.miss_reason)}</td><td>${esc(o.observer)}</td></tr>`).join("") + "</tbody>"
-    : `<tbody><tr><td class="hint">No missed scores in this time range.</td></tr></tbody>`;
+  summaryCount("progress-scoring", `${scoredIn.length} score${scoredIn.length === 1 ? "" : "s"} in range, ${missed.length} missed`);
+  more("progress-scoring", () => {
+    const box = $("scoring-charts"); box.textContent = "";
+    const dayX = days.map((d) => sec(d + "T12:00:00Z"));
+    timeChart(box, { title: "Scores per day", unit: "count; plan is 2 a day", xs: dayX, points: true, lines: true,
+      empty: "No scores in this range. Scores come from the Compost Control pages.",
+      series: ["L", "R"].map((c) => ({ label: `Chamber ${c}`, values: days.map((d) => obs.filter((o) => o.chamber === c && !o.missed && o.ts_utc.startsWith(d)).length) }))
+        .concat([{ label: "Plan", values: days.map(() => 2), color: cssVar("--muted"), dash: [6, 4] }]) });
+    const ageX = dec.map((d) => sec(d.ts_utc));
+    timeChart(box, { title: "Age of the last score at each decision", unit: "h; over 30 h counts as no score", xs: ageX, points: true,
+      empty: "No decisions in this range.",
+      series: ["L", "R"].map((c) => ({ label: `Chamber ${c}`, values: dec.map((d) => d.chamber === c && d.last_score_age_h != null ? Number(d.last_score_age_h) : null) })) });
+    $("missed-box").hidden = !missed.length;
+    $("missed-table").innerHTML = missed.length ? `<thead><tr><th>When</th><th>Ch</th><th>Missed because</th><th>By</th></tr></thead><tbody>` +
+      missed.slice().reverse().map((o) => `<tr><td>${when(sec(o.ts_utc))}</td><td>${esc(o.chamber)}</td><td class="wrap">${esc(o.miss_reason)}</td><td>${esc(o.observer)}</td></tr>`).join("") + "</tbody>" : "";
+  });
 
-  // 11. action -> next score within 30 h
+  // More: action -> next score within 30 h (a table, so built now)
   const graded = obs.filter((o) => !o.missed && grade(o) != null).map((o) => ({ ch: o.chamber, t: sec(o.ts_utc), s: grade(o) }));
   const OUT = ["good", "dry", "wet / sour", "no score in 30 h"];
   const table = Object.fromEntries(ACTIONS.map((a) => [a, Object.fromEntries(OUT.map((k) => [k, 0]))]));
+  let scoredWithin = 0;
   dec.forEach((d) => { const t = sec(d.ts_utc);
     const nx = graded.find((g) => g.ch === d.chamber && g.t > t && g.t - t <= 30 * H);
+    if (nx) scoredWithin++;
     table[d.action][nx ? outcomeOf(nx.s) : "no score in 30 h"]++; });
-  const omax = Math.max(0, ...ACTIONS.flatMap((a) => OUT.slice(0, 3).map((k) => table[a][k])));
+  summaryCount("progress-outcomes", `${scoredWithin} of ${dec.length} decision${dec.length === 1 ? "" : "s"} scored within 30 h`);
+  const omax = Math.max(0, ...shown.flatMap((a) => OUT.slice(0, 3).map((k) => table[a][k])));
   $("outcomes").innerHTML = `<thead><tr><th>Action</th>${OUT.map((k) => `<th class="num">${k}</th>`).join("")}<th class="num">Good rate</th></tr></thead><tbody>` +
-    ACTIONS.map((a) => { const r = table[a]; const scored = r.good + r.dry + r["wet / sour"];
-      return `<tr><td><span class="action">${a}</span> ${ACTION_NAMES[a]}</td>${OUT.map((k, i) => i < 3 ? cell(r[k], omax) : `<td class="num">${r[k] || "·"}</td>`).join("")}<td class="num">${scored ? pct(r.good, scored) + " %" : "–"}</td></tr>`; }).join("") + "</tbody>";
+    shown.map((a) => { const r = table[a]; const scored = r.good + r.dry + r["wet / sour"];
+      return `<tr><td>${actionPill(a)} ${ACTION_NAMES[a]}</td>${OUT.map((k, i) => i < 3 ? cell(r[k], omax) : `<td class="num">${r[k] || "\u00b7"}</td>`).join("")}<td class="num">${scored ? pct(r.good, scored) + " %" : "\u2013"}</td></tr>`; }).join("") + "</tbody>";
 
-  // 12-13. reward over time, sensor vs score
-  const rbox = $("reward-charts"); rbox.textContent = "";
-  const rx = [...new Set(graded.map((g) => g.t))].sort((a, b) => a - b);
-  timeChart(rbox, { title: "Reward from each score", unit: "+1 good, −1 dry, −2 wet", xs: rx, points: true, yRange: [-2.5, 1.5],
-    empty: "No scores in this time range.",
-    series: ["L", "R"].map((c) => ({ label: `Chamber ${c}`, values: rx.map((t) => { const g = graded.find((x) => x.t === t && x.ch === c); return g ? g.s : null; }) })) });
-  scatterCard(rbox, graded);
+  // More: reward over time, sensor vs score
+  summaryCount("progress-reward", `${graded.length} score${graded.length === 1 ? "" : "s"}`);
+  more("progress-reward", () => {
+    const rbox = $("reward-charts"); rbox.textContent = "";
+    const rx = [...new Set(graded.map((g) => g.t))].sort((a, b) => a - b);
+    timeChart(rbox, { title: "Reward from each score", unit: "+1 good, \u22121 dry, \u22122 wet", xs: rx, points: true, yRange: [-2.5, 1.5],
+      empty: "No scores in this range.",
+      series: ["L", "R"].map((c) => ({ label: `Chamber ${c}`, values: rx.map((t) => { const g = graded.find((x) => x.t === t && x.ch === c); return g ? g.s : null; }) })) });
+    scatterCard(rbox, graded);
+  });
+
+  // On plan? Range counts in the tiles' big numbers, all-time counts on the bars. Last, because it asks the server.
+  const tiles = $("progress-tiles");
+  $("verdict-progress").textContent = "Counting\u2026";
+  const dTarget = 2 * TARGETS.stage1.decisions, sTarget = 2 * TARGETS.stage1.scores;
+  const tile = (k, inRange, allTime, target, plan) => `<div class="tile"><span class="k">${esc(k)}</span>
+    <span class="v">${inRange.L + inRange.R} <small>${esc(hours ? `in ${RANGE_WORDS()}` : "all time")} \u00b7 L ${inRange.L} \u00b7 R ${inRange.R}</small></span>
+    <div class="bar"><i style="width:${Math.min(100, pct(allTime, target))}%"></i></div>
+    <span class="hint">all time: ${allTime} of ${target} (${pct(allTime, target)} %) \u00b7 ${esc(plan)}</span></div>`;
+  const draw = (dAll, sAll) => { tiles.innerHTML =
+    tile("Decisions", { L: perCh(dec, "L"), R: perCh(dec, "R") }, dAll, dTarget, "plan: 6 a day per chamber, 210 each by week 5")
+    + tile("Scores", { L: perCh(scoredIn, "L"), R: perCh(scoredIn, "R") }, sAll, sTarget, "plan: 2 a working day per chamber, 50 each by week 5"); };
+  try {
+    const [dAll, sAll, first] = await Promise.all([
+      count(`${T("decisions")}?${S()}`),
+      count(`${T("observations")}?${S()}&missed=eq.false`),
+      rowsOf(`${T("decisions")}?select=ts_utc&${S()}&order=ts_utc.asc&limit=1`)]);
+    if (tab !== "progress") return;
+    const day = first.length ? Math.floor((Date.now() / 1000 - sec(first[0].ts_utc)) / 86400) + 1 : null;
+    $("verdict-progress").textContent = `${day == null ? "No decision yet" : `Day ${day} of 35 in stage 1`} \u00b7 ${dAll} decisions of ${dTarget} \u00b7 ${sAll} scores of ${sTarget}, all time.`;
+    draw(dAll, sAll);
+  } catch (e) {
+    $("verdict-progress").textContent = "Could not count the all-time totals; the counts for this range are below.";
+    draw(0, 0);
+  }
 }
 
 function scatterCard(box, graded) {
@@ -711,7 +903,7 @@ function scatterCard(box, graded) {
   const pts = [];
   data.observations.filter((o) => !o.missed && o.squeeze != null).forEach((o) => {
     const t = sec(o.ts_utc);
-    const vp = data.readings.filter((r) => r.chamber === o.chamber && r.vapour_pressure_kpa != null && sec(r.ts_utc) <= t && sec(r.ts_utc) > t - H).map((r) => Number(r.vapour_pressure_kpa));
+    const vp = data.readings.filter((r) => r.chamber === o.chamber && r.vapour_pressure_kpa != null && airOk(r) && sec(r.ts_utc) <= t && sec(r.ts_utc) > t - H).map((r) => Number(r.vapour_pressure_kpa));
     if (vp.length) pts.push({ x: vp.reduce((a, b) => a + b, 0) / vp.length, y: Number(o.squeeze), ch: o.chamber });
   });
   if (!pts.length) { card.insertAdjacentHTML("beforeend", `<p class="empty">No scores with sensor readings in the hour before them yet.</p>`); return; }
@@ -730,7 +922,14 @@ function scatterCard(box, graded) {
 }
 
 // ---------------------------------------------------------------- health
-function renderHealth() {
+async function renderHealth() {
+  if (!data.machine.length) {
+    const last = await lastOnRecord("machine_readings");
+    if (tab !== "health") return;
+    emptyState("health", `No readings for <b>${esc(serial())}</b> in ${RANGE_WORDS()}. Last reading on record: ${dot(onRecord(last))}`);
+    return;
+  }
+  clearEmpty("health");
   // Judge the data on the latest logging session, so a sensor fixed an hour
   // ago is not still marked bad by older rows in the window. A session is a
   // run of machine readings with no break longer than three ticks.
@@ -814,25 +1013,50 @@ function renderHealth() {
       quiet ? "Was on but has not reported for over 25 minutes: its window may be closed, or the laptop asleep"
         : on ? "Protects the machine if the harness stops responding" : note);
   }
-  const since = latest ? `since ${when(latest.start)}${live ? ", still running" : ""}` : "";
-  $("health-table").innerHTML = `<thead><tr><th>Area</th><th>Check</th><th class="num">Latest session<br><span class="hint">${esc(since)}</span></th><th class="num">Whole range</th><th>Status</th><th>Note</th></tr></thead><tbody>` +
-    rows.map((r) => `<tr><td>${esc(r[0])}</td><td>${esc(r[1])}</td><td class="num">${esc(r[2])}</td><td class="num">${esc(r[3])}</td><td>${r[4]}</td><td class="wrap">${esc(r[5])}</td></tr>`).join("") + "</tbody>";
+  // Verdict: logging state, checks ok, and what to look at
+  const isPill = (r, kind) => typeof r[4] === "string" && r[4].includes(`pill ${kind}`);
+  const judged = rows.filter((r) => r[4]);
+  const notOk = judged.filter((r) => isPill(r, "warn") || isPill(r, "bad"));
+  const okN = judged.filter((r) => isPill(r, "ok") || isPill(r, "plain")).length;   // "stopped" on purpose is fine
+  const logging = rows[0];   // "Time since the last reading"
+  const logAgo = String(logging[2] || "").replace(/ ago$/, "");
+  const logWords = isPill(logging, "plain") ? `Logging stopped on purpose ${logging[2]}`
+    : isPill(logging, "ok") ? "Logging live" : `No reading for ${logAgo} and no clean stop`;
+  const byCheck = {};
+  notOk.forEach((r) => { (byCheck[r[1]] = byCheck[r[1]] || []).push(r[0].startsWith("Chamber ") ? `${r[0].slice(8)} ${r[2]}` : r[2]); });
+  const look = Object.entries(byCheck).map(([k, v]) => `${k.charAt(0).toLowerCase() + k.slice(1)} (${v.join(", ")})`).join(", ");
+  $("verdict-health").textContent = `${logWords} \u00b7 ${okN} of ${judged.length} checks ok` + (notOk.length ? ` \u00b7 to look at: ${look}.` : ".");
 
-  // 15. alarms and safety
+  // The checks, grouped by area: pill first, note only when not ok
+  const since = latest ? `since ${when(latest.start)}${live ? ", still running" : ""}` : "";
+  const groups = [...new Set(rows.map((r) => r[0]))];
+  $("health-checks").innerHTML = groups.map((g) => `<h3>${esc(g)}${g === "Logging" && since ? ` <span class="hint">latest session ${esc(since)}</span>` : ""}</h3>` +
+    rows.filter((r) => r[0] === g).map((r) => { const ok = isPill(r, "ok") || isPill(r, "plain");
+      return `<div class="check"><span>${r[4] || ""}</span><div class="line"><span class="name">${esc(r[1])}</span><span class="val">${esc(r[2] || "\u2013")}</span>${r[3] ? `<span class="all">whole range ${esc(r[3])}</span>` : ""}</div>${(!ok && r[5]) ? `<span class="why">${esc(r[5])}</span>` : ""}</div>`; }).join("")).join("");
+
+  // Alarms and safety: the serious events first, routine starts and stops collapsed
   const SAFETY = ["alarm", "guardrail", "power_cycle", "safety_guard"];
   const routine = (e) => e.type === "safety_guard" && /^on: still/.test(e.note || "");   // the 10-minute "still on"
   const ev = data.events.filter((e) => SAFETY.includes(e.type) && !routine(e));
-  const n = (f) => ev.filter(f).length;
-  const tiles = [["Alarms", n((e) => e.type === "alarm"), "bad"], ["Guardrail events", n((e) => e.type === "guardrail"), "warn"],
-    ["Harness starts and stops", n((e) => e.type === "power_cycle"), "plain"], ["Shared-air conflicts", data.events.filter((e) => e.type === "deviation").length, "info"],
-    ["Safety guard stepped in", n((e) => e.type === "safety_guard" && /^stepped in/.test(e.note || "")), "bad"]];
-  $("alarm-tiles").innerHTML = tiles.map(([k, v, kind]) => `<div class="tile"><span class="k">${k}</span><span class="v">${v}</span>${v ? pill(kind === "plain" ? "logged" : "in range", kind) : pill("none", "ok")}</div>`).join("");
+  const nOf = (f) => ev.filter(f).length;
+  const tiles = [["Alarms", nOf((e) => e.type === "alarm"), "bad"], ["Guardrail events", nOf((e) => e.type === "guardrail"), "warn"],
+    ["Shared-air conflicts", data.events.filter((e) => e.type === "deviation").length, "info"],
+    ["Safety guard stepped in", nOf((e) => e.type === "safety_guard" && /^stepped in/.test(e.note || "")), "bad"]].filter(([, v]) => v > 0);
+  $("alarm-tiles").innerHTML = tiles.map(([k, v, kind]) => `<div class="tile"><span class="k">${k}</span><span class="v">${v}</span>${pill("in range", kind)}</div>`).join("");
+  $("alarm-tiles").hidden = !tiles.length;
+  $("alarm-none").hidden = tiles.length > 0;
+  $("alarm-none").textContent = `No alarms, guardrail events, shared-air conflicts or safety-guard step-ins in ${RANGE_WORDS()}.`;
   const kindOf = (e) => e.type === "alarm" || /^stepped in/.test(e.note || "") ? "bad" : e.type === "guardrail" ? "warn" : e.type === "deviation" ? "info" : "plain";
   const label = (t) => t === "safety_guard" ? "safety guard" : t;
-  const list = data.events.filter((e) => (SAFETY.includes(e.type) && !routine(e)) || e.type === "deviation").slice().reverse().slice(0, 300);
-  $("alarm-table").innerHTML = list.length ? `<thead><tr><th>When</th><th>Ch</th><th>Type</th><th>What happened</th></tr></thead><tbody>` +
-    list.map((e) => `<tr><td>${when(sec(e.ts_utc))}</td><td>${esc(e.chamber || "machine")}</td><td>${pill(label(e.type), kindOf(e))}</td><td class="wrap">${esc(e.note)}${e.value != null ? ` (${esc(e.value)})` : ""}</td></tr>`).join("") + "</tbody>"
-    : `<tbody><tr><td class="hint">No alarms, guardrail events, harness starts or safety guard reports in this time range.</td></tr></tbody>`;
+  const evRow = (e) => `<tr><td>${when(sec(e.ts_utc))}</td><td>${esc(e.chamber || "machine")}</td><td>${pill(label(e.type), kindOf(e))}</td><td class="wrap">${esc(e.note)}${e.value != null ? ` (${esc(e.value)})` : ""}</td></tr>`;
+  const head = `<thead><tr><th>When</th><th>Ch</th><th>Type</th><th>What happened</th></tr></thead>`;
+  const serious = data.events.filter((e) => (SAFETY.includes(e.type) && e.type !== "power_cycle" && !routine(e)) || e.type === "deviation").slice().reverse().slice(0, 300);
+  $("alarm-box").hidden = !serious.length;
+  $("alarm-table").innerHTML = serious.length ? `${head}<tbody>${serious.map(evRow).join("")}</tbody>` : "";
+  const cycles = ev.filter((e) => e.type === "power_cycle").slice().reverse().slice(0, 300);
+  $("power-cycles").hidden = !cycles.length;
+  summaryCount("health-power", `${cycles.length} harness start${cycles.length === 1 ? "" : "s"} and stops`);
+  $("power-cycle-table").innerHTML = cycles.length ? `${head}<tbody>${cycles.map(evRow).join("")}</tbody>` : "";
 }
 
 // ---------------------------------------------------------------- compare
@@ -848,8 +1072,8 @@ async function renderCompare() {
       return;
     }
     const sinceQ = hours ? `&ts_utc=gte.${encodeURIComponent(since)}` : "";
-    const per = await Promise.all(serials.slice(0, 5).map((s) => getAll(`${T("readings")}?select=ts_utc,bme_rh_pct,bme_temp_c&serial=eq.${encodeURIComponent(s)}${sinceQ}&order=ts_utc.asc`)));
-    const hourly = (rows, col) => { const m = new Map(); rows.forEach((r) => { if (r[col] == null) return;
+    const per = await Promise.all(serials.slice(0, 5).map((s) => getAll(`${T("readings")}?select=ts_utc,bme_rh_pct,bme_temp_c,valid_mask&serial=eq.${encodeURIComponent(s)}${sinceQ}&order=ts_utc.asc`)));
+    const hourly = (rows, col) => { const m = new Map(); rows.forEach((r) => { if (r[col] == null || !airOk(r)) return;
       const t = Math.floor(sec(r.ts_utc) / H) * H; const a = m.get(t) || []; a.push(Number(r[col])); m.set(t, a); });
       return m; };
     const grid = document.createElement("div"); grid.className = "chart-grid"; box.textContent = ""; box.appendChild(grid);
@@ -904,14 +1128,17 @@ async function renderWeekly() {
 function render() {
   if (!data) return;
   destroyPlots();
+  const failed = (e) => { $("status-line").textContent = `Could not draw this tab: ${e.message}`; };
   try {
-    if (tab === "sensors") renderSensors();
-    else if (tab === "policy") renderPolicy();
-    else if (tab === "progress") renderProgress();
-    else if (tab === "health") renderHealth();
-    else if (tab === "compare") renderCompare();
-    else if (tab === "weekly") renderWeekly();
-  } catch (e) { $("status-line").textContent = `Could not draw this tab: ${e.message}`; }
+    let done;
+    if (tab === "sensors") done = renderSensors();
+    else if (tab === "policy") done = renderPolicy();
+    else if (tab === "progress") done = renderProgress();
+    else if (tab === "health") done = renderHealth();
+    else if (tab === "compare") done = renderCompare();
+    else if (tab === "weekly") done = renderWeekly();
+    if (done && typeof done.catch === "function") done.catch(failed);   // async renderers fail after this try
+  } catch (e) { failed(e); }
 }
 let resizeTimer;
 window.addEventListener("resize", () => { clearTimeout(resizeTimer); resizeTimer = setTimeout(render, 250); });
@@ -924,7 +1151,53 @@ if (document.querySelector(`#tabs button[data-tab="${CSS.escape(linked)}"]`)) {
   document.querySelectorAll("#tabs button").forEach((b) => b.setAttribute("aria-selected", String(b.dataset.tab === tab)));
   document.querySelectorAll("[data-panel]").forEach((p) => { p.hidden = p.dataset.panel !== tab; });
 }
+// ---------------------------------------------------------------- lid banner
+// Whether the front lid is open, from the newest machine reading, polled every
+// 15 s whatever the time range. Live means a reading within three ticks, as on
+// the Health tab; an older open reading is shown as "was open", since the lid
+// may have been closed after the logger stopped.
+const LID_POLL_MS = 15000;
+let lidSerial = null;
+function renderLid(s) {
+  const el = $("lid");
+  const live = s && s.now - s.ts < 3 * TICK_S;
+  if (!s || (s.closed && !live)) { el.hidden = true; el.className = "lid"; el.innerHTML = ""; return; }
+  if (s.closed) {
+    el.className = "lid closed";
+    el.innerHTML = `Lid closed <span>\u00b7 last reading ${esc(ago(s.ts))}</span>`;
+  } else if (live) {
+    const since = s.since == null ? "" : `${s.atLeast ? "open since at least" : "open since"} ${esc(when(s.since))} (${esc(ago(s.since).replace(/ ago$/, ""))}) \u00b7 `;
+    el.className = "lid open";
+    el.innerHTML = `<strong>The lid is OPEN</strong><span>${since}mixing waits until it is closed \u00b7 last reading ${esc(ago(s.ts))}</span>`;
+  } else {
+    el.className = "lid was-open";
+    el.innerHTML = `<strong>The lid was open at the last reading</strong><span>${esc(when(s.ts))} (${esc(ago(s.ts))}). Nothing is logging the machine now, so it may have been closed since.</span>`;
+  }
+  el.hidden = false;
+}
+async function pollLid() {
+  if (document.hidden) return;
+  const who = serial();
+  if (who !== lidSerial) { lidSerial = who; renderLid(null); }
+  try {
+    const q = `${T("machine_readings")}?select=ts_utc,lid_closed&${S()}`;
+    const [last] = await rowsOf(`${q}&order=ts_utc.desc&limit=1`);
+    if (who !== serial()) return;
+    if (!last || last.lid_closed == null) { renderLid(null); return; }
+    const s = { ts: sec(last.ts_utc), closed: last.lid_closed === true, now: Date.now() / 1000, since: null, atLeast: false };
+    if (!s.closed) {   // when it opened: the first open reading after the last closed one
+      const [shut] = await rowsOf(`${q}&lid_closed=eq.true&order=ts_utc.desc&limit=1`);
+      const [opened] = await rowsOf(`${q}&lid_closed=eq.false${shut ? `&ts_utc=gt.${encodeURIComponent(shut.ts_utc)}` : ""}&order=ts_utc.asc&limit=1`);
+      if (opened) { s.since = sec(opened.ts_utc); s.atLeast = !shut; }
+    }
+    if (who === serial()) renderLid(s);
+  } catch (e) { /* keep what is shown; the next poll tries again */ }
+}
+setInterval(() => pollLid(), LID_POLL_MS);
+document.addEventListener("visibilitychange", () => { if (!document.hidden) pollLid(); });
+
 reload();
+pollLid();
 setInterval(() => { if (!document.hidden) reload(); }, 60000);
 </script>
 </body>
