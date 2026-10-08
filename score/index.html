@@ -146,6 +146,7 @@ table.log th { font-size: 12px; color: var(--muted); font-weight: 700; letter-sp
 .entry { border: 1px solid var(--line); border-radius: 8px; padding: 10px 12px; display: grid; gap: 8px; }
 .entry .head { display: flex; flex-wrap: wrap; gap: 4px 10px; align-items: baseline; }
 .entry .what { font-weight: 700; }
+.entry .sum { white-space: pre-line; }
 .entry .meta { font-size: 13px; color: var(--muted); }
 .entry .acts { display: flex; flex-wrap: wrap; gap: 8px; }
 .entry button { padding: 7px 14px; border-radius: 8px; border: 1px solid var(--line); background: var(--panel);
@@ -158,6 +159,8 @@ table.log th { font-size: 12px; color: var(--muted); font-weight: 700; letter-sp
 .entry .form { display: grid; gap: 10px; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); }
 .entry .form label { display: grid; gap: 4px; font-size: 13px; color: var(--muted); }
 .entry .form input[type="file"] { padding: 5px; }
+.entry .form textarea { grid-column: 1 / -1; font: inherit; padding: 7px 8px; border: 1px solid var(--line);
+  border-radius: 6px; background: var(--panel); color: var(--ink); min-height: 72px; }
 .entry .form input, .entry .form select { font: inherit; padding: 7px 8px; border: 1px solid var(--line);
   border-radius: 6px; background: var(--panel); color: var(--ink); min-width: 0; }
 .entry .confirm { color: var(--bad); font-weight: 600; margin: 0; }
@@ -303,7 +306,7 @@ button:focus-visible, input:focus-visible, select:focus-visible, textarea:focus-
     </div>
     <div class="field">
       <label class="label" for="water_note">Note (optional)</label>
-      <input id="water_note" type="text" maxlength="500">
+      <textarea id="water_note" maxlength="500"></textarea>
     </div>
   </section>
 
@@ -319,7 +322,7 @@ button:focus-visible, input:focus-visible, select:focus-visible, textarea:focus-
     </div>
     <div class="field">
       <label class="label" for="unload_note">Note (optional)</label>
-      <input id="unload_note" type="text" maxlength="500" placeholder="e.g. about 80% removed">
+      <textarea id="unload_note" maxlength="500" placeholder="e.g. about 80% removed"></textarea>
     </div>
   </section>
 
@@ -334,7 +337,10 @@ button:focus-visible, input:focus-visible, select:focus-visible, textarea:focus-
     </div>
     <div class="field">
       <label class="label" for="service_note">What was done</label>
-      <input id="service_note" type="text" maxlength="500" placeholder="e.g. cleared a jammed mixer">
+      <textarea id="service_note" maxlength="500" placeholder="e.g.
+Problem: L mixer read 0 A
+Findings: hardware test passed
+Done: harness fixed, run restarted"></textarea>
     </div>
   </section>
 
@@ -873,14 +879,17 @@ function editFields(kind, r) {
            ["miss_reason", "Why missed", input("text", r.miss_reason), txt]);
     const photo = input("file"); photo.accept = "image/*"; photo.multiple = true;
     f.push(["photo_file", `Add photos (has ${photoList(r.photo).length} of ${MAX_PHOTOS})`, photo, (e) => [...e.files]]);
-  } else f.push(["note", "Note", input("text", r.note), txt]);
+  } else {
+    const note = document.createElement("textarea"); note.maxLength = 500; note.rows = 3; note.value = r.note || "";
+    f.push(["note", "Note", note, txt]);
+  }
   return f;
 }
 function button(text, cls) { const b = document.createElement("button"); b.type = "button"; b.textContent = text; if (cls) b.className = cls; return b; }
 function entryHead(kind, r, metaText) {
   const head = document.createElement("div"); head.className = "head";
   const what = document.createElement("span"); what.className = "what"; what.textContent = `${KIND_LABEL[kind] || kind} · ${r.chamber || "–"}`;
-  const sum = document.createElement("span"); sum.textContent = summary(kind, r);
+  const sum = document.createElement("span"); sum.className = "sum"; sum.textContent = summary(kind, r);
   const meta = document.createElement("span"); meta.className = "meta"; meta.textContent = metaText;
   head.append(what, sum, meta);
   return head;
