@@ -198,6 +198,7 @@ section.card details.more { border: 0; padding: 0; }
     </div>
   </div>
   <div class="lid" id="lid" role="status" aria-live="polite" hidden></div>
+  <div class="lid open" id="late" role="status" aria-live="polite" hidden></div>
 </header>
 
 <main>
@@ -740,11 +741,7 @@ async function renderPolicy() {
     const kept = ch[c].slice(i + 1).map((r) => clock(sec(r.ts_utc)));
     const keptText = !kept.length ? "" : ` Picked again at ${kept.length > 4 ? `${kept.length} decisions, latest ${kept[kept.length - 1]}`
       : orList(kept).replace(/ or /, " and ")} (${kept.length + 1} decisions in a row).`;
-    // a scheduled decision more than 15 minutes overdue
-    const slot = nextDecision().getTime() - 4 * H * 1000;
-    const late = Date.now() - slot > 15 * 60000 && sec(d.ts_utc) * 1000 < slot - 5 * 60000
-      ? `<p class="verdict"><span class="pill warn">Late</span> Decision due at ${clock(slot / 1000)} has not arrived. Check that the harness is running (Health tab).</p>` : "";
-    return `<div class="box"><h3>Chamber ${c}</h3><p class="verdict">${actionPill(d.action)} ${esc(ACTION_NAMES[d.action] || "")} since ${atLeast}${when(sec(first.ts_utc))} (${ago(sec(first.ts_utc))}), ${esc(PLAIN.policy(d.policy_version))} from ${esc(orList(actionWords(d.allowed_set)))}.${reason ? ` ${esc(reason.charAt(0).toUpperCase() + reason.slice(1))}.` : ""}${esc(keptText)}</p>${late}</div>`;
+    return `<div class="box"><h3>Chamber ${c}</h3><p class="verdict">${actionPill(d.action)} ${esc(ACTION_NAMES[d.action] || "")} since ${atLeast}${when(sec(first.ts_utc))} (${ago(sec(first.ts_utc))}), ${esc(PLAIN.policy(d.policy_version))} from ${esc(orList(actionWords(d.allowed_set)))}.${reason ? ` ${esc(reason.charAt(0).toUpperCase() + reason.slice(1))}.` : ""}${esc(keptText)}</p></div>`;
   }).join("");
   const learned = !/^(random|matched)/.test(latest.policy_version || "");
   $("verdict-policy").textContent = `Next decision ${nextDecision().toLocaleString([], { weekday: "short", hour: "2-digit", minute: "2-digit" })} (scheduled; the harness must be running) \u00b7 ${PLAIN.policy(latest.policy_version)} \u00b7 ${PLAIN.arm[latest.arm] || latest.arm || ""} \u00b7 stage ${latest.stage} \u00b7 ${PLAIN.steer(latest.scores_steer)}.`
@@ -1151,9 +1148,22 @@ async function renderWeekly() {
   } catch (e) { box.innerHTML = `<p class="empty">Could not build the summary.</p>`; }
 }
 
+// Red banner when a scheduled decision is more than 15 minutes overdue, on
+// every tab, like the open-lid warning. Judged on the newest decision loaded.
+function renderLate() {
+  const el = $("late"), dec = data ? data.decisions : [];
+  const slot = nextDecision().getTime() - 4 * H * 1000;
+  const last = dec.length ? sec(dec[dec.length - 1].ts_utc) * 1000 : null;
+  const late = last != null && Date.now() - slot > 15 * 60000 && last < slot - 5 * 60000;
+  el.hidden = !late;
+  el.innerHTML = late ? `<strong>Decision due at ${esc(clock(slot / 1000))} has NOT arrived</strong>` +
+    `<span>last decision ${esc(when(last / 1000))} (${esc(ago(last / 1000))}) · check that the harness is running (Health tab)</span>` : "";
+}
+
 // ---------------------------------------------------------------- render
 function render() {
   if (!data) return;
+  renderLate();
   destroyPlots();
   const failed = (e) => { $("status-line").textContent = `Could not draw this tab: ${e.message}`; };
   try {
