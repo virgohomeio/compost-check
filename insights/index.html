@@ -731,7 +731,11 @@ async function renderPolicy() {
     const d = ch[c][ch[c].length - 1];
     if (!d) return `<div class="box"><h3>Chamber ${c}</h3><p class="empty">No decision for this chamber in ${RANGE_WORDS()}.</p></div>`;
     const reason = REASON_TEXT[d.restrict_reason] || d.restrict_reason || "";
-    return `<div class="box"><h3>Chamber ${c}</h3><p class="verdict">${actionPill(d.action)} ${esc(ACTION_NAMES[d.action] || "")} since ${when(sec(d.ts_utc))} (${ago(sec(d.ts_utc))}), ${esc(PLAIN.policy(d.policy_version))} from ${esc(orList(actionWords(d.allowed_set)))}.${reason ? ` ${esc(reason.charAt(0).toUpperCase() + reason.slice(1))}.` : ""}</p></div>`;
+    // "since" the first of the run of decisions that kept this same action
+    let i = ch[c].length - 1;
+    while (i > 0 && ch[c][i - 1].action === d.action) i--;
+    const first = ch[c][i], atLeast = i === 0 && data.from != null ? "at least " : "";
+    return `<div class="box"><h3>Chamber ${c}</h3><p class="verdict">${actionPill(d.action)} ${esc(ACTION_NAMES[d.action] || "")} since ${atLeast}${when(sec(first.ts_utc))} (${ago(sec(first.ts_utc))}), ${esc(PLAIN.policy(d.policy_version))} from ${esc(orList(actionWords(d.allowed_set)))}.${reason ? ` ${esc(reason.charAt(0).toUpperCase() + reason.slice(1))}.` : ""}</p></div>`;
   }).join("");
   const learned = !/^(random|matched)/.test(latest.policy_version || "");
   $("verdict-policy").textContent = `Next decision ${nextDecision().toLocaleString([], { weekday: "short", hour: "2-digit", minute: "2-digit" })} (scheduled; the harness must be running) \u00b7 ${PLAIN.policy(latest.policy_version)} \u00b7 ${PLAIN.arm[latest.arm] || latest.arm || ""} \u00b7 stage ${latest.stage} \u00b7 ${PLAIN.steer(latest.scores_steer)}.`
