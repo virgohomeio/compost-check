@@ -171,7 +171,7 @@ cd RND_AI_DynamicAlgo</pre><button type="button">Copy</button></div>
 transport:
   uart: {port: <b class="ph">&lt;PORT&gt;</b>, baud: 115200, timeout_s: 0.5}
 gas_saturation_ohm: 102400000
-ptc_guard_c: {off_at: 62, on_below: 58, alarm_at: 75}
+ptc_guard_c: {off_at: 58, on_below: 51, alarm_at: 75}
 firmware:
   stop_process_on_start: false
   start_process_on_exit: false
@@ -404,7 +404,7 @@ python -m harness.api.certs --out harness\secrets</pre><button type="button">Cop
 <section class="phase">
   <div class="phase-head">
     <span class="eyebrow">Reference</span>
-    <h2>The five actions</h2>
+    <h2 id="the-five-actions">The five actions</h2>
     <p>Every 4 hours each chamber gets one action. A1 and A3 are the firmware's own light and heavy modes; A0, A2 and A4 are built from them. The blower always runs at 30 % power, and mixing starts after 20.7 min of idle time in every action.</p>
   </div>
   <div class="table-wrap"><table>
@@ -414,13 +414,13 @@ python -m harness.api.certs --out harness\secrets</pre><button type="button">Cop
           <tr><td>Blower on / off</td><td>47.5 s / 930 s</td><td>47.5 s / 930 s</td><td>47.5 s / 329 s</td><td>47.5 s / 186 s</td><td>47.5 s / 71 s</td></tr>
           <tr><td>Air time</td><td>4.9 %</td><td>4.9 %</td><td>12.6 %</td><td>20.3 %</td><td>40 %</td></tr>
           <tr><td>Pad heaters</td><td><b>off</b></td><td>to 70 °C</td><td>to 70 °C</td><td>to 70 °C</td><td>to 70 °C</td></tr>
-          <tr><td>Blower PTC</td><td><b>off</b></td><td>off 62, on below 58 °C</td><td>off 62, on below 58 °C</td><td>off 62, on below 58 °C</td><td>off 62, on below 58 °C</td></tr>
+          <tr><td>Blower PTC</td><td><b>off</b></td><td>off 58, on below 51 °C</td><td>off 58, on below 51 °C</td><td>off 58, on below 51 °C</td><td>off 58, on below 51 °C</td></tr>
           <tr><td>Mix phases</td><td>12 s / 6 s</td><td>12 s / 6 s</td><td>18 s / 9 s</td><td>24 s / 12 s</td><td>24 s / 12 s</td></tr>
           <tr><td>What it is for</td><td>Curing chamber: air on, heat off</td><td>Light household</td><td>Between the two modes</td><td>Heavy household</td><td>Big wet feed, or too wet</td></tr>
     </tbody>
   </table></div>
   <div class="note"><p><strong>In use now: A1 and A3 only.</strong> <code>firmware_modes_only: true</code> in <code>machine_<b class="ph">&lt;NUM&gt;</b>.yaml</code> limits every decision to the two firmware modes, 50 % each, until further notice. A4 needs an odour smoke test of the enclosure before it is used.</p></div>
-  <p>Differences from the firmware: the PTC switches off at 62 °C instead of 70, because 70 overshot to 76–88 °C; heavy's mix phases are 24 s / 12 s where the firmware source uses 12 s / 6 s.</p>
+  <p>Differences from the firmware: the PTC switches off at 58 °C (back on below 51, as in BUILD_PLAN) instead of 70, because it overshoots by about 12 °C and should peak near the firmware's 70 °C; heavy's mix phases are 24 s / 12 s where the firmware source uses 12 s / 6 s.</p>
 </section>
 
 <section class="phase">
