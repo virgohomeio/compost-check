@@ -586,11 +586,11 @@ function airOk(r) {
   if (m && m !== "o") return false;
   return !(zero(r.bme_temp_c) && zero(r.bme_rh_pct));
 }
-// The gas channel's ceiling, 102,400,000 Ω, is no gas reading: a gap too.
-// The value is checked, not bme_gas_saturated, because the harness may flag
-// lower readings (gas_saturation_ohm) that are still measured.
-const GAS_RAIL_OHM = 102400000;
-const gasOk = (r) => airOk(r) && Number(r.bme_gas_ohm) > 0 && Number(r.bme_gas_ohm) < GAS_RAIL_OHM;
+// 102,400,000 Ω is the gas channel saturated: a valid reading, plotted like
+// any other. Saturation is judged by this value, not bme_gas_saturated, which
+// the harness may set lower (gas_saturation_ohm).
+const GAS_SAT_OHM = 102400000;
+const gasOk = (r) => airOk(r) && Number(r.bme_gas_ohm) > 0;
 
 function tickTable() {
   const ticks = new Map();
@@ -637,10 +637,11 @@ function renderSensors() {
     empty: "No sensor data in this time range. Charts fill in while the harness or collect.py logs the machine." }, extra || {}));
   P("BME humidity", "%RH", [{ label: "Left", values: col("L", "bme_rh_pct", null, airOk) }, { label: "Right", values: col("R", "bme_rh_pct", null, airOk) }]);
   P("BME temperature", "°C", [{ label: "Left", values: col("L", "bme_temp_c", null, airOk) }, { label: "Right", values: col("R", "bme_temp_c", null, airOk) }]);
-  // Gas resistance spans orders of magnitude (0.2 to 60 MΩ in a day), so a log axis.
+  // Gas resistance spans orders of magnitude (0.2 MΩ to saturated at 102.4 MΩ), so a log axis.
   const mohm = (v) => Number(v) / 1e6;
-  P("BME gas resistance", "MΩ, log scale", [{ label: "Left", values: col("L", "bme_gas_ohm", mohm, gasOk) }, { label: "Right", values: col("R", "bme_gas_ohm", mohm, gasOk) }],
-    { yLog: true, empty: "No gas readings in this time range: none logged, or the sensors sat at their ceiling (no gas reading)." });
+  const gasFmt = (v) => v >= mohm(GAS_SAT_OHM) ? `${v} saturated` : String(+v.toFixed(3));
+  P("BME gas resistance", "MΩ, log scale", [{ label: "Left", values: col("L", "bme_gas_ohm", mohm, gasOk), fmt: gasFmt },
+    { label: "Right", values: col("R", "bme_gas_ohm", mohm, gasOk), fmt: gasFmt }], { yLog: true });
   P("Currents", "A", [{ label: "Machine (AC)", values: col("M", "machine_current_a") },
     { label: "Left motor", values: col("L", "motor_current_a") }, { label: "Right motor", values: col("R", "motor_current_a") }]);
   P("Temperatures", "°C", [{ label: "Left pad", values: col("L", "pad_ntc_c") }, { label: "Right pad", values: col("R", "pad_ntc_c") },
@@ -992,10 +993,11 @@ async function renderHealth() {
   ["L", "R"].forEach((c) => {
     const all = data.readings.filter((r) => r.chamber === c), cur = all.filter(inLatest);
     const v = (arr, i) => share(arr, (r) => (r.valid_mask || "")[i] === "o");
-    const sat = (arr) => share(arr, (r) => r.bme_gas_saturated === true);
+    const sat = (arr) => share(arr, (r) => Number(r.bme_gas_ohm) >= GAS_SAT_OHM);
     const line = (check, fc, fa, good, ok, note) => add(`Chamber ${c}`, check, fmt(fc), fmt(fa), fc == null ? "" : status(good(fc), ok(fc)), note);
     line("BME688 readings valid", v(cur, 0), v(all, 0), (x) => x >= 98, (x) => x >= 90, "Temperature, humidity, pressure, gas");
-    line("Gas sensor stuck at its ceiling", sat(cur), sat(all), (x) => x <= 5, (x) => x <= 30, "102,400,000 Ω means no gas reading");
+    // Saturation is a valid reading, so its share is shown but not judged.
+    add(`Chamber ${c}`, "Gas readings saturated", fmt(sat(cur)), fmt(sat(all)), "", "102,400,000 Ω: the gas channel saturated, a valid reading");
     line("Pad heater sensor valid", v(cur, 1), v(all, 1), (x) => x >= 98, (x) => x >= 90, "");
     line("Mixer current readable", v(cur, 2), v(all, 2), (x) => x >= 98, (x) => x >= 90, "");
   });
