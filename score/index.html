@@ -291,6 +291,13 @@ button:focus-visible, input:focus-visible, select:focus-visible, textarea:focus-
     </div>
   </section>
 
+  <!-- Feed history: every feed logged for this machine -->
+  <section class="card" data-panel="feed" hidden>
+    <h2>Feed history</h2>
+    <p class="hint">Every feed logged for this machine, newest first. To fix an entry, use the Entries tab.</p>
+    <div class="entries" id="history-feed"><p class="hint">Loading…</p></div>
+  </section>
+
   <!-- Water: events_v2 water, value in mL, as POST /events/water -->
   <section class="card" data-panel="water" hidden>
     <h2>Water added</h2>
@@ -310,6 +317,13 @@ button:focus-visible, input:focus-visible, select:focus-visible, textarea:focus-
     </div>
   </section>
 
+  <!-- Water history: every water entry for this machine -->
+  <section class="card" data-panel="water" hidden>
+    <h2>Water history</h2>
+    <p class="hint">Every water addition logged for this machine, newest first. To fix an entry, use the Entries tab.</p>
+    <div class="entries" id="history-water"><p class="hint">Loading…</p></div>
+  </section>
+
   <!-- Unload: events_v2 unload + role_change, as POST /events/unload -->
   <section class="card" data-panel="unload" hidden>
     <h2>Unload</h2>
@@ -324,6 +338,13 @@ button:focus-visible, input:focus-visible, select:focus-visible, textarea:focus-
       <label class="label" for="unload_note">Note (optional)</label>
       <textarea id="unload_note" maxlength="500" placeholder="e.g. about 80% removed"></textarea>
     </div>
+  </section>
+
+  <!-- Unload history: every unload for this machine -->
+  <section class="card" data-panel="unload" hidden>
+    <h2>Unload history</h2>
+    <p class="hint">Every unload logged for this machine, newest first. To fix an entry, use the Entries tab.</p>
+    <div class="entries" id="history-unload"><p class="hint">Loading…</p></div>
   </section>
 
   <!-- Service: events_v2 service, as POST /events/service -->
@@ -348,7 +369,7 @@ Done: harness fixed, run restarted"></textarea>
   <section class="card" data-panel="service" hidden>
     <h2>Service history</h2>
     <p class="hint">Every service logged for this machine, newest first, and the data corrections made to its records. To fix an entry, use the Entries tab.</p>
-    <div class="entries" id="service-history"><p class="hint">Loading…</p></div>
+    <div class="entries" id="history-service"><p class="hint">Loading…</p></div>
   </section>
 
   <!-- Entries: what people entered, to edit or delete; every change is logged -->
@@ -441,7 +462,7 @@ function machineChanged() {
   store("p150-serial", serial()); loadRecent();
   if (tab === "status") loadStatus();
   if (tab === "entries") loadEntries();
-  if (tab === "service") loadServiceHistory();
+  if (HISTORY[tab]) loadHistory(tab);
 }
 $("serial").addEventListener("change", () => { $("serial-other").hidden = $("serial").value !== "other"; machineChanged(); });
 $("serial-other").addEventListener("change", machineChanged);
@@ -489,7 +510,7 @@ function showTab(t) {
   say("");
   if (t === "status") loadStatus();
   if (t === "entries") loadEntries();
-  if (t === "service") loadServiceHistory();
+  if (HISTORY[t]) loadHistory(t);
 }
 document.querySelectorAll("#tabs button").forEach((b) => b.addEventListener("click", () => {
   showTab(b.dataset.tab);
@@ -678,7 +699,7 @@ $("save").addEventListener("click", async () => {
     }
     await insert(table, rows);
     say(done(t, built) + photoNote, photoNote ? "err" : "ok");
-    reset(t); loadRecent(); if (tab === "status") loadStatus(); if (t === "service") loadServiceHistory();
+    reset(t); loadRecent(); if (tab === "status") loadStatus(); if (HISTORY[t]) loadHistory(t);
   } catch (e) {
     if (e.permanent) say(`Not saved. The database refused it (${e.message}). Tell the study owner.`, "err");
     else {
@@ -989,26 +1010,37 @@ function renderEntry(item, history) {
   });
   return box;
 }
-async function loadServiceHistory() {
-  const box = $("service-history");
+// History cards: Feed, Water, Unload and Service tabs, newest first. Service
+// also lists data corrections; the harness's automatic "settings reloaded"
+// service notes are left out.
+const HISTORY = { feed: ["feed_tap"], water: ["water"], unload: ["unload"], service: ["service", "correction"] };
+const HISTORY_LABEL = { feed_tap: "Feed", water: "Water", unload: "Unload", service: "Service", correction: "Data correction" };
+function historyDetail(r) {
+  if (r.event === "feed_tap") return [r.size_guess, r.wetness_guess, r.note].filter(Boolean).join(", ") || "no details";
+  if (r.event === "water") return [r.value != null ? `${r.value} mL` : null, r.note].filter(Boolean).join(", ") || "no details";
+  return r.note || "no note";
+}
+async function loadHistory(t) {
+  const box = $(`history-${t}`);
+  if (!box || !HISTORY[t]) return;
   if (!serial()) { box.innerHTML = '<p class="hint">Choose the machine at the top.</p>'; return; }
   try {
-    const rows = (await get(`events?machine=eq.${encodeURIComponent(serial())}&event=in.(service,correction)` +
-      `&order=day.desc,time.desc&limit=200`)).filter((r) => r.entered_by !== "harness");   // not the automatic "settings reloaded" notes
+    const rows = (await get(`events?machine=eq.${encodeURIComponent(serial())}&event=in.(${HISTORY[t].join(",")})` +
+      `&order=day.desc,time.desc&limit=200`)).filter((r) => r.entered_by !== "harness");
     box.textContent = "";
-    if (!rows.length) { box.innerHTML = '<p class="hint">No service logged for this machine yet.</p>'; return; }
+    if (!rows.length) { box.innerHTML = '<p class="hint">Nothing logged for this machine yet.</p>'; return; }
     rows.forEach((r) => {
       const item = document.createElement("article"); item.className = "entry";
-      const kind = r.event === "correction" ? "Data correction" : "Service";
       const head = document.createElement("div"); head.className = "head";
-      const what = document.createElement("span"); what.className = "what"; what.textContent = `${kind} · ${r.chamber || "machine"}`;
+      const what = document.createElement("span"); what.className = "what";
+      what.textContent = `${HISTORY_LABEL[r.event] || r.event} · ${r.chamber || "machine"}`;
       const meta = document.createElement("span"); meta.className = "meta";
       meta.textContent = `${when(entryTime(r))}${r.entered_by ? " · by " + r.entered_by : ""}`;
-      const sum = document.createElement("span"); sum.className = "sum"; sum.textContent = r.note || "no note";
+      const sum = document.createElement("span"); sum.className = "sum"; sum.textContent = historyDetail(r);
       head.append(what, meta); item.append(head, sum); box.appendChild(item);
     });
   } catch (e) {
-    box.innerHTML = '<p class="hint">Could not load the service history. Check the connection.</p>';
+    box.innerHTML = '<p class="hint">Could not load the history. Check the connection.</p>';
   }
 }
 async function loadEntries() {
