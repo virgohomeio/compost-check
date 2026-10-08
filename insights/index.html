@@ -452,7 +452,7 @@ let loading = null;
 async function load() {
   const since = hours ? `&ts_utc=gte.${encodeURIComponent(new Date(Date.now() - hours * H * 1000).toISOString())}` : "";
   const [readings, machine, decisions, events, observations] = await Promise.all([
-    getAll(`${T("readings")}?select=ts_utc,chamber,bme_rh_pct,bme_temp_c,bme_gas_saturated,vapour_pressure_kpa,pad_ntc_c,motor_current_a,valid_mask&${S()}${since}&order=ts_utc.asc`),
+    getAll(`${T("readings")}?select=ts_utc,chamber,bme_rh_pct,bme_temp_c,bme_gas_ohm,bme_gas_saturated,vapour_pressure_kpa,pad_ntc_c,motor_current_a,valid_mask&${S()}${since}&order=ts_utc.asc`),
     getAll(`${T("machine_readings")}?select=ts_utc,lid_closed,ptc_ntc_c,intake_ntc_c,internal_temp_c,blower_pwm_pct,machine_current_a,machine_state,machine_state_name,valid_mask,harness_version&${S()}${since}&order=ts_utc.asc`),
     getAll(`${T("decisions")}?select=*&${S()}${since}&order=ts_utc.asc`),
     getAll(`${T("events")}?select=*&${S()}${since}&order=ts_utc.asc`),
@@ -500,7 +500,7 @@ function queuePlot(build) {
 }
 const COLORS = () => ["--s1", "--s2", "--s3", "--s4", "--s5"].map(cssVar);
 
-/* panel: {title, unit, series:[{label, values}], xs, step, binary, yNames, markers} */
+/* panel: {title, unit, series:[{label, values}], xs, step, binary, yNames, yRange, yLog, markers} */
 function timeChart(box, panel) {
   const card = document.createElement("div"); card.className = "chart";
   card.innerHTML = `<h3>${esc(panel.title)} <span class="unit">(${esc(panel.unit)})</span></h3>`;
@@ -524,7 +524,7 @@ function timeChart(box, panel) {
   const opts = {
     width: Math.max(240, plotBox.clientWidth), height: panel.height || 200,
     cursor: { drag: { x: true, y: false } },
-    scales: { x: xRange ? { time: true, range: xRange } : { time: true }, y: panel.yNames ? { range: [-0.3, panel.yNames.length - 0.7] } : (panel.yRange ? { range: panel.yRange } : {}) },
+    scales: { x: xRange ? { time: true, range: xRange } : { time: true }, y: panel.yNames ? { range: [-0.3, panel.yNames.length - 0.7] } : (panel.yRange ? { range: panel.yRange } : panel.yLog ? { distr: 3 } : {}) },
     axes: [{ stroke: ink, grid: { stroke: grid, width: 1 }, ticks: { stroke: grid } }, yAxis],
     series: [{ label: "Time", value: (u, v) => v == null ? "–" : when(v) }].concat(panel.series.map((s, i) => ({
       label: s.label, stroke: s.color || colors[i % 5], width: s.dash ? 1.5 : 2, dash: s.dash, spanGaps: !!panel.spanGaps,
@@ -583,6 +583,11 @@ function airOk(r) {
   if (m && m !== "o") return false;
   return !(zero(r.bme_temp_c) && zero(r.bme_rh_pct));
 }
+// The gas channel's ceiling, 102,400,000 Ω, is no gas reading: a gap too.
+// The value is checked, not bme_gas_saturated, because the harness may flag
+// lower readings (gas_saturation_ohm) that are still measured.
+const GAS_RAIL_OHM = 102400000;
+const gasOk = (r) => airOk(r) && Number(r.bme_gas_ohm) > 0 && Number(r.bme_gas_ohm) < GAS_RAIL_OHM;
 
 function tickTable() {
   const ticks = new Map();
@@ -629,6 +634,10 @@ function renderSensors() {
     empty: "No sensor data in this time range. Charts fill in while the harness or collect.py logs the machine." }, extra || {}));
   P("BME humidity", "%RH", [{ label: "Left", values: col("L", "bme_rh_pct", null, airOk) }, { label: "Right", values: col("R", "bme_rh_pct", null, airOk) }]);
   P("BME temperature", "°C", [{ label: "Left", values: col("L", "bme_temp_c", null, airOk) }, { label: "Right", values: col("R", "bme_temp_c", null, airOk) }]);
+  // Gas resistance spans orders of magnitude (0.2 to 60 MΩ in a day), so a log axis.
+  const mohm = (v) => Number(v) / 1e6;
+  P("BME gas resistance", "MΩ, log scale", [{ label: "Left", values: col("L", "bme_gas_ohm", mohm, gasOk) }, { label: "Right", values: col("R", "bme_gas_ohm", mohm, gasOk) }],
+    { yLog: true, empty: "No gas readings in this time range: none logged, or the sensors sat at their ceiling (no gas reading)." });
   P("Currents", "A", [{ label: "Machine (AC)", values: col("M", "machine_current_a") },
     { label: "Left motor", values: col("L", "motor_current_a") }, { label: "Right motor", values: col("R", "motor_current_a") }]);
   P("Temperatures", "°C", [{ label: "Left pad", values: col("L", "pad_ntc_c") }, { label: "Right pad", values: col("R", "pad_ntc_c") },
