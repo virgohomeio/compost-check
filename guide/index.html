@@ -201,7 +201,7 @@ firmware_modes_only: true</pre><button type="button">Copy</button></div>
         <tbody>
           <tr><td><b>New laptop</b></td><td>i (get the code), step 1 (packages), step 2 (port), step 4 with the lines in ii, step 5 (unlock), step 6 (keys), step 7 (tests), then step 8 (machine check)</td></tr>
           <tr><td><b>New machine</b> on a laptop already set up</td><td>step 2 (its port), step 3 (its serial), copy an existing <code>machine_<b class="ph">&lt;NUM&gt;</b>.yaml</code> to the new machine's name (step 4), change its <code>serial</code> and <code>port</code>, then step 8 (machine check)</td></tr>
-          <tr><td><b>Two or more machines on one laptop</b></td><td>Each machine runs in its own windows with its own file: one harness and one safety guard per machine (steps 10 and 11 with that machine's <code>machine_<b class="ph">&lt;NUM&gt;</b>.yaml</code>). Add <code>--no-api</code> to every harness after the first: the laptop's small local page can only run once. The Compost Control pages do not need it</td></tr>
+          <tr><td><b>Two or more machines on one laptop</b></td><td>Each machine runs in its own windows with its own file: one harness and one safety guard per machine (steps 10 and 11 with that machine's <code>machine_<b class="ph">&lt;NUM&gt;</b>.yaml</code>). The commands are the same for every machine; only the file name changes. Each harness's small local page takes the next free port by itself (8443, then 8444, …)</td></tr>
           <tr><td><b>Same machine, other laptop</b></td><td>stop the harness and the safety guard on the first laptop, move the USB cable, then step 8 on the second. The run picks up where it was</td></tr>
         </tbody>
       </table></div>
