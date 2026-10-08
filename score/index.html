@@ -157,6 +157,7 @@ table.log th { font-size: 12px; color: var(--muted); font-weight: 700; letter-sp
 .entry button:disabled { opacity: .6; cursor: default; }
 .entry .form { display: grid; gap: 10px; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); }
 .entry .form label { display: grid; gap: 4px; font-size: 13px; color: var(--muted); }
+.entry .form input[type="file"] { padding: 5px; }
 .entry .form input, .entry .form select { font: inherit; padding: 7px 8px; border: 1px solid var(--line);
   border-radius: 6px; background: var(--panel); color: var(--ink); min-width: 0; }
 .entry .confirm { color: var(--bad); font-weight: 600; margin: 0; }
@@ -813,7 +814,7 @@ function summary(kind, r) {
     if (r.missed) return `missed${r.miss_reason ? ": " + r.miss_reason : ""}`;
     const smell = r.smell && r.smell !== "none" ? ` ${r.smell}` : "";
     const where = r.smell_where && r.smell_where !== "none" ? ` at the ${r.smell_where}` : "";
-    return `squeeze ${r.squeeze ?? "–"}${r.moisture ? ` (${r.moisture})` : ""}, smell ${r.smell_level ?? "–"}${smell}${where}`;
+    return `squeeze ${r.squeeze ?? "–"}${r.moisture ? ` (${r.moisture})` : ""}, smell ${r.smell_level ?? "–"}${smell}${where}${r.photo ? ", with photo" : ""}`;
   }
   if (kind === "feed_tap") return [r.size_guess || "size not given", r.wetness_guess || "wetness not given", r.note].filter(Boolean).join(", ");
   if (kind === "water") return [r.value != null ? `${r.value} mL` : "amount not given", r.note].filter(Boolean).join(", ");
@@ -843,6 +844,8 @@ function editFields(kind, r) {
            ["smell_where", "Smelled at", select(opt(["none", "material", "room"]), r.smell_where), txt],
            ["missed", "Missed", missed, (e) => e.checked],
            ["miss_reason", "Why missed", input("text", r.miss_reason), txt]);
+    const photo = input("file"); photo.accept = "image/*";
+    f.push(["photo_file", r.photo ? "Replace the photo" : "Add a photo", photo, (e) => e.files[0] || null]);
   } else f.push(["note", "Note", input("text", r.note), txt]);
   return f;
 }
@@ -864,6 +867,11 @@ function renderEntry(item, history) {
     ? ` · edited ${edits.length}×, last ${when(StudyTables.utcOf(edits[0].day, edits[0].time, edits[0].utc_offset))} by ${edits[0].changed_by}` : "");
   const editBtn = button("Edit"), delBtn = button("Delete", "warn");
   const acts = document.createElement("div"); acts.className = "acts"; acts.append(editBtn, delBtn);
+  if (kind === "score" && row.photo && row.photo.startsWith("supabase:")) {
+    const view = button("View photo");
+    view.addEventListener("click", () => showPhoto(row.photo));
+    acts.appendChild(view);
+  }
   const area = document.createElement("div");
   box.append(entryHead(kind, row, meta), acts, area);
   const who = () => {
@@ -886,7 +894,23 @@ function renderEntry(item, history) {
     save.addEventListener("click", async () => {
       const name = who(); if (!name) return;
       const changes = {};
-      fields.forEach(([key, , el, read]) => { const v = read(el); if ((v ?? null) !== (row[key] ?? null)) changes[key] = v; });
+      let photoFile = null;
+      fields.forEach(([key, , el, read]) => {
+        const v = read(el);
+        if (key === "photo_file") { photoFile = v; return; }
+        if ((v ?? null) !== (row[key] ?? null)) changes[key] = v;
+      });
+      if (photoFile) {
+        const type = (photoFile.type || "").toLowerCase();
+        if (!PHOTO_TYPES[type]) { entriesSay(`The photo must be an image (JPEG, PNG, WebP, GIF or HEIC); this one is ${type || "of unknown type"}.`, "err"); return; }
+        if (photoFile.size > MAX_PHOTO_BYTES) { entriesSay("The photo is larger than 15 MB. Take a smaller one.", "err"); return; }
+        entriesSay("Uploading the photo…");
+        try {
+          // a new file every time: the old photo stays in storage, the change log keeps both paths
+          changes.photo = await uploadPhoto(photoFile, { ts_utc: nowIso(), serial: serial(),
+            chamber: changes.chamber || row.chamber, obs_id: id });
+        } catch (e) { entriesSay("The photo could not be uploaded, so nothing was changed. Try again.", "err"); return; }
+      }
       if (kind === "score" && "squeeze" in changes) changes.moisture = moistureClass(changes.squeeze);
       if (!Object.keys(changes).length) { entriesSay("Nothing was changed."); area.textContent = ""; return; }
       save.disabled = true; entriesSay("Saving the change…");
