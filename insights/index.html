@@ -357,6 +357,7 @@ const $ = (id) => document.getElementById(id);
 function store(k, v) { try { if (v === undefined) return localStorage.getItem(k); localStorage.setItem(k, v); } catch (e) { return null; } }
 function esc(s) { return String(s ?? "").replace(/[&<>"]/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[c])); }
 const when = (t) => new Date(t * 1000).toLocaleString([], { month: "short", day: "numeric", hour: "2-digit", minute: "2-digit" });
+const clock = (t) => new Date(t * 1000).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" });
 const ago = (t) => { const s = Math.max(0, Date.now() / 1000 - t);
   return s < 90 ? `${Math.round(s)} s ago` : s < 5400 ? `${Math.round(s / 60)} min ago` : s < 172800 ? `${(s / H).toFixed(1)} h ago` : `${(s / 86400).toFixed(1)} days ago`; };
 const sec = (iso) => Math.round(new Date(iso).getTime() / 1000);
@@ -735,7 +736,15 @@ async function renderPolicy() {
     let i = ch[c].length - 1;
     while (i > 0 && ch[c][i - 1].action === d.action) i--;
     const first = ch[c][i], atLeast = i === 0 && data.from != null ? "at least " : "";
-    return `<div class="box"><h3>Chamber ${c}</h3><p class="verdict">${actionPill(d.action)} ${esc(ACTION_NAMES[d.action] || "")} since ${atLeast}${when(sec(first.ts_utc))} (${ago(sec(first.ts_utc))}), ${esc(PLAIN.policy(d.policy_version))} from ${esc(orList(actionWords(d.allowed_set)))}.${reason ? ` ${esc(reason.charAt(0).toUpperCase() + reason.slice(1))}.` : ""}</p></div>`;
+    // the later decisions that picked it again, so a repeat is not mistaken for a hang
+    const kept = ch[c].slice(i + 1).map((r) => clock(sec(r.ts_utc)));
+    const keptText = !kept.length ? "" : ` Picked again at ${kept.length > 4 ? `${kept.length} decisions, latest ${kept[kept.length - 1]}`
+      : orList(kept).replace(/ or /, " and ")} (${kept.length + 1} decisions in a row).`;
+    // a scheduled decision more than 15 minutes overdue
+    const slot = nextDecision().getTime() - 4 * H * 1000;
+    const late = Date.now() - slot > 15 * 60000 && sec(d.ts_utc) * 1000 < slot - 5 * 60000
+      ? `<p class="verdict"><span class="pill warn">Late</span> Decision due at ${clock(slot / 1000)} has not arrived. Check that the harness is running (Health tab).</p>` : "";
+    return `<div class="box"><h3>Chamber ${c}</h3><p class="verdict">${actionPill(d.action)} ${esc(ACTION_NAMES[d.action] || "")} since ${atLeast}${when(sec(first.ts_utc))} (${ago(sec(first.ts_utc))}), ${esc(PLAIN.policy(d.policy_version))} from ${esc(orList(actionWords(d.allowed_set)))}.${reason ? ` ${esc(reason.charAt(0).toUpperCase() + reason.slice(1))}.` : ""}${esc(keptText)}</p>${late}</div>`;
   }).join("");
   const learned = !/^(random|matched)/.test(latest.policy_version || "");
   $("verdict-policy").textContent = `Next decision ${nextDecision().toLocaleString([], { weekday: "short", hour: "2-digit", minute: "2-digit" })} (scheduled; the harness must be running) \u00b7 ${PLAIN.policy(latest.policy_version)} \u00b7 ${PLAIN.arm[latest.arm] || latest.arm || ""} \u00b7 stage ${latest.stage} \u00b7 ${PLAIN.steer(latest.scores_steer)}.`
