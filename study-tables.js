@@ -227,6 +227,95 @@
     } catch (e) { /* the entry itself is saved */ }
   }
 
+  // "When did it happen?" for the entry forms: Now by default; Earlier lets a
+  // late entry carry the time it really happened (today or yesterday, never
+  // the future), with the machine's last lid opening offered as a one-tap
+  // time and a gentle note when the chosen time is nowhere near a lid opening.
+  // whenField(box, {url, key, machine: () => serial}) fills `box` and returns
+  // {iso(), error(), reset(), refresh()}.
+  function whenField(box, opts) {
+    const DAY = 86400000, NEAR = 3600000;
+    if (!document.getElementById("when-field-style")) {
+      const st = document.createElement("style"); st.id = "when-field-style";
+      st.textContent = ".when-row{display:grid;gap:8px}.when-row input{font:inherit;padding:9px 10px;" +
+        "border:1px solid var(--line);border-radius:8px;background:var(--panel);color:var(--ink);max-width:100%}" +
+        ".when-suggest{font:inherit;padding:8px 12px;border-radius:8px;border:1px dashed var(--accent);" +
+        "background:var(--panel);color:var(--accent);cursor:pointer;text-align:left}";
+      document.head.appendChild(st);
+    }
+    box.innerHTML = '<span class="label">When did it happen?</span>' +
+      '<div class="seg"><button type="button" data-when="now" aria-pressed="true">Now</button>' +
+      '<button type="button" data-when="earlier" aria-pressed="false">Earlier</button></div>' +
+      '<div class="when-row" hidden><input type="datetime-local" aria-label="When it happened">' +
+      '<button type="button" class="when-suggest" hidden></button><p class="hint when-note"></p></div>';
+    const [nowBtn, earlierBtn] = box.querySelectorAll("[data-when]");
+    const row = box.querySelector(".when-row"), input = row.querySelector("input");
+    const suggest = row.querySelector(".when-suggest"), note = row.querySelector(".when-note");
+    let mode = "now", openings = [];
+    const pad2 = (n) => String(n).padStart(2, "0");
+    const local = (ms) => { const d = new Date(ms);
+      return `${d.getFullYear()}-${pad2(d.getMonth() + 1)}-${pad2(d.getDate())}T${pad2(d.getHours())}:${pad2(d.getMinutes())}`; };
+    const hm = (ms) => { const d = new Date(ms); return `${pad2(d.getHours())}:${pad2(d.getMinutes())}`; };
+    function setMode(m) {
+      mode = m;
+      nowBtn.setAttribute("aria-pressed", String(m === "now"));
+      earlierBtn.setAttribute("aria-pressed", String(m === "earlier"));
+      row.hidden = m !== "earlier";
+      if (m === "earlier") { input.min = local(Date.now() - DAY); input.max = local(Date.now()); refresh(); }
+    }
+    function checkNear() {
+      const t = Date.parse(input.value);
+      note.textContent = input.value && !isNaN(t) && openings.length &&
+        !openings.some(([a, b]) => t >= a - NEAR && t <= b + NEAR)
+        ? "No lid opening near that time; check it." : "";
+    }
+    async function refresh() {
+      const m = opts.machine && opts.machine();
+      openings = []; suggest.hidden = true;
+      if (!m || mode !== "earlier") return;
+      try {
+        const since = when(new Date(Date.now() - DAY).toISOString()).day;
+        const res = await fetch(`${opts.url}/rest/v1/events?machine=eq.${encodeURIComponent(m)}` +
+          `&event=in.(lid_open,lid_close)&day=gte.${since}&order=day.asc,time.asc&limit=1000`,
+          { headers: { apikey: opts.key, Authorization: `Bearer ${opts.key}` }, cache: "no-store" });
+        if (!res.ok) return;
+        let open = null;
+        (await res.json()).forEach((r) => {
+          const t = Date.parse(utcOf(r.day, r.time, r.utc_offset));
+          if (r.event === "lid_open") open = t;
+          else if (open !== null) { openings.push([open, t]); open = null; }
+        });
+        if (open !== null) openings.push([open, Date.now()]);          // still open
+        const last = openings[openings.length - 1];
+        if (last) {
+          suggest.textContent = `Last lid opening: ${hm(last[0])}–${hm(last[1])} → use ${hm(last[1])}`;
+          suggest.onclick = () => { input.value = local(last[1]); checkNear(); };
+          suggest.hidden = false;
+        }
+        checkNear();
+      } catch (e) { /* the time can still be typed */ }
+    }
+    nowBtn.addEventListener("click", () => setMode("now"));
+    earlierBtn.addEventListener("click", () => setMode("earlier"));
+    input.addEventListener("change", checkNear);
+    return {
+      iso() {
+        if (mode === "now" || !input.value) return new Date().toISOString().replace(/\.\d{3}Z$/, "Z");
+        return new Date(Date.parse(input.value)).toISOString().replace(/\.\d{3}Z$/, "Z");
+      },
+      error() {
+        if (mode === "now") return "";
+        const t = Date.parse(input.value);
+        if (!input.value || isNaN(t)) return "Pick when it happened, or choose Now.";
+        if (t > Date.now() + 60000) return "That time is in the future.";
+        if (t < Date.now() - DAY) return "Only the last 24 hours can be entered.";
+        return "";
+      },
+      reset() { input.value = ""; note.textContent = ""; setMode("now"); },
+      refresh,
+    };
+  }
+
   window.StudyTables = { when, utcOf, toTable, fromTable, translate, fetchRows, fillMachines, logAdds,
-    tables: BY_NAME };
+    whenField, tables: BY_NAME };
 })();

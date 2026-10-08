@@ -202,6 +202,7 @@ button:focus-visible, input:focus-visible, select:focus-visible, textarea:focus-
     <label class="label" for="observer">Your name</label>
     <input id="observer" type="text" autocomplete="name" maxlength="64" placeholder="e.g. Bassem">
   </div>
+  <div class="field" id="when-field"></div>
 
   <!-- Score: one observations_v2 row, as the harness POST /observations -->
   <section class="card" data-panel="score">
@@ -460,6 +461,7 @@ else if (savedSerial) { $("serial").value = "other"; $("serial-other").hidden = 
 function serial() { return $("serial").value === "other" ? $("serial-other").value.trim() : $("serial").value; }
 function machineChanged() {
   store("p150-serial", serial()); loadRecent();
+  whenPick.refresh();
   if (tab === "status") loadStatus();
   if (tab === "entries") loadEntries();
   if (HISTORY[tab]) loadHistory(tab);
@@ -494,6 +496,7 @@ $("missed").addEventListener("change", () => {
   $("score-box").hidden = $("missed").checked;
 });
 $("observer").value = store("p150-observer") || "";
+const whenPick = StudyTables.whenField($("when-field"), { url: SUPABASE_URL, key: SUPABASE_KEY, machine: () => serial() });
 
 // ---- tabs
 const SAVE_LABEL = { score: "Save score", feed: "Log feed", water: "Log water", unload: "Log unload", service: "Log service" };
@@ -505,6 +508,7 @@ function showTab(t) {
   const readOnly = t === "status" || t === "entries";
   $("save-bar").hidden = readOnly;
   $("observer").parentElement.hidden = t === "status";      // an edit needs a name too
+  $("when-field").hidden = readOnly;
   $("save").textContent = SAVE_LABEL[t] || "";
   $("save").className = t === "unload" ? "danger" : "";
   say("");
@@ -528,10 +532,12 @@ function common() {
   if (!s) return "Choose the machine at the top.";
   const name = $("observer").value.trim();
   if (!name) return "Enter your name.";
+  const late = whenPick.error();
+  if (late) return late;
   return { s, name };
 }
 function event(c, type, chamber, extra) {
-  return Object.assign({ event_id: newId("E"), ts_utc: nowIso(), serial: c.s, chamber, type,
+  return Object.assign({ event_id: newId("E"), ts_utc: whenPick.iso(), serial: c.s, chamber, type,
     value: null, size_guess: null, wetness_guess: null, entered_by: c.name, corrects_event_id: null, note: null }, extra);
 }
 
@@ -539,7 +545,7 @@ function buildScore() {
   const c = common(); if (typeof c === "string") return c;
   if (!state.chamber) return "Choose chamber L or R.";
   const missed = $("missed").checked;
-  const row = { obs_id: newId("O"), ts_utc: nowIso(), serial: c.s, chamber: state.chamber, observer: c.name,
+  const row = { obs_id: newId("O"), ts_utc: whenPick.iso(), serial: c.s, chamber: state.chamber, observer: c.name,
     squeeze: null, moisture_class: null, smell_level: null, smell_descriptor: null, smell_location: null,
     after_mix: null, fresh_food_seen: null, photo_path: null, missed, miss_reason: null,
     crosscal_pair_id: $("crosscal_pair_id").value.trim() || null };
@@ -699,14 +705,14 @@ $("save").addEventListener("click", async () => {
     }
     await insert(table, rows);
     say(done(t, built) + photoNote, photoNote ? "err" : "ok");
-    reset(t); loadRecent(); if (tab === "status") loadStatus(); if (HISTORY[t]) loadHistory(t);
+    reset(t); whenPick.reset(); loadRecent(); if (tab === "status") loadStatus(); if (HISTORY[t]) loadHistory(t);
   } catch (e) {
     if (e.permanent) say(`Not saved. The database refused it (${e.message}). Tell the study owner.`, "err");
     else {
       setQueue(queue().concat([{ table, rows }]));
       say("No connection. Kept on this phone; it will be sent automatically." +
         (built.photos && built.photos.length ? " The photos could not be kept." : ""), "err");
-      reset(t);
+      reset(t); whenPick.reset();
     }
   } finally { $("save").disabled = false; }
 });

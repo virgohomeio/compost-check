@@ -163,6 +163,8 @@ button:focus-visible, input:focus-visible, select:focus-visible, textarea:focus-
       <label class="label" for="observer">Your name</label>
       <input id="observer" type="text" autocomplete="name" placeholder="e.g. Bassem">
     </div>
+    <div class="field" id="when-field">
+    </div>
     <div class="checks">
       <label><input type="checkbox" id="missed"> Could not score this chamber</label>
     </div>
@@ -288,12 +290,12 @@ function serial() {
 }
 $("serial").addEventListener("change", () => {
   $("serial-other").hidden = $("serial").value !== "other";
-  store("p150-serial", serial()); loadRecent();
+  store("p150-serial", serial()); loadRecent(); whenPick.refresh();
 });
-$("serial-other").addEventListener("change", () => { store("p150-serial", serial()); loadRecent(); });
+$("serial-other").addEventListener("change", () => { store("p150-serial", serial()); loadRecent(); whenPick.refresh(); });
 // Every machine that has sent data, from Supabase (public.machines); MACHINES is the fallback.
 StudyTables.fillMachines(SUPABASE_URL, SUPABASE_KEY, $("serial"), $("serial-other"), Boolean(savedSerial),
-  () => { store("p150-serial", serial()); loadRecent(); });
+  () => { store("p150-serial", serial()); loadRecent(); whenPick.refresh(); });
 
 // ---- button groups
 document.querySelectorAll("[data-group], #squeeze").forEach((group) => {
@@ -314,6 +316,7 @@ $("missed").addEventListener("change", () => {
   $("score-box").hidden = $("missed").checked;
 });
 $("observer").value = store("p150-observer") || "";
+const whenPick = StudyTables.whenField($("when-field"), { url: SUPABASE_URL, key: SUPABASE_KEY, machine: () => serial() });
 
 // ---- tabs
 let tab = "score";
@@ -341,8 +344,10 @@ function buildObservation() {
   if (!state.chamber) return "Choose chamber L or R.";
   const observer = $("observer").value.trim();
   if (!observer) return "Enter your name.";
+  const late = whenPick.error();
+  if (late) return late;
   const missed = $("missed").checked;
-  const row = { obs_id: newId("O"), ts_utc: nowIso(), serial: s, chamber: state.chamber,
+  const row = { obs_id: newId("O"), ts_utc: whenPick.iso(), serial: s, chamber: state.chamber,
     observer, squeeze: null, moisture_class: null, smell_level: null, smell_descriptor: null,
     smell_location: null, after_mix: null, fresh_food_seen: null, photo_path: null,
     missed, miss_reason: null, crosscal_pair_id: null };
@@ -372,7 +377,9 @@ function buildFeed() {
   if (!s) return "Choose the machine at the top.";
   if (!state.feed_chamber) return "Choose which chamber was fed.";
   const observer = $("observer").value.trim();
-  return { event_id: newId("E"), ts_utc: nowIso(), serial: s, chamber: state.feed_chamber,
+  const late = whenPick.error();
+  if (late) return late;
+  return { event_id: newId("E"), ts_utc: whenPick.iso(), serial: s, chamber: state.feed_chamber,
     type: "feed_tap", value: null, size_guess: state.size_guess || null,
     wetness_guess: state.wetness_guess || null, entered_by: observer ? "web:" + observer : "web",
     corrects_event_id: null, note: $("feed_note").value.trim() || null };
@@ -444,6 +451,7 @@ $("save").addEventListener("click", async () => {
     say(isScore ? `Saved: chamber ${row.chamber}` + (row.missed ? ", missed" : `, squeeze ${row.squeeze} (${row.moisture_class})`)
       : `Saved: feed into chamber ${row.chamber}`, "ok");
     isScore ? resetScore() : resetFeed();
+    whenPick.reset();
     loadRecent();
   } catch (e) {
     if (e.permanent) { say(`Not saved. The database refused it (${e.message}). Tell the study owner.`, "err"); }
@@ -451,6 +459,7 @@ $("save").addEventListener("click", async () => {
       setQueue(queue().concat([{ table, row }]));
       say("No connection. Kept on this phone; it will be sent automatically.", "err");
       isScore ? resetScore() : resetFeed();
+      whenPick.reset();
     }
   } finally { $("save").disabled = false; }
 });
