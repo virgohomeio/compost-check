@@ -510,10 +510,13 @@ function timeChart(box, panel) {
     plotBox.outerHTML = `<p class="empty">${esc(panel.empty || "No values in this time range.")}</p>`;
     return;
   }
-  // A range narrower than an hour (one point, say) would stretch the axis across years: show a day instead.
+  // A single moment (one point, say) would stretch the axis across years: show
+  // the chosen range around it, at most a day. Only a single moment: the data
+  // of a 15 min to 1 h range is itself under an hour, and must fill the chart.
   let xmin = Infinity, xmax = -Infinity;
   for (const x of panel.xs) { if (x < xmin) xmin = x; if (x > xmax) xmax = x; }
-  const xRange = xmax - xmin < H ? [xmin - 12 * H, xmax + 12 * H] : null;
+  const half = Math.min(hours || 24, 24) * H / 2;
+  const xRange = xmax - xmin < TICK_S ? [xmin - half, xmax + half] : null;
   const ink = cssVar("--muted"), grid = cssVar("--grid"), colors = COLORS();
   const yAxis = { stroke: ink, grid: { stroke: grid, width: 1 }, ticks: { stroke: grid }, size: 54 };
   if (panel.yNames) { const n = panel.yNames; yAxis.splits = () => n.map((_, i) => i); yAxis.values = (u, v) => v.map((x) => n[x] ?? ""); }
