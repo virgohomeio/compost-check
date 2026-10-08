@@ -344,6 +344,13 @@ Done: harness fixed, run restarted"></textarea>
     </div>
   </section>
 
+  <!-- Service history: every service entry and data correction for this machine -->
+  <section class="card" data-panel="service" hidden>
+    <h2>Service history</h2>
+    <p class="hint">Every service logged for this machine, newest first, and the data corrections made to its records. To fix an entry, use the Entries tab.</p>
+    <div class="entries" id="service-history"><p class="hint">Loading…</p></div>
+  </section>
+
   <!-- Entries: what people entered, to edit or delete; every change is logged -->
   <section class="card" data-panel="entries" hidden>
     <h2>Entries, last 7 days</h2>
@@ -434,6 +441,7 @@ function machineChanged() {
   store("p150-serial", serial()); loadRecent();
   if (tab === "status") loadStatus();
   if (tab === "entries") loadEntries();
+  if (tab === "service") loadServiceHistory();
 }
 $("serial").addEventListener("change", () => { $("serial-other").hidden = $("serial").value !== "other"; machineChanged(); });
 $("serial-other").addEventListener("change", machineChanged);
@@ -481,6 +489,7 @@ function showTab(t) {
   say("");
   if (t === "status") loadStatus();
   if (t === "entries") loadEntries();
+  if (t === "service") loadServiceHistory();
 }
 document.querySelectorAll("#tabs button").forEach((b) => b.addEventListener("click", () => {
   showTab(b.dataset.tab);
@@ -669,7 +678,7 @@ $("save").addEventListener("click", async () => {
     }
     await insert(table, rows);
     say(done(t, built) + photoNote, photoNote ? "err" : "ok");
-    reset(t); loadRecent(); if (tab === "status") loadStatus();
+    reset(t); loadRecent(); if (tab === "status") loadStatus(); if (t === "service") loadServiceHistory();
   } catch (e) {
     if (e.permanent) say(`Not saved. The database refused it (${e.message}). Tell the study owner.`, "err");
     else {
@@ -979,6 +988,28 @@ function renderEntry(item, history) {
     });
   });
   return box;
+}
+async function loadServiceHistory() {
+  const box = $("service-history");
+  if (!serial()) { box.innerHTML = '<p class="hint">Choose the machine at the top.</p>'; return; }
+  try {
+    const rows = (await get(`events?machine=eq.${encodeURIComponent(serial())}&event=in.(service,correction)` +
+      `&order=day.desc,time.desc&limit=200`)).filter((r) => r.entered_by !== "harness");   // not the automatic "settings reloaded" notes
+    box.textContent = "";
+    if (!rows.length) { box.innerHTML = '<p class="hint">No service logged for this machine yet.</p>'; return; }
+    rows.forEach((r) => {
+      const item = document.createElement("article"); item.className = "entry";
+      const kind = r.event === "correction" ? "Data correction" : "Service";
+      const head = document.createElement("div"); head.className = "head";
+      const what = document.createElement("span"); what.className = "what"; what.textContent = `${kind} · ${r.chamber || "machine"}`;
+      const meta = document.createElement("span"); meta.className = "meta";
+      meta.textContent = `${when(entryTime(r))}${r.entered_by ? " · by " + r.entered_by : ""}`;
+      const sum = document.createElement("span"); sum.className = "sum"; sum.textContent = r.note || "no note";
+      head.append(what, meta); item.append(head, sum); box.appendChild(item);
+    });
+  } catch (e) {
+    box.innerHTML = '<p class="hint">Could not load the service history. Check the connection.</p>';
+  }
 }
 async function loadEntries() {
   const list = $("entries-list"), gone = $("entries-deleted");
