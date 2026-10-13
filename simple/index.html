@@ -326,6 +326,8 @@ function showTab(t) {
   $("tab-feed").setAttribute("aria-selected", t === "feed");
   $("panel-score").hidden = t !== "score";
   $("panel-feed").hidden = t !== "feed";
+  // one "When did it happen?" for both tabs: it sits in the panel on show
+  (t === "feed" ? $("feed_chamber") : $("observer")).parentElement.after($("when-field"));
   $("save").textContent = t === "score" ? "Save score" : "Save feed";
   say("");
 }
