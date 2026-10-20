@@ -182,7 +182,13 @@
   // before (`chosen` false), the machine with the newest data is selected.
   // `other` is the free-text box behind "Other…"; onChange runs when the
   // selection changes here.
+  // Machines out of service: left out of every machine list, though their
+  // data stays in Supabase. Delete a serial here when it is repaired.
+  // 285 and 341: out of service since 2026-10-20.
+  const OUT_OF_SERVICE = ["LL01-00000000285", "LL01-00000000341"];
+
   async function fillMachines(url, key, select, other, chosen, onChange) {
+    [...select.options].forEach((o) => { if (OUT_OF_SERVICE.includes(o.value)) o.remove(); });
     let rows;
     try {
       const res = await fetch(`${url}/rest/v1/machines?select=machine,last_day&order=last_day.desc,machine.asc`,
@@ -190,6 +196,7 @@
       if (!res.ok) return;
       rows = await res.json();
     } catch (e) { return; }
+    rows = rows.filter((r) => !OUT_OF_SERVICE.includes(r.machine));
     if (!rows.length) return;
     const before = select.value === "other" && other ? other.value.trim() : select.value;
     const otherOpt = select.querySelector('option[value="other"]');
@@ -202,7 +209,7 @@
       select.insertBefore(o, otherOpt);
     };
     rows.forEach((r) => r.machine && add(r.machine, `${r.machine} · last data ${r.last_day}`));
-    known.forEach((m) => add(m, m));
+    known.filter((m) => !OUT_OF_SERVICE.includes(m)).forEach((m) => add(m, m));
     const pick = chosen ? before : rows[0].machine;
     if (pick && seen.has(pick)) { select.value = pick; if (other) other.hidden = true; }
     const now = select.value === "other" && other ? other.value.trim() : select.value;
