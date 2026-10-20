@@ -97,6 +97,14 @@ textarea { min-height: 64px; resize: vertical; }
 .seg.big button { font-size: 20px; font-weight: 700; padding: 14px; }
 .seg button[aria-pressed="true"] { background: var(--sel); color: var(--sel-ink); border-color: var(--sel); }
 
+/* Feed load by wetness: one tap sets both, so a feed takes one decision. */
+.loadgrid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 6px; }
+.loadgrid button { display: grid; justify-items: center; align-content: center; gap: 4px;
+  min-height: 72px; padding: 10px 6px; border-radius: 8px; border: 1px solid var(--line);
+  background: var(--bg); color: var(--ink); font: 15px var(--sans); cursor: pointer; }
+.loadgrid .g { font-weight: 700; font-size: 14px; text-align: center; }
+.loadgrid button[aria-pressed="true"] { border-color: var(--sel); box-shadow: inset 0 0 0 2px var(--sel); }
+
 /* The squeeze scale: the study's moisture score, 1 dry to 6 wet. */
 .squeeze { display: grid; gap: 6px; }
 .squeeze button { display: grid; grid-template-columns: 2.2em 1fr auto; align-items: center; gap: 10px;
@@ -267,7 +275,7 @@ button:focus-visible, input:focus-visible, select:focus-visible, textarea:focus-
   <!-- Feed: events_v2 feed_tap, as POST /events/feed -->
   <section class="card" data-panel="feed" hidden>
     <h2>Feed</h2>
-    <p class="hint">Record it when food goes in. Size and wetness are optional guesses.</p>
+    <p class="hint">Record it when food goes in.</p>
     <div class="field">
       <span class="label">Chamber fed</span>
       <div class="seg big" data-group="feed_chamber">
@@ -275,20 +283,35 @@ button:focus-visible, input:focus-visible, select:focus-visible, textarea:focus-
       </div>
     </div>
     <div class="field">
-      <span class="label">Size (optional)</span>
-      <div class="seg" data-group="size_guess" id="size_guess">
-        <button type="button" data-v="small">small</button><button type="button" data-v="medium">medium</button><button type="button" data-v="large">large</button>
+      <span class="label">How much went in</span>
+      <p class="hint">Food and water together, 1 mL of water counting as 1 g.</p>
+      <div class="loadgrid" data-group="feed_load" id="feed_load">
+        <button type="button" data-v="small|dry"><span class="g">under 250 g</span><span class="band dry">dry</span></button>
+        <button type="button" data-v="small|normal"><span class="g">under 250 g</span><span class="band good">normal</span></button>
+        <button type="button" data-v="small|wet"><span class="g">under 250 g</span><span class="band wet">wet</span></button>
+        <button type="button" data-v="medium|dry"><span class="g">250–500 g</span><span class="band dry">dry</span></button>
+        <button type="button" data-v="medium|normal"><span class="g">250–500 g</span><span class="band good">normal</span></button>
+        <button type="button" data-v="medium|wet"><span class="g">250–500 g</span><span class="band wet">wet</span></button>
+        <button type="button" data-v="large|dry"><span class="g">over 500 g</span><span class="band dry">dry</span></button>
+        <button type="button" data-v="large|normal"><span class="g">over 500 g</span><span class="band good">normal</span></button>
+        <button type="button" data-v="large|wet"><span class="g">over 500 g</span><span class="band wet">wet</span></button>
       </div>
+      <p class="hint"><b>dry</b>: no water added and the food is dry in itself, such as coffee
+        grounds, carbon or soil. <b>normal</b>: no water added, mixed kitchen waste.
+        <b>wet</b>: water added, or the food is mostly water, such as vegetable, fruit or
+        cooked food. Water added always counts as wet, whatever the food.</p>
     </div>
     <div class="field">
-      <span class="label">Wetness (optional)</span>
-      <div class="seg" data-group="wetness_guess" id="wetness_guess">
-        <button type="button" data-v="dry">dry</button><button type="button" data-v="normal">normal</button><button type="button" data-v="wet">wet</button>
-      </div>
+      <label class="label" for="feed_grams">Exact weight in grams (optional)</label>
+      <input type="number" id="feed_grams" inputmode="numeric" min="0" max="20000" step="1"
+             placeholder="food and water together, e.g. 400">
+      <p class="hint">Worth filling in while the bench still weighs feeds: it is the known
+        amount the sensor readings get checked against, and the only thing that lets a feed be
+        re-banded exactly if the bands ever move. It has to agree with the band you tapped.</p>
     </div>
     <div class="field">
-      <label class="label" for="feed_note">Note (optional)</label>
-      <textarea id="feed_note" maxlength="500" placeholder="e.g. ~1 kg vegetable scraps, coffee grounds"></textarea>
+      <label class="label" for="feed_note">What went in (optional)</label>
+      <textarea id="feed_note" maxlength="500" placeholder="e.g. coffee grounds, vegetable scraps"></textarea>
     </div>
   </section>
 
@@ -437,6 +460,21 @@ const MAX_PHOTO_BYTES = 15 * 1024 * 1024;
 const PHOTO_TYPES = { "image/jpeg": ".jpg", "image/png": ".png", "image/webp": ".webp",
   "image/gif": ".gif", "image/heic": ".heic", "image/heif": ".heif" };
 const WATER_MAX_ML = 50000;
+const FEED_MAX_G = 20000;
+
+// A feed's load is the food plus any water poured in with it, 1 mL counting
+// as 1 g. The three bands are the three size_guess values the schema already
+// has, so this needs no new column -- what changed is that the words now mean
+// something. Over the first two bench weeks "small" was used for loads from
+// 100 g to 400 g and "large" twice, both times for 200 g.
+//
+// The edges come from the 44 weighed feeds of those weeks (median 250 g) and
+// they also separate the profile cards: a Light feed is 100-200 g, a Heavy
+// one 250-400 g, a Binge one 700 g and up. An edge belongs to the band above.
+const LOAD_BAND_EDGES_G = [250, 500];
+const BAND_LABEL = { small: "under 250 g", medium: "250–500 g", large: "over 500 g" };
+const loadBand = (g) => g < LOAD_BAND_EDGES_G[0] ? "small"
+  : g < LOAD_BAND_EDGES_G[1] ? "medium" : "large";
 const MACHINES = ["LL01-00000000305", "LL01-00000000312", "LL01-00000000000"];
 const QUEUE_KEY = "p150-check-queue";
 const HEADERS = { apikey: SUPABASE_KEY, Authorization: `Bearer ${SUPABASE_KEY}` };
@@ -570,8 +608,23 @@ function buildScore() {
 function buildFeed() {
   const c = common(); if (typeof c === "string") return c;
   if (!state.feed_chamber) return "Choose which chamber was fed.";
-  return { events: [event(c, "feed_tap", state.feed_chamber, { size_guess: state.size_guess || null,
-    wetness_guess: state.wetness_guess || null, note: $("feed_note").value.trim() || null })] };
+  if (!state.feed_load) return "Tap how much went in.";
+  const [size, wet] = state.feed_load.split("|");
+  const raw = $("feed_grams").value.trim();
+  let grams = null;
+  if (raw !== "") {
+    grams = Number(raw);
+    if (!Number.isFinite(grams) || grams < 0 || grams > FEED_MAX_G)
+      return `Enter the weight in grams, from 0 to ${FEED_MAX_G}, or leave it empty.`;
+    // One row must not carry two answers: a weight that lands in a different
+    // band than the one tapped is a mistake worth seeing now, not a figure to
+    // be quietly overruled.
+    if (loadBand(grams) !== size)
+      return `${grams} g is ${BAND_LABEL[loadBand(grams)]}, not ${BAND_LABEL[size]}.` +
+             " Fix the weight or tap the matching band.";
+  }
+  return { events: [event(c, "feed_tap", state.feed_chamber, { value: grams,
+    size_guess: size, wetness_guess: wet, note: $("feed_note").value.trim() || null })] };
 }
 function buildWater() {
   const c = common(); if (typeof c === "string") return c;
@@ -670,7 +723,7 @@ function reset(t) {
     ["after_mix", "fresh_food_seen", "missed"].forEach((id) => { $(id).checked = false; });
     ["miss_reason", "crosscal_pair_id", "photo"].forEach((id) => { $(id).value = ""; });
     $("miss-box").hidden = true; $("score-box").hidden = false;
-  } else if (t === "feed") { clearGroups(["size_guess", "wetness_guess"]); $("feed_note").value = ""; }
+  } else if (t === "feed") { clearGroups(["feed_load"]); $("feed_grams").value = ""; $("feed_note").value = ""; }
   else if (t === "water") { $("water_ml").value = ""; $("water_note").value = ""; }
   else if (t === "unload") { clearGroups(["unload_chamber"]); $("unload_note").value = ""; }
   else if (t === "service") { $("service_note").value = ""; }
@@ -682,7 +735,9 @@ function done(t, built) {
       + (r.photo_path ? `, with ${photoList(r.photo_path).length} photo${photoList(r.photo_path).length > 1 ? "s" : ""}` : "");
   }
   const e = built.events[0];
-  return { feed: `Logged: feed into chamber ${e.chamber}`, water: `Logged: ${e.value} mL into chamber ${e.chamber}`,
+  return { feed: `Logged: ${BAND_LABEL[e.size_guess]} ${e.wetness_guess}` +
+             (e.value ? ` (${e.value} g)` : "") + ` into chamber ${e.chamber}`,
+           water: `Logged: ${e.value} mL into chamber ${e.chamber}`,
     unload: `Logged: chamber ${e.chamber} emptied`, service: `Logged: service on chamber ${e.chamber}` }[t];
 }
 
@@ -885,7 +940,8 @@ function summary(kind, r) {
     const where = r.smell_where && r.smell_where !== "none" ? ` at the ${r.smell_where}` : "";
     return `squeeze ${r.squeeze ?? "–"}${r.moisture ? ` (${r.moisture})` : ""}, smell ${r.smell_level ?? "–"}${smell}${where}${r.photo ? `, with ${photoList(r.photo).length} photo${photoList(r.photo).length > 1 ? "s" : ""}` : ""}`;
   }
-  if (kind === "feed_tap") return [r.size_guess || "size not given", r.wetness_guess || "wetness not given", r.note].filter(Boolean).join(", ");
+  if (kind === "feed_tap") return [r.size_guess ? BAND_LABEL[r.size_guess] : "load not given",
+    r.wetness_guess || "wetness not given", r.value ? `${r.value} g` : null, r.note].filter(Boolean).join(", ");
   if (kind === "water") return [r.value != null ? `${r.value} mL` : "amount not given", r.note].filter(Boolean).join(", ");
   return r.note || "no note";
 }
@@ -902,8 +958,10 @@ function editFields(kind, r) {
   // [field name, label, element, how to read it back]
   const txt = (e) => e.value.trim() || null, num = (e) => e.value === "" ? null : Number(e.value);
   const f = [["chamber", "Chamber", select([["L", "L"], ["R", "R"]], r.chamber), (e) => e.value]];
-  if (kind === "feed_tap") f.push(["size_guess", "Size", select(opt(["small", "medium", "large"]), r.size_guess), txt],
-                                  ["wetness_guess", "Wetness", select(opt(["dry", "normal", "wet"]), r.wetness_guess), txt]);
+  if (kind === "feed_tap") f.push(["size_guess", "Load",
+                                   select(["small", "medium", "large"].map((b) => [b, BAND_LABEL[b]]), r.size_guess), txt],
+                                  ["wetness_guess", "Wetness", select(opt(["dry", "normal", "wet"]), r.wetness_guess), txt],
+                                  ["value", "Exact weight, g", input("number", r.value), num]);
   if (kind === "water") f.push(["value", "Water, mL", input("number", r.value), num]);
   if (kind === "score") {
     const missed = input("checkbox"); missed.checked = !!r.missed;
@@ -1022,7 +1080,8 @@ function renderEntry(item, history) {
 const HISTORY = { feed: ["feed_tap"], water: ["water"], unload: ["unload"], service: ["service", "correction"] };
 const HISTORY_LABEL = { feed_tap: "Feed", water: "Water", unload: "Unload", service: "Service", correction: "Data correction" };
 function historyDetail(r) {
-  if (r.event === "feed_tap") return [r.size_guess, r.wetness_guess, r.note].filter(Boolean).join(", ") || "no details";
+  if (r.event === "feed_tap") return [r.size_guess ? BAND_LABEL[r.size_guess] : null, r.wetness_guess,
+    r.value ? `${r.value} g` : null, r.note].filter(Boolean).join(", ") || "no details";
   if (r.event === "water") return [r.value != null ? `${r.value} mL` : null, r.note].filter(Boolean).join(", ") || "no details";
   return r.note || "no note";
 }

@@ -94,6 +94,14 @@ textarea { min-height: 64px; resize: vertical; }
 .seg button[aria-pressed="true"] { background: var(--sel); color: var(--sel-ink); border-color: var(--sel); }
 
 /* The squeeze scale: the study's moisture score, 1 dry to 6 wet. */
+.loadgrid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 6px; }
+.loadgrid button { display: grid; justify-items: center; align-content: center; gap: 4px;
+  min-height: 72px; padding: 10px 6px; border-radius: 8px; border: 1px solid var(--line);
+  background: var(--bg); color: var(--ink); font: 15px var(--sans); cursor: pointer; }
+.loadgrid .g { font-weight: 700; font-size: 14px; text-align: center; }
+.loadgrid .band { font-size: 12px; font-weight: 700; letter-spacing: .05em; text-transform: uppercase;
+  padding: 2px 8px; border-radius: 999px; white-space: nowrap; }
+.loadgrid button[aria-pressed="true"] { border-color: var(--sel); box-shadow: inset 0 0 0 2px var(--sel); }
 .squeeze { display: grid; gap: 6px; }
 .squeeze button { display: grid; grid-template-columns: 2.2em 1fr auto; align-items: center; gap: 10px;
   text-align: left; padding: 10px 12px; border-radius: 8px; border: 1px solid var(--line);
@@ -218,16 +226,25 @@ button:focus-visible, input:focus-visible, select:focus-visible, textarea:focus-
       </div>
     </div>
     <div class="field">
-      <span class="label">How much (optional)</span>
-      <div class="seg" id="size_guess" data-group="size_guess">
-        <button type="button" data-v="small">small</button><button type="button" data-v="medium">medium</button><button type="button" data-v="large">large</button>
+      <span class="label">How much went in</span>
+      <p class="hint">Food and water together, 1 mL of water counting as 1 g.</p>
+      <div class="loadgrid" id="feed_load" data-group="feed_load">
+        <button type="button" data-v="small|dry"><span class="g">under 250 g</span><span class="band dry">dry</span></button>
+        <button type="button" data-v="small|normal"><span class="g">under 250 g</span><span class="band good">normal</span></button>
+        <button type="button" data-v="small|wet"><span class="g">under 250 g</span><span class="band wet">wet</span></button>
+        <button type="button" data-v="medium|dry"><span class="g">250–500 g</span><span class="band dry">dry</span></button>
+        <button type="button" data-v="medium|normal"><span class="g">250–500 g</span><span class="band good">normal</span></button>
+        <button type="button" data-v="medium|wet"><span class="g">250–500 g</span><span class="band wet">wet</span></button>
+        <button type="button" data-v="large|dry"><span class="g">over 500 g</span><span class="band dry">dry</span></button>
+        <button type="button" data-v="large|normal"><span class="g">over 500 g</span><span class="band good">normal</span></button>
+        <button type="button" data-v="large|wet"><span class="g">over 500 g</span><span class="band wet">wet</span></button>
       </div>
+      <p class="hint">Water added always counts as wet, whatever the food.</p>
     </div>
     <div class="field">
-      <span class="label">How wet (optional)</span>
-      <div class="seg" id="wetness_guess" data-group="wetness_guess">
-        <button type="button" data-v="dry">dry</button><button type="button" data-v="normal">normal</button><button type="button" data-v="wet">wet</button>
-      </div>
+      <label class="label" for="feed_grams">Exact weight in grams (optional)</label>
+      <input type="number" id="feed_grams" inputmode="numeric" min="0" max="20000" step="1"
+             placeholder="food and water together, e.g. 400">
     </div>
     <div class="field">
       <label class="label" for="feed_note">What went in (optional)</label>
@@ -336,6 +353,13 @@ $("tab-feed").addEventListener("click", () => showTab("feed"));
 
 // ---- rows, as schema_v2 columns
 const nowIso = () => new Date().toISOString().replace(/\.\d{3}Z$/, "Z");
+const FEED_MAX_G = 20000;
+// Load is the food plus any water poured in with it, 1 mL counting as 1 g.
+// The bands are the three size_guess values the schema already has; the edges
+// come from the 44 weighed feeds of the first two bench weeks (median 250 g)
+// and match the profile cards. An edge belongs to the band above.
+const BAND_LABEL = { small: "under 250 g", medium: "250\u2013500 g", large: "over 500 g" };
+const loadBand = (g) => g < 250 ? "small" : g < 500 ? "medium" : "large";
 const newId = (p) => p + "-" + (crypto.randomUUID ? crypto.randomUUID() : String(Math.random()).slice(2) + Date.now())
   .replace(/-/g, "").slice(0, 12);
 const moistureClass = (s) => s <= 2 ? "dry" : s <= 5 ? "good" : "wet";
@@ -378,12 +402,26 @@ function buildFeed() {
   const s = serial();
   if (!s) return "Choose the machine at the top.";
   if (!state.feed_chamber) return "Choose which chamber was fed.";
+  if (!state.feed_load) return "Tap how much went in.";
   const observer = $("observer").value.trim();
   const late = whenPick.error();
   if (late) return late;
+  const [size, wet] = state.feed_load.split("|");
+  const raw = $("feed_grams").value.trim();
+  let grams = null;
+  if (raw !== "") {
+    grams = Number(raw);
+    if (!Number.isFinite(grams) || grams < 0 || grams > FEED_MAX_G)
+      return `Enter the weight in grams, from 0 to ${FEED_MAX_G}, or leave it empty.`;
+    // One row must not carry two answers, so a weight in a different band than
+    // the one tapped is shown now rather than quietly overruling either.
+    if (loadBand(grams) !== size)
+      return `${grams} g is ${BAND_LABEL[loadBand(grams)]}, not ${BAND_LABEL[size]}.` +
+             " Fix the weight or tap the matching band.";
+  }
   return { event_id: newId("E"), ts_utc: whenPick.iso(), serial: s, chamber: state.feed_chamber,
-    type: "feed_tap", value: null, size_guess: state.size_guess || null,
-    wetness_guess: state.wetness_guess || null, entered_by: observer ? "web:" + observer : "web",
+    type: "feed_tap", value: grams, size_guess: size,
+    wetness_guess: wet, entered_by: observer ? "web:" + observer : "web",
     corrects_event_id: null, note: $("feed_note").value.trim() || null };
 }
 
@@ -435,8 +473,9 @@ function resetScore() {
   $("miss_reason").value = ""; $("miss-box").hidden = true; $("score-box").hidden = false;
 }
 function resetFeed() {
-  ["size_guess", "wetness_guess"].forEach((k) => { state[k] = undefined; });
-  document.querySelectorAll("#size_guess button, #wetness_guess button").forEach((b) => b.setAttribute("aria-pressed", "false"));
+  state.feed_load = undefined;
+  document.querySelectorAll("#feed_load button").forEach((b) => b.setAttribute("aria-pressed", "false"));
+  $("feed_grams").value = "";
   $("feed_note").value = "";
 }
 
@@ -451,7 +490,7 @@ $("save").addEventListener("click", async () => {
   try {
     await send(table, row);
     say(isScore ? `Saved: chamber ${row.chamber}` + (row.missed ? ", missed" : `, squeeze ${row.squeeze} (${row.moisture_class})`)
-      : `Saved: feed into chamber ${row.chamber}`, "ok");
+      : `Saved: ${BAND_LABEL[row.size_guess]} ${row.wetness_guess}` + (row.value ? ` (${row.value} g)` : "") + ` into chamber ${row.chamber}`, "ok");
     isScore ? resetScore() : resetFeed();
     whenPick.reset();
     loadRecent();
