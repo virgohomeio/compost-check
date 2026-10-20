@@ -1090,7 +1090,8 @@ async function renderCompare() {
   try {
     const since = new Date(Date.now() - (hours || 24 * 365) * H * 1000).toISOString();
     const rows = await rowsOf(`${T("machine_readings")}?select=serial&ts_utc=gte.${encodeURIComponent(since)}&order=ts_utc.desc&limit=5000`);
-    const serials = [...new Set(rows.map((r) => r.serial))];
+    const serials = [...new Set(rows.map((r) => r.serial))]
+      .filter((s) => !StudyTables.OUT_OF_SERVICE.includes(s));
     if (serials.length < 2) {
       box.innerHTML = `<p class="note">Comparison needs at least two machines logging in this time range; ${serials.length ? `only ${esc(serials[0])} has data` : "none has data"}. The study plan has four bench machines. Once a second one logs (run the harness or collect.py on it), its lines appear here beside this one.</p>`;
       return;

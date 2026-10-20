@@ -198,7 +198,12 @@
     } catch (e) { return; }
     rows = rows.filter((r) => !OUT_OF_SERVICE.includes(r.machine));
     if (!rows.length) return;
-    const before = select.value === "other" && other ? other.value.trim() : select.value;
+    let before = select.value === "other" && other ? other.value.trim() : select.value;
+    if (OUT_OF_SERVICE.includes(before)) {
+      // remembered from before it went out of service: start on a live machine
+      before = ""; chosen = false;
+      if (other) { other.value = ""; other.hidden = true; }
+    }
     const otherOpt = select.querySelector('option[value="other"]');
     const known = [...select.options].map((o) => o.value).filter((v) => v !== "other");
     [...select.options].forEach((o) => { if (o.value !== "other") o.remove(); });
@@ -323,6 +328,6 @@
     };
   }
 
-  window.StudyTables = { when, utcOf, toTable, fromTable, translate, fetchRows, fillMachines, logAdds,
+  window.StudyTables = { OUT_OF_SERVICE, when, utcOf, toTable, fromTable, translate, fetchRows, fillMachines, logAdds,
     whenField, tables: BY_NAME };
 })();
