@@ -97,7 +97,7 @@ textarea { min-height: 64px; resize: vertical; }
 .seg.big button { font-size: 20px; font-weight: 700; padding: 14px; }
 .seg button[aria-pressed="true"] { background: var(--sel); color: var(--sel-ink); border-color: var(--sel); }
 
-/* Feed load by wetness: one tap sets both, so a feed takes one decision. */
+/* Feed: how much (food + water) and how wet, one row each. */
 .loadgrid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 6px; }
 .loadgrid button { display: grid; justify-items: center; align-content: center; gap: 4px;
   min-height: 72px; padding: 10px 6px; border-radius: 8px; border: 1px solid var(--line);
@@ -284,16 +284,18 @@ button:focus-visible, input:focus-visible, select:focus-visible, textarea:focus-
     <div class="field">
       <span class="label">How much went in</span>
       <p class="hint">Food and water together, 1 mL of water counting as 1 g.</p>
-      <div class="loadgrid" data-group="feed_load" id="feed_load">
-        <button type="button" data-v="small|dry"><span class="g">under 250 g</span><span class="band dry">dry</span></button>
-        <button type="button" data-v="small|normal"><span class="g">under 250 g</span><span class="band good">normal</span></button>
-        <button type="button" data-v="small|wet"><span class="g">under 250 g</span><span class="band wet">wet</span></button>
-        <button type="button" data-v="medium|dry"><span class="g">250–500 g</span><span class="band dry">dry</span></button>
-        <button type="button" data-v="medium|normal"><span class="g">250–500 g</span><span class="band good">normal</span></button>
-        <button type="button" data-v="medium|wet"><span class="g">250–500 g</span><span class="band wet">wet</span></button>
-        <button type="button" data-v="large|dry"><span class="g">over 500 g</span><span class="band dry">dry</span></button>
-        <button type="button" data-v="large|normal"><span class="g">over 500 g</span><span class="band good">normal</span></button>
-        <button type="button" data-v="large|wet"><span class="g">over 500 g</span><span class="band wet">wet</span></button>
+      <div class="loadgrid" data-group="feed_size" id="feed_size">
+        <button type="button" data-v="small"><span class="g">under 250 g</span></button>
+        <button type="button" data-v="medium"><span class="g">250–500 g</span></button>
+        <button type="button" data-v="large"><span class="g">over 500 g</span></button>
+      </div>
+    </div>
+    <div class="field">
+      <span class="label">How wet</span>
+      <div class="loadgrid" data-group="feed_wet" id="feed_wet">
+        <button type="button" data-v="dry"><span class="band dry">dry</span></button>
+        <button type="button" data-v="normal"><span class="band good">normal</span></button>
+        <button type="button" data-v="wet"><span class="band wet">wet</span></button>
       </div>
       <p class="hint"><b>dry</b>: no water added and the food is dry in itself, such as coffee
         grounds, carbon or soil. <b>normal</b>: no water added, mixed kitchen waste.
@@ -580,8 +582,9 @@ function buildScore() {
 function buildFeed() {
   const c = common(); if (typeof c === "string") return c;
   if (!state.feed_chamber) return "Choose which chamber was fed.";
-  if (!state.feed_load) return "Tap how much went in.";
-  const [size, wet] = state.feed_load.split("|");
+  if (!state.feed_size) return "Tap how much went in.";
+  if (!state.feed_wet) return "Tap how wet it was.";
+  const size = state.feed_size, wet = state.feed_wet;
   const raw = $("feed_grams").value.trim();
   let grams = null;
   if (raw !== "") {
@@ -688,7 +691,7 @@ function reset(t) {
     ["after_mix", "fresh_food_seen", "missed"].forEach((id) => { $(id).checked = false; });
     ["miss_reason", "crosscal_pair_id", "photo"].forEach((id) => { $(id).value = ""; });
     $("miss-box").hidden = true; $("score-box").hidden = false;
-  } else if (t === "feed") { clearGroups(["feed_load"]); $("feed_grams").value = ""; $("feed_note").value = ""; }
+  } else if (t === "feed") { clearGroups(["feed_size", "feed_wet"]); $("feed_grams").value = ""; $("feed_note").value = ""; }
   else if (t === "unload") { clearGroups(["unload_chamber"]); $("unload_note").value = ""; }
   else if (t === "service") { $("service_note").value = ""; }
 }

@@ -228,16 +228,18 @@ button:focus-visible, input:focus-visible, select:focus-visible, textarea:focus-
     <div class="field">
       <span class="label">How much went in</span>
       <p class="hint">Food and water together, 1 mL of water counting as 1 g.</p>
-      <div class="loadgrid" id="feed_load" data-group="feed_load">
-        <button type="button" data-v="small|dry"><span class="g">under 250 g</span><span class="band dry">dry</span></button>
-        <button type="button" data-v="small|normal"><span class="g">under 250 g</span><span class="band good">normal</span></button>
-        <button type="button" data-v="small|wet"><span class="g">under 250 g</span><span class="band wet">wet</span></button>
-        <button type="button" data-v="medium|dry"><span class="g">250–500 g</span><span class="band dry">dry</span></button>
-        <button type="button" data-v="medium|normal"><span class="g">250–500 g</span><span class="band good">normal</span></button>
-        <button type="button" data-v="medium|wet"><span class="g">250–500 g</span><span class="band wet">wet</span></button>
-        <button type="button" data-v="large|dry"><span class="g">over 500 g</span><span class="band dry">dry</span></button>
-        <button type="button" data-v="large|normal"><span class="g">over 500 g</span><span class="band good">normal</span></button>
-        <button type="button" data-v="large|wet"><span class="g">over 500 g</span><span class="band wet">wet</span></button>
+      <div class="loadgrid" data-group="feed_size" id="feed_size">
+        <button type="button" data-v="small"><span class="g">under 250 g</span></button>
+        <button type="button" data-v="medium"><span class="g">250–500 g</span></button>
+        <button type="button" data-v="large"><span class="g">over 500 g</span></button>
+      </div>
+    </div>
+    <div class="field">
+      <span class="label">How wet</span>
+      <div class="loadgrid" data-group="feed_wet" id="feed_wet">
+        <button type="button" data-v="dry"><span class="band dry">dry</span></button>
+        <button type="button" data-v="normal"><span class="band good">normal</span></button>
+        <button type="button" data-v="wet"><span class="band wet">wet</span></button>
       </div>
       <p class="hint">Water added always counts as wet, whatever the food.</p>
     </div>
@@ -402,11 +404,12 @@ function buildFeed() {
   const s = serial();
   if (!s) return "Choose the machine at the top.";
   if (!state.feed_chamber) return "Choose which chamber was fed.";
-  if (!state.feed_load) return "Tap how much went in.";
+  if (!state.feed_size) return "Tap how much went in.";
+  if (!state.feed_wet) return "Tap how wet it was.";
   const observer = $("observer").value.trim();
   const late = whenPick.error();
   if (late) return late;
-  const [size, wet] = state.feed_load.split("|");
+  const size = state.feed_size, wet = state.feed_wet;
   const raw = $("feed_grams").value.trim();
   let grams = null;
   if (raw !== "") {
@@ -473,8 +476,8 @@ function resetScore() {
   $("miss_reason").value = ""; $("miss-box").hidden = true; $("score-box").hidden = false;
 }
 function resetFeed() {
-  state.feed_load = undefined;
-  document.querySelectorAll("#feed_load button").forEach((b) => b.setAttribute("aria-pressed", "false"));
+  state.feed_size = state.feed_wet = undefined;
+  document.querySelectorAll("#feed_size button, #feed_wet button").forEach((b) => b.setAttribute("aria-pressed", "false"));
   $("feed_grams").value = "";
   $("feed_note").value = "";
 }
