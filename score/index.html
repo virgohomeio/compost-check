@@ -199,7 +199,6 @@ button:focus-visible, input:focus-visible, select:focus-visible, textarea:focus-
   <nav class="tabs" role="tablist" id="tabs">
     <button role="tab" data-tab="score" aria-selected="true">Score</button>
     <button role="tab" data-tab="feed" aria-selected="false">Feed</button>
-    <button role="tab" data-tab="water" aria-selected="false">Water</button>
     <button role="tab" data-tab="unload" aria-selected="false">Unload</button>
     <button role="tab" data-tab="service" aria-selected="false">Service</button>
     <button role="tab" data-tab="entries" aria-selected="false">Entries</button>
@@ -322,32 +321,6 @@ button:focus-visible, input:focus-visible, select:focus-visible, textarea:focus-
     <div class="entries" id="history-feed"><p class="hint">Loading…</p></div>
   </section>
 
-  <!-- Water: events_v2 water, value in mL, as POST /events/water -->
-  <section class="card" data-panel="water" hidden>
-    <h2>Water added</h2>
-    <div class="field">
-      <span class="label">Chamber</span>
-      <div class="seg big" data-group="water_chamber">
-        <button type="button" data-v="L">L</button><button type="button" data-v="R">R</button>
-      </div>
-    </div>
-    <div class="field">
-      <label class="label" for="water_ml">Amount (mL)</label>
-      <input id="water_ml" type="number" inputmode="numeric" min="1" max="50000" step="1" placeholder="e.g. 500">
-    </div>
-    <div class="field">
-      <label class="label" for="water_note">Note (optional)</label>
-      <textarea id="water_note" maxlength="500"></textarea>
-    </div>
-  </section>
-
-  <!-- Water history: every water entry for this machine -->
-  <section class="card" data-panel="water" hidden>
-    <h2>Water history</h2>
-    <p class="hint">Every water addition logged for this machine, newest first. To fix an entry, use the Entries tab.</p>
-    <div class="entries" id="history-water"><p class="hint">Loading…</p></div>
-  </section>
-
   <!-- Unload: events_v2 unload + role_change, as POST /events/unload -->
   <section class="card" data-panel="unload" hidden>
     <h2>Unload</h2>
@@ -459,7 +432,6 @@ const PHOTO_BUCKET = "study-photos";
 const MAX_PHOTO_BYTES = 15 * 1024 * 1024;
 const PHOTO_TYPES = { "image/jpeg": ".jpg", "image/png": ".png", "image/webp": ".webp",
   "image/gif": ".gif", "image/heic": ".heic", "image/heif": ".heif" };
-const WATER_MAX_ML = 50000;
 const FEED_MAX_G = 20000;
 
 // A feed's load is the food plus any water poured in with it, 1 mL counting
@@ -537,7 +509,7 @@ $("observer").value = store("p150-observer") || "";
 const whenPick = StudyTables.whenField($("when-field"), { url: SUPABASE_URL, key: SUPABASE_KEY, machine: () => serial() });
 
 // ---- tabs
-const SAVE_LABEL = { score: "Save score", feed: "Log feed", water: "Log water", unload: "Log unload", service: "Log service" };
+const SAVE_LABEL = { score: "Save score", feed: "Log feed", unload: "Log unload", service: "Log service" };
 let tab = "score";
 function showTab(t) {
   tab = t;
@@ -626,13 +598,6 @@ function buildFeed() {
   return { events: [event(c, "feed_tap", state.feed_chamber, { value: grams,
     size_guess: size, wetness_guess: wet, note: $("feed_note").value.trim() || null })] };
 }
-function buildWater() {
-  const c = common(); if (typeof c === "string") return c;
-  if (!state.water_chamber) return "Choose the chamber the water went into.";
-  const ml = Number($("water_ml").value);
-  if (!(ml > 0) || ml > WATER_MAX_ML) return `Enter the amount in mL, from 1 to ${WATER_MAX_ML}.`;
-  return { events: [event(c, "water", state.water_chamber, { value: ml, note: $("water_note").value.trim() || null })] };
-}
 function buildUnload() {
   const c = common(); if (typeof c === "string") return c;
   if (!state.unload_chamber) return "Choose the chamber that was emptied.";
@@ -647,7 +612,7 @@ function buildService() {
   if (!note) return "Say what was done.";
   return { events: [event(c, "service", state.service_chamber, { note })] };
 }
-const BUILD = { score: buildScore, feed: buildFeed, water: buildWater, unload: buildUnload, service: buildService };
+const BUILD = { score: buildScore, feed: buildFeed, unload: buildUnload, service: buildService };
 
 // ---- sending, with an offline queue
 async function insert(file, rows) {
@@ -724,7 +689,6 @@ function reset(t) {
     ["miss_reason", "crosscal_pair_id", "photo"].forEach((id) => { $(id).value = ""; });
     $("miss-box").hidden = true; $("score-box").hidden = false;
   } else if (t === "feed") { clearGroups(["feed_load"]); $("feed_grams").value = ""; $("feed_note").value = ""; }
-  else if (t === "water") { $("water_ml").value = ""; $("water_note").value = ""; }
   else if (t === "unload") { clearGroups(["unload_chamber"]); $("unload_note").value = ""; }
   else if (t === "service") { $("service_note").value = ""; }
 }
@@ -737,7 +701,6 @@ function done(t, built) {
   const e = built.events[0];
   return { feed: `Logged: ${BAND_LABEL[e.size_guess]} ${e.wetness_guess}` +
              (e.value ? ` (${e.value} g)` : "") + ` into chamber ${e.chamber}`,
-           water: `Logged: ${e.value} mL into chamber ${e.chamber}`,
     unload: `Logged: chamber ${e.chamber} emptied`, service: `Logged: service on chamber ${e.chamber}` }[t];
 }
 
@@ -1074,10 +1037,12 @@ function renderEntry(item, history) {
   });
   return box;
 }
-// History cards: Feed, Water, Unload and Service tabs, newest first. Service
+// History cards: Feed, Unload and Service tabs, newest first. Service
 // also lists data corrections; the harness's automatic "settings reloaded"
 // service notes are left out.
-const HISTORY = { feed: ["feed_tap"], water: ["water"], unload: ["unload"], service: ["service", "correction"] };
+// Water has no tab of its own any more: a feed's load counts food and water
+// together. Old water entries still show, and can be fixed, under Entries.
+const HISTORY = { feed: ["feed_tap"], unload: ["unload"], service: ["service", "correction"] };
 const HISTORY_LABEL = { feed_tap: "Feed", water: "Water", unload: "Unload", service: "Service", correction: "Data correction" };
 function historyDetail(r) {
   if (r.event === "feed_tap") return [r.size_guess ? BAND_LABEL[r.size_guess] : null, r.wetness_guess,
@@ -1146,8 +1111,10 @@ window.addEventListener("online", flushQueue);
 // A link straight to a tab: .../score/#status, #feed and so on. Charts moved to Insights.
 const linked = location.hash.slice(1);
 if (linked === "charts") location.replace("../insights/#sensors");
-const linkedBtn = document.querySelector(`#tabs button[data-tab="${CSS.escape(linked)}"]`);
-if (linkedBtn) showTab(linked);
+if (linked === "water") location.replace("#feed");      // the Water tab is gone: water goes in with the feed
+const tabLink = linked === "water" ? "feed" : linked;
+const linkedBtn = document.querySelector(`#tabs button[data-tab="${CSS.escape(tabLink)}"]`);
+if (linkedBtn) showTab(tabLink);
 setInterval(() => {
   if (document.hidden) return;
   if (tab === "status") loadStatus();
