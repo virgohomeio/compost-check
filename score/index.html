@@ -89,6 +89,18 @@ section.card h2 { margin: 0; font-size: 17px; text-wrap: balance; }
 input[type="text"], input[type="number"], textarea { width: 100%; padding: 10px 12px; border-radius: 8px;
   border: 1px solid var(--line); background: var(--bg); color: var(--ink); font: 16px var(--sans); }
 input[type="file"] { font: 14px var(--sans); color: var(--muted); max-width: 100%; }
+/* Photo picker: the camera straight away, or the gallery; previews to drop one before saving. */
+.picker { display: grid; gap: 8px; }
+.picker .pick-btns { display: flex; flex-wrap: wrap; gap: 8px; }
+.picker .pick-btns button { padding: 10px 14px; border-radius: 8px; border: 1px solid var(--line);
+  background: var(--panel); color: var(--ink); font: 15px var(--sans); cursor: pointer; }
+.picker .thumbs { display: flex; flex-wrap: wrap; gap: 8px; }
+.picker .thumb { position: relative; }
+.picker .thumb img { width: 72px; height: 72px; object-fit: cover; border-radius: 6px; border: 1px solid var(--line); display: block; }
+.picker .thumb button { position: absolute; top: -6px; right: -6px; width: 24px; height: 24px; border-radius: 50%;
+  border: 1px solid var(--line); background: var(--panel); color: var(--ink); font: 13px var(--sans);
+  line-height: 1; padding: 0; cursor: pointer; }
+.picker input[type="file"] { display: none; }
 textarea { min-height: 64px; resize: vertical; }
 
 .seg { display: flex; flex-wrap: wrap; gap: 6px; }
@@ -264,8 +276,8 @@ button:focus-visible, input:focus-visible, select:focus-visible, textarea:focus-
         <label><input type="checkbox" id="fresh_food_seen"> Fresh food visible on top</label>
       </div>
       <div class="field">
-        <label class="label" for="photo">Photos (optional, up to 10)</label>
-        <input type="file" id="photo" accept="image/*" multiple>
+        <span class="label">Photos (optional, up to 10)</span>
+        <div id="photo-picker"></div>
       </div>
       <div class="field">
         <label class="label" for="crosscal_pair_id">Cross-calibration pair ID</label>
@@ -512,6 +524,8 @@ $("missed").addEventListener("change", () => {
 });
 $("observer").value = store("p150-observer") || "";
 const whenPick = StudyTables.whenField($("when-field"), { url: SUPABASE_URL, key: SUPABASE_KEY, machine: () => serial() });
+const scorePhotos = photoPicker();
+$("photo-picker").appendChild(scorePhotos.el);
 
 // ---- tabs
 const SAVE_LABEL = { score: "Save score", feed: "Log feed", unload: "Log unload", service: "Log service" };
@@ -577,7 +591,7 @@ function buildScore() {
   row.smell_location = state.smell_location || (row.smell_level === 0 ? "none" : null);
   row.after_mix = $("after_mix").checked;
   row.fresh_food_seen = $("fresh_food_seen").checked;
-  const files = [...$("photo").files];
+  const files = scorePhotos.files();
   const bad = photoProblem(files, 0);
   if (bad) return bad;
   return { observations: [row], photos: files };
@@ -637,6 +651,40 @@ async function insert(file, rows) {
 }
 const MAX_PHOTOS = 10;
 const photoList = (v) => (v || "").split("|").filter(Boolean);
+// Two ways in: "Take photo" opens the phone's back camera directly (capture),
+// one shot per tap; "Choose photos" opens the gallery, several at once. Picked
+// photos collect below as previews, each with a button to drop it.
+function photoPicker() {
+  const box = document.createElement("div"); box.className = "picker";
+  const btns = document.createElement("div"); btns.className = "pick-btns";
+  const cam = document.createElement("input"); cam.type = "file"; cam.accept = "image/*";
+  cam.setAttribute("capture", "environment");
+  const lib = document.createElement("input"); lib.type = "file"; lib.accept = "image/*"; lib.multiple = true;
+  const camBtn = document.createElement("button"); camBtn.type = "button"; camBtn.textContent = "📷 Take photo";
+  const libBtn = document.createElement("button"); libBtn.type = "button"; libBtn.textContent = "🖼 Choose photos";
+  camBtn.addEventListener("click", () => cam.click());
+  libBtn.addEventListener("click", () => lib.click());
+  const thumbs = document.createElement("div"); thumbs.className = "thumbs";
+  let picked = [];
+  function draw() {
+    thumbs.textContent = "";
+    picked.forEach((f, i) => {
+      const t = document.createElement("div"); t.className = "thumb";
+      const img = document.createElement("img"); img.alt = `Photo ${i + 1}`; img.src = URL.createObjectURL(f);
+      img.addEventListener("load", () => URL.revokeObjectURL(img.src));
+      const x = document.createElement("button"); x.type = "button"; x.textContent = "✕";
+      x.setAttribute("aria-label", `Remove photo ${i + 1}`);
+      x.addEventListener("click", () => { picked.splice(i, 1); draw(); });
+      t.append(img, x); thumbs.appendChild(t);
+    });
+  }
+  [cam, lib].forEach((inp) => inp.addEventListener("change", () => {
+    picked = picked.concat([...inp.files]); inp.value = ""; draw();
+  }));
+  btns.append(camBtn, libBtn);
+  box.append(btns, cam, lib, thumbs);
+  return { el: box, files: () => picked.slice(), clear: () => { picked = []; draw(); } };
+}
 function photoProblem(files, already) {
   if (already + files.length > MAX_PHOTOS) return `Up to ${MAX_PHOTOS} photos per score; this would make ${already + files.length}.`;
   for (const f of files) {
@@ -692,7 +740,8 @@ function reset(t) {
     clearGroups(["squeeze", "smell_level", "smell_descriptor", "smell_location"]);
     $("smell-detail").hidden = true;
     ["after_mix", "fresh_food_seen", "missed"].forEach((id) => { $(id).checked = false; });
-    ["miss_reason", "crosscal_pair_id", "photo"].forEach((id) => { $(id).value = ""; });
+    ["miss_reason", "crosscal_pair_id"].forEach((id) => { $(id).value = ""; });
+    scorePhotos.clear();
     $("miss-box").hidden = true; $("score-box").hidden = false;
   } else if (t === "feed") { clearGroups(["feed_size", "feed_wet"]); $("feed_grams").value = ""; $("feed_note").value = ""; }
   else if (t === "unload") { clearGroups(["unload_chamber"]); $("unload_note").value = ""; }
@@ -961,8 +1010,8 @@ function editFields(kind, r) {
       line.append(name, view, rm); box.append(line);
     });
     f.push(["photo_keep", `Photos (${have.length})`, box, () => have.filter((p) => !removed.has(p))]);
-    const photo = input("file"); photo.accept = "image/*"; photo.multiple = true;
-    f.push(["photo_file", `Add or replace photos (up to ${MAX_PHOTOS} in all)`, photo, (e) => [...e.files]]);
+    const picker = photoPicker();
+    f.push(["photo_file", `Add or replace photos (up to ${MAX_PHOTOS} in all)`, picker.el, () => picker.files()]);
   } else {
     const note = document.createElement("textarea"); note.maxLength = 500; note.rows = 3; note.value = r.note || "";
     f.push(["note", "Note", note, txt]);
