@@ -157,6 +157,9 @@ table.log th { font-size: 12px; color: var(--muted); font-weight: 700; letter-sp
 .entry .sum { white-space: pre-line; }
 .entry .meta { font-size: 13px; color: var(--muted); }
 .entry .acts { display: flex; flex-wrap: wrap; gap: 8px; }
+.photo-edit { display: grid; gap: 6px; }
+.photo-line { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; }
+.photo-line.gone span { text-decoration: line-through; color: var(--muted); }
 .entry button { padding: 7px 14px; border-radius: 8px; border: 1px solid var(--line); background: var(--panel);
   color: var(--ink); font: inherit; cursor: pointer; }
 .entry button.primary { background: var(--accent); border-color: var(--accent); color: var(--accent-ink); }
@@ -911,7 +914,9 @@ function summary(kind, r) {
   if (kind === "water") return [r.value != null ? `${r.value} mL` : "amount not given", r.note].filter(Boolean).join(", ");
   return r.note || "no note";
 }
-function field(labelText, el) { const l = document.createElement("label"); l.append(labelText, el); return l; }
+function field(labelText, el) {
+  const l = document.createElement(el.tagName === "DIV" ? "div" : "label"); l.append(labelText, el); return l;
+}
 function select(options, value) {
   const s = document.createElement("select");
   options.forEach(([v, t]) => { const o = document.createElement("option"); o.value = v; o.textContent = t; s.appendChild(o); });
@@ -937,12 +942,36 @@ function editFields(kind, r) {
            ["smell_where", "Smelled at", select(opt(["none", "material", "room"]), r.smell_where), txt],
            ["missed", "Missed", missed, (e) => e.checked],
            ["miss_reason", "Why missed", input("text", r.miss_reason), txt]);
+    // Each photo can be viewed or removed; a replacement is a removal plus an
+    // added photo. A removed file stays in storage, and the change log keeps
+    // the old list, so a removal can be undone from there.
+    const have = photoList(r.photo), removed = new Set();
+    const box = document.createElement("div"); box.className = "photo-edit";
+    if (!have.length) { const none = document.createElement("span"); none.className = "hint"; none.textContent = "No photo yet."; box.append(none); }
+    have.forEach((p, i) => {
+      const line = document.createElement("div"); line.className = "photo-line";
+      const name = document.createElement("span"); name.textContent = `Photo ${i + 1}`;
+      const view = button("View"), rm = button("Remove", "warn");
+      view.addEventListener("click", () => showPhoto(p));
+      rm.addEventListener("click", () => {
+        if (removed.has(p)) removed.delete(p); else removed.add(p);
+        const gone = removed.has(p);
+        rm.textContent = gone ? "Undo remove" : "Remove"; line.classList.toggle("gone", gone);
+      });
+      line.append(name, view, rm); box.append(line);
+    });
+    f.push(["photo_keep", `Photos (${have.length})`, box, () => have.filter((p) => !removed.has(p))]);
     const photo = input("file"); photo.accept = "image/*"; photo.multiple = true;
-    f.push(["photo_file", `Add photos (has ${photoList(r.photo).length} of ${MAX_PHOTOS})`, photo, (e) => [...e.files]]);
+    f.push(["photo_file", `Add or replace photos (up to ${MAX_PHOTOS} in all)`, photo, (e) => [...e.files]]);
   } else {
     const note = document.createElement("textarea"); note.maxLength = 500; note.rows = 3; note.value = r.note || "";
     f.push(["note", "Note", note, txt]);
   }
+  // The time, with the same choices as a new entry, plus Keep (the default).
+  const whenBox = document.createElement("div"); whenBox.className = "field";
+  const picker = StudyTables.whenField(whenBox, { url: SUPABASE_URL, key: SUPABASE_KEY,
+    machine: () => r.machine, keep: true, at: entryTime(r), backDays: 30 });
+  f.push(["when", "", whenBox, () => picker]);
   return f;
 }
 function button(text, cls) { const b = document.createElement("button"); b.type = "button"; b.textContent = text; if (cls) b.className = cls; return b; }
@@ -990,23 +1019,39 @@ function renderEntry(item, history) {
     save.addEventListener("click", async () => {
       const name = who(); if (!name) return;
       const changes = {};
-      let photoFile = null;
+      let photoFile = null, keepPhotos = null, picker = null;
       fields.forEach(([key, , el, read]) => {
         const v = read(el);
         if (key === "photo_file") { photoFile = v; return; }
+        if (key === "photo_keep") { keepPhotos = v; return; }
+        if (key === "when") { picker = v; return; }
         if ((v ?? null) !== (row[key] ?? null)) changes[key] = v;
       });
-      if (photoFile && photoFile.length) {
-        const have = photoList(row.photo);
-        const bad = photoProblem(photoFile, have.length);
-        if (bad) { entriesSay(bad, "err"); return; }
-        entriesSay(`Uploading ${photoFile.length} photo${photoFile.length > 1 ? "s" : ""}…`);
-        // new files are added to the ones the score has; nothing in storage is replaced
-        const [paths, failed] = await uploadPhotos(photoFile, { ts_utc: nowIso(), serial: serial(),
-          chamber: changes.chamber || row.chamber, obs_id: id }, have.length);
-        if (!paths.length) { entriesSay("The photos could not be uploaded, so nothing was changed. Try again.", "err"); return; }
-        if (failed) entriesSay(`${failed} photo${failed > 1 ? "s" : ""} could not be uploaded; saving the rest.`, "err");
-        changes.photo = have.concat(paths).join("|");
+      if (picker) {
+        const late = picker.error();
+        if (late) { entriesSay(late, "err"); return; }
+        const iso = picker.iso();                       // null: Keep
+        if (iso) {
+          const parts = StudyTables.when(iso);
+          ["day", "week", "time", "utc_offset"].forEach((k) => {
+            if (String(parts[k]) !== String(row[k] ?? "")) changes[k] = parts[k];
+          });
+        }
+      }
+      if (keepPhotos) {
+        let photos = keepPhotos;
+        if (photoFile && photoFile.length) {
+          const bad = photoProblem(photoFile, photos.length);
+          if (bad) { entriesSay(bad, "err"); return; }
+          entriesSay(`Uploading ${photoFile.length} photo${photoFile.length > 1 ? "s" : ""}…`);
+          // new files are added under new names; nothing in storage is overwritten
+          const [paths, failed] = await uploadPhotos(photoFile, { ts_utc: nowIso(), serial: serial(),
+            chamber: changes.chamber || row.chamber, obs_id: id }, photoList(row.photo).length);
+          if (!paths.length) { entriesSay("The photos could not be uploaded, so nothing was changed. Try again.", "err"); return; }
+          if (failed) entriesSay(`${failed} photo${failed > 1 ? "s" : ""} could not be uploaded; saving the rest.`, "err");
+          photos = photos.concat(paths);
+        }
+        if (photos.join("|") !== (row.photo || "")) changes.photo = photos.join("|") || null;
       }
       if (kind === "score" && "squeeze" in changes) changes.moisture = moistureClass(changes.squeeze);
       if (!Object.keys(changes).length) { entriesSay("Nothing was changed."); area.textContent = ""; return; }
@@ -1015,7 +1060,13 @@ function renderEntry(item, history) {
         await rpc("update_entry", { p_table: table, p_id: id, p_changes: changes, p_by: name, p_reason: reason.value.trim() || null });
         entriesSay(`Saved. The change is in the change log under ${name}.`, "ok");
         loadEntries(); loadRecent();
-      } catch (e) { entriesSay(`Not changed: ${e.message}`, "err"); save.disabled = false; }
+      } catch (e) {
+        // before the database is updated to allow it (Supabase/entry_time_edit.sql)
+        const msg = /field (day|week|time|utc_offset) cannot be changed/.test(e.message)
+          ? "Changing the time is not switched on in the database yet (it needs entry_time_edit.sql run once). Nothing was changed."
+          : `Not changed: ${e.message}`;
+        entriesSay(msg, "err"); save.disabled = false;
+      }
     });
   });
   delBtn.addEventListener("click", () => {

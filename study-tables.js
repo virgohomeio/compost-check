@@ -245,8 +245,14 @@
   // time and a gentle note when the chosen time is nowhere near a lid opening.
   // whenField(box, {url, key, machine: () => serial}) fills `box` and returns
   // {iso(), error(), reset(), refresh()}.
+  // "When did it happen?" for a new entry: Now, or Earlier in the last day,
+  // with the latest lid opening offered. For an edit, opts.keep adds Keep
+  // (the default: the time stays as it is), opts.at is the entry's current
+  // time (Earlier starts there and offers the lid opening nearest to it) and
+  // opts.backDays widens how far back Earlier may go.
   function whenField(box, opts) {
     const DAY = 86400000, NEAR = 3600000;
+    const BACK = (opts.backDays || 1) * DAY;
     if (!document.getElementById("when-field-style")) {
       const st = document.createElement("style"); st.id = "when-field-style";
       st.textContent = ".when-row{display:grid;gap:8px}.when-row input{font:inherit;padding:9px 10px;" +
@@ -256,24 +262,31 @@
       document.head.appendChild(st);
     }
     box.innerHTML = '<span class="label">When did it happen?</span>' +
-      '<div class="seg"><button type="button" data-when="now" aria-pressed="true">Now</button>' +
+      '<div class="seg">' + (opts.keep ? '<button type="button" data-when="keep" aria-pressed="true">Keep</button>' : "") +
+      `<button type="button" data-when="now" aria-pressed="${opts.keep ? "false" : "true"}">Now</button>` +
       '<button type="button" data-when="earlier" aria-pressed="false">Earlier</button></div>' +
       '<div class="when-row" hidden><input type="datetime-local" aria-label="When it happened">' +
       '<button type="button" class="when-suggest" hidden></button><p class="hint when-note"></p></div>';
-    const [nowBtn, earlierBtn] = box.querySelectorAll("[data-when]");
+    const keepBtn = box.querySelector('[data-when="keep"]');
+    const nowBtn = box.querySelector('[data-when="now"]'), earlierBtn = box.querySelector('[data-when="earlier"]');
     const row = box.querySelector(".when-row"), input = row.querySelector("input");
     const suggest = row.querySelector(".when-suggest"), note = row.querySelector(".when-note");
-    let mode = "now", openings = [];
+    let mode = opts.keep ? "keep" : "now", openings = [];
     const pad2 = (n) => String(n).padStart(2, "0");
     const local = (ms) => { const d = new Date(ms);
       return `${d.getFullYear()}-${pad2(d.getMonth() + 1)}-${pad2(d.getDate())}T${pad2(d.getHours())}:${pad2(d.getMinutes())}`; };
     const hm = (ms) => { const d = new Date(ms); return `${pad2(d.getHours())}:${pad2(d.getMinutes())}`; };
     function setMode(m) {
       mode = m;
+      if (keepBtn) keepBtn.setAttribute("aria-pressed", String(m === "keep"));
       nowBtn.setAttribute("aria-pressed", String(m === "now"));
       earlierBtn.setAttribute("aria-pressed", String(m === "earlier"));
       row.hidden = m !== "earlier";
-      if (m === "earlier") { input.min = local(Date.now() - DAY); input.max = local(Date.now()); refresh(); }
+      if (m === "earlier") {
+        input.min = local(Date.now() - BACK); input.max = local(Date.now());
+        if (!input.value && opts.at) input.value = local(Date.parse(opts.at));
+        refresh();
+      }
     }
     function checkNear() {
       const t = Date.parse(input.value);
@@ -286,7 +299,8 @@
       openings = []; suggest.hidden = true;
       if (!m || mode !== "earlier") return;
       try {
-        const since = when(new Date(Date.now() - DAY).toISOString()).day;
+        const around = opts.at ? Date.parse(opts.at) : Date.now();
+        const since = when(new Date(Math.max(around - DAY, Date.now() - BACK)).toISOString()).day;
         const res = await fetch(`${opts.url}/rest/v1/events?machine=eq.${encodeURIComponent(m)}` +
           `&event=in.(lid_open,lid_close)&day=gte.${since}&order=day.asc,time.asc&limit=1000`,
           { headers: { apikey: opts.key, Authorization: `Bearer ${opts.key}` }, cache: "no-store" });
@@ -298,32 +312,41 @@
           else if (open !== null) { openings.push([open, t]); open = null; }
         });
         if (open !== null) openings.push([open, Date.now()]);          // still open
-        const last = openings[openings.length - 1];
+        // a new entry: the latest opening; an edit: the one nearest the entry's time
+        const last = opts.at && openings.length
+          ? openings.reduce((a, b) => (Math.abs(b[1] - around) < Math.abs(a[1] - around) ? b : a))
+          : openings[openings.length - 1];
         if (last) {
-          suggest.textContent = `Last lid opening: ${hm(last[0])}–${hm(last[1])} → use ${hm(last[1])}`;
+          const day = (ms) => (new Date(ms).toDateString() === new Date().toDateString() ? "" :
+            new Date(ms).toLocaleDateString([], { month: "short", day: "numeric" }) + " ");
+          suggest.textContent = `${opts.at ? "Nearest" : "Last"} lid opening: ${day(last[0])}${hm(last[0])}–${hm(last[1])} → use ${hm(last[1])}`;
           suggest.onclick = () => { input.value = local(last[1]); checkNear(); };
           suggest.hidden = false;
         }
         checkNear();
       } catch (e) { /* the time can still be typed */ }
     }
+    if (keepBtn) keepBtn.addEventListener("click", () => setMode("keep"));
     nowBtn.addEventListener("click", () => setMode("now"));
     earlierBtn.addEventListener("click", () => setMode("earlier"));
     input.addEventListener("change", checkNear);
     return {
+      mode: () => mode,
       iso() {
+        if (mode === "keep") return null;
         if (mode === "now" || !input.value) return new Date().toISOString().replace(/\.\d{3}Z$/, "Z");
         return new Date(Date.parse(input.value)).toISOString().replace(/\.\d{3}Z$/, "Z");
       },
       error() {
-        if (mode === "now") return "";
+        if (mode === "now" || mode === "keep") return "";
         const t = Date.parse(input.value);
         if (!input.value || isNaN(t)) return "Pick when it happened, or choose Now.";
         if (t > Date.now() + 60000) return "That time is in the future.";
-        if (t < Date.now() - DAY) return "Only the last 24 hours can be entered.";
+        if (t < Date.now() - BACK) return opts.backDays > 1
+          ? `Only the last ${opts.backDays} days can be picked.` : "Only the last 24 hours can be entered.";
         return "";
       },
-      reset() { input.value = ""; note.textContent = ""; setMode("now"); },
+      reset() { input.value = ""; note.textContent = ""; setMode(opts.keep ? "keep" : "now"); },
       refresh,
     };
   }
