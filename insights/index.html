@@ -473,6 +473,7 @@ async function reload() {
     const d = await mine;
     if (mine !== loading) return;
     data = d;
+    data.loadedAt = Date.now();
     const n = d.readings.length + d.machine.length + d.decisions.length + d.events.length + d.observations.length;
     $("status-line").textContent = `${serial()} · ${hours ? `last ${hours >= 24 ? hours / 24 + " day" + (hours > 24 ? "s" : "") : hours < 1 ? Math.round(hours * 60) + " min" : hours + " h"}` : "all time"} · ${n} rows · updated ${new Date().toLocaleTimeString([], { hour: "2-digit", minute: "2-digit", second: "2-digit" })}`;
     render();
@@ -1151,9 +1152,13 @@ async function renderWeekly() {
 }
 
 // Red banner when a scheduled decision is more than 15 minutes overdue, on
-// every tab, like the open-lid warning. Judged on the newest decision loaded.
+// every tab, like the open-lid warning. Judged on the newest decision loaded,
+// and only on data loaded in the last 5 minutes: a page left in the
+// background overnight must not call this morning's decisions missing.
+const LATE_DATA_MAX_MS = 5 * 60000;
 function renderLate() {
   const el = $("late"), dec = data ? data.decisions : [];
+  if (!data || Date.now() - (data.loadedAt || 0) > LATE_DATA_MAX_MS) { el.hidden = true; el.innerHTML = ""; return; }
   const slot = nextDecision().getTime() - 4 * H * 1000;
   const last = dec.length ? sec(dec[dec.length - 1].ts_utc) * 1000 : null;
   const late = last != null && Date.now() - slot > 15 * 60000 && last < slot - 5 * 60000;
@@ -1238,6 +1243,10 @@ document.addEventListener("visibilitychange", () => { if (!document.hidden) poll
 reload();
 pollLid();
 setInterval(() => { if (!document.hidden) reload(); }, 60000);
+// back from the background: fresh data at once, not up to a minute later
+document.addEventListener("visibilitychange", () => {
+  if (!document.hidden && data && Date.now() - (data.loadedAt || 0) > 60000) reload();
+});
 </script>
 </body>
 </html>
