@@ -132,8 +132,8 @@ nav.pages a:focus-visible { outline: 2px solid var(--moss); outline-offset: 2px;
   <dl class="facts">
     <div><dt>Decisions</dt><dd>every 4 h, per chamber</dd></div>
     <div><dt>Readings</dt><dd>every 42 s</dd></div>
-    <div><dt>Actions in use</dt><dd>A1 and A3 (of A0–A4)</dd></div>
-    <div><dt>Policy now</dt><dd>random, 50 % each</dd></div>
+    <div><dt>Actions in use</dt><dd>all five, A0–A4 (since 21 Oct)</dd></div>
+    <div><dt>Policy now</dt><dd>random among what the latest score allows</dd></div>
   </dl>
   <div class="links">
     <a href="https://virgohomeio.github.io/compost-check/simple/" target="_blank" rel="noopener">Quick score</a>
@@ -166,10 +166,12 @@ cd RND_AI_DynamicAlgo</pre><button type="button">Copy</button></div>
 
     <li class="step"><span class="n">ii</span><div class="body">
       <h3>The settings file: what it must say</h3>
-      <p>Each machine has its own settings file on each laptop: <code>RL\harness\config\machine_<b class="ph">&lt;NUM&gt;</b>.yaml</code>, named after the last three digits of its serial, so <code>machine_312.yaml</code> for <code>LL01-00000000312</code> (step 4 makes it). It never goes to GitHub, so a pull never brings these settings: check them by hand on every laptop. Open the file in Notepad and make these lines read as below. Lines under <code>transport:</code> and <code>firmware:</code> keep their two spaces in front; every other line has none. If a line is missing, add it at the end of the file.</p>
+      <p>Each machine has its own settings file on each laptop: <code>RL\harness\config\machine_<b class="ph">&lt;NUM&gt;</b>.yaml</code>, named after the last three digits of its serial, so <code>machine_312.yaml</code> for <code>LL01-00000000312</code> (step 4 makes it). It never goes to GitHub, so a pull never brings these settings: check them by hand on every laptop. Open the file in Notepad and make these lines read as below. Lines under <code>transport:</code>, <code>safety:</code> and <code>firmware:</code> keep their two spaces in front (spaces, never a tab); every other line has none. If a line is missing, add it at the end of the file.</p>
       <div class="cmd"><pre>serial: <b class="ph">&lt;SERIAL&gt;</b>
 transport:
   uart: {port: <b class="ph">&lt;PORT&gt;</b>, baud: 115200, timeout_s: 0.5}
+safety:
+  link_retry_s: 3
 gas_saturation_ohm: 102400000
 ptc_guard_c: {off_at: 58, on_below: 51, alarm_at: 75}
 firmware:
@@ -177,8 +179,8 @@ firmware:
   start_process_on_exit: false
 stage: 1
 policy: {kind: random}
-scores_drive_decisions: false
-firmware_modes_only: true</pre><button type="button">Copy</button></div>
+scores_drive_decisions: true
+firmware_modes_only: false</pre><button type="button">Copy</button></div>
       <p>Replace <b class="ph">&lt;SERIAL&gt;</b> with the machine's serial (step 3) and <b class="ph">&lt;PORT&gt;</b> with this laptop's port for it (step 2).</p>
       <div class="table-wrap"><table>
         <thead><tr><th>Line</th><th>What it is</th><th>Changes when</th></tr></thead>
@@ -186,8 +188,10 @@ firmware_modes_only: true</pre><button type="button">Copy</button></div>
           <tr><td><code>serial:</code></td><td>the machine this laptop drives (step 3 reads it)</td><td><b>new machine</b></td></tr>
           <tr><td><code>port:</code> inside <code>uart:</code></td><td>where the USB cable shows up on this laptop (step 2 finds it)</td><td><b>new laptop</b>, or a new machine or cable</td></tr>
           <tr><td><code>stop_process_on_start</code>, <code>start_process_on_exit</code></td><td><code>false</code>: these machines take commands directly and refuse the hand-over</td><td>never, for now</td></tr>
-          <tr><td><code>firmware_modes_only</code></td><td><code>true</code>: decisions use only A1 light and A3 heavy</td><td>only when the study says so</td></tr>
-          <tr><td><code>scores_drive_decisions</code></td><td><code>false</code>: scores are recorded, not used to steer</td><td>only when the study says so</td></tr>
+          <tr><td><code>firmware_modes_only</code></td><td><code>false</code>: decisions use all five settings, A0 to A4 (<code>true</code> would limit them to A1 light and A3 heavy)</td><td>only when the study says so</td></tr>
+          <tr><td><code>scores_drive_decisions</code></td><td><code>true</code>: the latest score narrows which settings a decision may draw (the guardrails, under <a href="#the-five-actions">The five actions</a>)</td><td>only when the study says so</td></tr>
+          <tr><td><code>link_retry_s</code> under <code>safety:</code></td><td>how soon the harness tries the machine again after the USB link is lost</td><td>never, for now</td></tr>
+          <tr><td><code>usb_reset</code> inside <code>uart:</code> (optional)</td><td>the automatic USB reset is on without it, first try after 30 s of lost link. A machine whose link drops often can start sooner, for example <code>uart: {port: COM5, baud: 115200, timeout_s: 0.5, usb_reset: {after_s: 5}}</code> (305 uses this)</td><td>only for a machine with frequent drops</td></tr>
           <tr><td><code>gas_saturation_ohm</code>, <code>ptc_guard_c</code>, <code>stage</code>, <code>policy</code></td><td>the study's current values</td><td>only when the study says so</td></tr>
         </tbody>
       </table></div>
@@ -352,7 +356,8 @@ python -m harness.api.certs --out harness\secrets</pre><button type="button">Cop
       <div class="cmd"><pre>python -m harness.run --config harness\config\machine_<b class="ph">&lt;NUM&gt;</b>.yaml --watchdog</pre><button type="button">Copy</button></div>
       <ul>
         <li>The harness pauses the firmware's program and runs the blower, heaters and mixers itself.</li>
-        <li>It picks one of A0 to A4 at random for each chamber at each 4-hourly decision.</li>
+        <li>At each 4-hourly decision it picks a setting at random for each chamber, from the ones the chamber's latest score allows (see <a href="#the-five-actions">The five actions</a>).</li>
+        <li><b>Run both terminals as administrator</b> (VS Code or PowerShell opened with "Run as administrator"). Then, when the USB link stalls, the harness and the safety guard reset the machine's USB port by themselves; the Health tab shows each reset. In a normal terminal they cannot, and a stalled link needs the cable unplugged and plugged back in.</li>
         <li>Every row goes to the local CSV files and to Supabase.</li>
       </ul>
     </div></li>
@@ -405,22 +410,34 @@ python -m harness.api.certs --out harness\secrets</pre><button type="button">Cop
   <div class="phase-head">
     <span class="eyebrow">Reference</span>
     <h2 id="the-five-actions">The five actions</h2>
-    <p>Every 4 hours each chamber gets one action. A1 and A3 are the firmware's own light and heavy modes; A0, A2 and A4 are built from them. The blower always runs at 30 % power, and mixing starts after 20.7 min of idle time in every action.</p>
+    <p>Every 4 hours each chamber gets one setting. Since 21 Oct 2026 each one is its own mode, set in <code>RL\harness\config\actions.yaml</code>; heavy is still the firmware's heavy mode. The blower always runs at 30 % power for 47.5 s at a time; the settings differ in how long it rests, how hot the pads run and how often the chamber mixes.</p>
   </div>
   <div class="table-wrap"><table>
     <thead><tr><th>Setting</th><th>A0 dormant</th><th>A1 light</th><th>A2 middle</th><th>A3 heavy</th><th>A4 boost</th></tr></thead>
     <tbody>
-          <tr><td>Source</td><td>Built from light</td><td><b>Firmware light mode</b></td><td>Built: halfway</td><td><b>Firmware heavy mode</b></td><td>Built from heavy</td></tr>
-          <tr><td>Blower on / off</td><td>47.5 s / 930 s</td><td>47.5 s / 930 s</td><td>47.5 s / 329 s</td><td>47.5 s / 186 s</td><td>47.5 s / 71 s</td></tr>
-          <tr><td>Air time</td><td>4.9 %</td><td>4.9 %</td><td>12.6 %</td><td>20.3 %</td><td>40 %</td></tr>
-          <tr><td>Pad heaters</td><td><b>off</b></td><td>to 70 °C</td><td>to 70 °C</td><td>to 70 °C</td><td>to 70 °C</td></tr>
-          <tr><td>Blower PTC</td><td><b>off</b></td><td>off 58, on below 51 °C</td><td>off 58, on below 51 °C</td><td>off 58, on below 51 °C</td><td>off 58, on below 51 °C</td></tr>
-          <tr><td>Mix phases</td><td>12 s / 6 s</td><td>12 s / 6 s</td><td>18 s / 9 s</td><td>24 s / 12 s</td><td>24 s / 12 s</td></tr>
-          <tr><td>What it is for</td><td>Curing chamber: air on, heat off</td><td>Light household</td><td>Between the two modes</td><td>Heavy household</td><td>Big wet feed, or too wet</td></tr>
+          <tr><td>Blower on / off</td><td>47.5 s / 930 s</td><td>47.5 s / 700 s</td><td>47.5 s / 450 s</td><td>47.5 s / 186 s</td><td>47.5 s / 60 s</td></tr>
+          <tr><td>Air time</td><td>4.9 %</td><td>6.4 %</td><td>9.5 %</td><td>20.3 %</td><td>44.2 %</td></tr>
+          <tr><td>Pad heaters</td><td><b>50–60 °C, half the time at most</b></td><td>to 70 °C</td><td>to 70 °C</td><td>to 70 °C</td><td>to 70 °C</td></tr>
+          <tr><td>Blower PTC</td><td colspan="5">on with the blower in every setting, held to the band in <code>ptc_guard_c</code></td></tr>
+          <tr><td>Mixes every</td><td>120 min</td><td>90 min</td><td>60 min</td><td>20.7 min</td><td>10 min</td></tr>
+          <tr><td>Mix phases</td><td>12 s / 6 s</td><td>12 s / 6 s</td><td>24 s / 12 s</td><td>24 s / 12 s</td><td>24 s / 12 s</td></tr>
+          <tr><td>What it is for</td><td>Curing, or a chamber getting dry</td><td>Light household</td><td>Between the two</td><td>Heavy household (<b>firmware heavy</b>)</td><td>Big wet feed, or too wet</td></tr>
     </tbody>
   </table></div>
-  <div class="note"><p><strong>In use now: A1 and A3 only.</strong> <code>firmware_modes_only: true</code> in <code>machine_<b class="ph">&lt;NUM&gt;</b>.yaml</code> limits every decision to the two firmware modes, 50 % each, until further notice. A4 needs an odour smoke test of the enclosure before it is used.</p></div>
-  <p>Differences from the firmware: the PTC switches off at 58 °C (back on below 51, as in BUILD_PLAN) instead of 70, because it overshoots by about 12 °C and should peak near the firmware's 70 °C; heavy's mix phases are 24 s / 12 s where the firmware source uses 12 s / 6 s.</p>
+  <p>The two chambers share one blower. When they are on different settings, the fed chamber's setting runs the blower (<code>arbitration: fed_chamber_wins</code>); mixing and pads stay per chamber. Boost runs the blower almost half the time, so the room can smell more while it runs, and its limit (<code>max_safe_duty_pct</code>) is 45 %.</p>
+
+  <h3>The guardrails: what the latest score allows</h3>
+  <p>With <code>scores_drive_decisions: true</code>, each chamber's latest score narrows the choice, and the harness draws at random, evenly, within what is left. Nobody picks a setting by hand.</p>
+  <div class="table-wrap"><table>
+    <thead><tr><th>Latest score</th><th>Allowed</th><th>Why</th></tr></thead>
+    <tbody>
+      <tr><td>Squeeze 3 to 5, and no strong sour or garbage smell at the material</td><td>all five</td><td>the chamber is fine; every setting teaches something</td></tr>
+      <tr><td>Squeeze 1 or 2 (dry)</td><td>A0 dormant, A1 light</td><td>less air, so it dries no further. It does not add water: wet food does</td></tr>
+      <tr><td>Squeeze 6 (slurry), or smell level 2, sour or garbage, at the material</td><td>A3 heavy, A4 boost</td><td>more air to dry it and clear the smell</td></tr>
+      <tr><td>No score in the last 30 hours</td><td>A1 light, A2 middle, A3 heavy</td><td>nothing extreme without a recent look</td></tr>
+    </tbody>
+  </table></div>
+  <div class="note"><p><strong>Changing a setting.</strong> Edit <code>actions.yaml</code>, then stop the harness (Ctrl+C once) and start it again: unlike <code>machine_<b class="ph">&lt;NUM&gt;</b>.yaml</code>, it is read only at start. Before using a changed setting on a machine, hold each setting for 17 minutes and check it: <code>python -m harness.tools.action_dry_run --config harness\config\machine_<b class="ph">&lt;NUM&gt;</b>.yaml</code> (run in <b>RL</b>, harness stopped). Decisions before 21 Oct ran an earlier ladder (light's blower for A0 with heaters off, A2 at 12.6 %, A4 at 40 %, all mixing every 20.7 min); the learning tells them apart by the air and mixing each decision actually got.</p></div>
 </section>
 
 <section class="phase">
@@ -467,7 +484,7 @@ python -m harness.api.certs --out harness\secrets</pre><button type="button">Cop
       <tr><td>The laptop crashes or the harness dies</td><td>The safety guard notices the harness has stopped answering, sends the safe state and hands the machine back to the firmware.</td></tr>
       <tr><td>Another laptop takes over the same machine</td><td>First stop this laptop's harness (Ctrl+C) and its safety guard, and move the USB cable: only one laptop can drive a machine. Then do steps 1 to 7 there with the same serial, and step 11. It reads Supabase and carries on: the actions already chosen for the current 4-hour block stay, the sensor history and latest scores are reloaded, and the next decision is the one the old laptop would have made.</td></tr>
       <tr><td>A laptop moves to a different machine</td><td>Use that machine's own <code>machine_<b class="ph">&lt;NUM&gt;</b>.yaml</code>, or make one (step 4). Each machine keeps its own cycle under its own serial, so neither machine's cycle is disturbed.</td></tr>
-      <tr><td>You change <code>machine_<b class="ph">&lt;NUM&gt;</b>.yaml</code> during a run</td><td>No restart needed. The change applies at the next 4-hourly decision.</td></tr>
+      <tr><td>You change <code>machine_<b class="ph">&lt;NUM&gt;</b>.yaml</code> during a run</td><td>No restart needed for the study settings (<code>scores_drive_decisions</code>, <code>firmware_modes_only</code>, <code>policy</code>): they apply at the next 4-hourly decision. A change to <code>uart</code> or <code>safety</code>, or to <code>actions.yaml</code>, needs a restart.</td></tr>
     </tbody>
   </table></div>
   <p>Only one laptop can drive a machine at a time. Stop the old one before starting the new one.</p>
@@ -503,17 +520,17 @@ python -m Machine_Learning train --since &lt;STUDY START DATE&gt; --out runs\r1<
   <div class="phase-head">
     <span class="eyebrow">Optional</span>
     <h2>Weekly feed profile</h2>
-    <p>A label for how each chamber was fed that week. The machine runs the same without it.</p>
+    <p>A label for how each chamber was fed that week. The machine runs the same without it, and you no longer need to set it: training works it out from the feeds logged on the pages.</p>
   </div>
   <div class="table-wrap"><table>
     <thead><tr><th>Field</th><th>Set by</th><th>Used for</th></tr></thead>
     <tbody>
-      <tr><td><b>Role</b>: fed or curing</td><td>Automatic. A chamber is fed if a feed was logged in the last 24 hours, otherwise curing.</td><td>Deciding which chamber sets the shared blower when the two chambers want different air.</td></tr>
-      <tr><td><b>Profile</b>: heavy, light, switcher, holiday, binge or none</td><td>You, once a week per chamber, with the command below.</td><td>Never an input to any policy. Training uses it to compare policies week type by week type, and the matched comparison uses it to pick heavy or light mode.</td></tr>
+      <tr><td><b>Role</b>: fed or curing</td><td>Automatic, from the sensors: a chamber is fed if a feed was sensed in the last 24 hours (its humidity jumped after the lid closed), otherwise curing. Logged feeds never set it.</td><td>Deciding which chamber sets the shared blower when the two chambers want different air.</td></tr>
+      <tr><td><b>Profile</b>: heavy, light, switcher, holiday, binge or curing</td><td>Automatic, in training, from each chamber-week's logged feeds. A profile set with the command below wins over the worked-out one; it is only for a week the feeds would get wrong.</td><td>Never an input to any policy. Training uses it to compare policies week type by week type, and the matched comparison uses it to pick heavy or light mode.</td></tr>
     </tbody>
   </table></div>
   <div class="note">
-    <p><strong>Training needs it.</strong> Training only exports a learned policy if it holds up on each week type, and it can only check that on weeks that carry a profile. Weeks left as none are still used for learning but cannot count toward that check.</p>
+    <p><strong>Training needs it.</strong> Training only exports a learned policy if it holds up on each week type, so log every feed on the pages: a week with no logged feeds counts as curing.</p>
   </div>
   <p class="where">Run in <b>RND_AI_DynamicAlgo</b>, while the harness is running. Change <code>chamber</code> (L or R) and <code>profile</code> each time.</p>
   <div class="cmd"><pre>$t = (Get-Content RL\harness\secrets\api_token -Raw).Trim()
@@ -537,6 +554,7 @@ Invoke-RestMethod -Method Post -Uri https://localhost:8443/intervals -SkipCertif
       <tr><td>"placeholders are not confirmed"</td><td>Control is still locked on this laptop. See step 5.</td></tr>
       <tr><td>"the firmware refused STOP_PROCESS"</td><td>In this laptop's <code>machine_<b class="ph">&lt;NUM&gt;</b>.yaml</code>, under <code>firmware:</code>, set <code>stop_process_on_start: false</code> and <code>start_process_on_exit: false</code> (step 4).</td></tr>
       <tr><td>"Access denied" on the port while another laptop ran the machine</td><td>The other laptop still holds the cable. Stop its harness and safety guard first.</td></tr>
+      <tr><td>"link lost after 3 errors … port stalled"</td><td>Nothing, if the terminals run as administrator: the next line says "automatic USB reset … done" and then "link restored", usually within 15 s. If no reset follows, the terminal is not an administrator one: unplug the USB cable, plug it back in, and next time start both as administrator.</td></tr>
       <tr><td>A test fails</td><td>Don't start. Save the output.</td></tr>
       <tr><td>Nothing new on Insights after 5 minutes</td><td>Check the terminal for upload errors. Rows are still saved locally and sent later.</td></tr>
       <tr><td>Mixers never run</td><td>A lid reads open. Run the machine check (step 8).</td></tr>
@@ -544,7 +562,7 @@ Invoke-RestMethod -Method Post -Uri https://localhost:8443/intervals -SkipCertif
     </tbody>
   </table></div>
 </section>
-<footer>Settings this guide relies on, in <code>RL\harness\config\machine_<b class="ph">&lt;NUM&gt;</b>.yaml</code>: <code>policy: random</code>, <code>scores_drive_decisions: false</code>, <code>arbitration: fed_chamber_wins</code>. Supabase tables: sensor_readings, machine_status, decisions, events, scores, feed_weeks, blocks. Written 2 Oct 2026.</footer>
+<footer>Settings this guide relies on, in <code>RL\harness\config\machine_<b class="ph">&lt;NUM&gt;</b>.yaml</code>: <code>policy: random</code>, <code>scores_drive_decisions: true</code>, <code>firmware_modes_only: false</code>, <code>arbitration: fed_chamber_wins</code>; the five settings in <code>actions.yaml</code>. Supabase tables: sensor_readings, machine_status, decisions, events, scores, feed_weeks, blocks. Written 2 Oct 2026, updated 22 Oct 2026.</footer>
 </div>
 
 <script>
