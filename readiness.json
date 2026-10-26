@@ -1,0 +1,115 @@
+{
+ "generated": "2026-10-26T15:14",
+ "targets": {
+  "decisions": 750,
+  "per_setting": 125,
+  "share": 0.15,
+  "scores": 175,
+  "profile_weeks": 3,
+  "decision_log_pct": 98.0,
+  "readings_missing_pct": 1.0
+ },
+ "rows": [
+  {
+   "n": 1,
+   "condition": "Decisions applied, all settings",
+   "target": ">= 750",
+   "now": "475",
+   "met": false,
+   "forecast": "~03 Nov"
+  },
+  {
+   "n": 2,
+   "condition": "Decisions per setting",
+   "target": ">= 125 each",
+   "now": "dormant 30  light 214  middle 39  heavy 167  boost 25",
+   "met": false,
+   "forecast": "dormant ~09 Nov; middle ~07 Nov; boost ~09 Nov"
+  },
+  {
+   "n": 3,
+   "condition": "Settings balance (when all five allowed)",
+   "target": ">= 15% each",
+   "now": "dormant 25%  light 15%  middle 32%  heavy 7%  boost 22%  (of 60)",
+   "met": false,
+   "forecast": ""
+  },
+  {
+   "n": 4,
+   "condition": "Scores",
+   "target": ">= 175",
+   "now": "97",
+   "met": false,
+   "forecast": "~04 Nov"
+  },
+  {
+   "n": 5,
+   "condition": "Different users (chamber-weeks)",
+   "target": "heavy, light and 2 edge cases, >= 3 weeks each",
+   "now": "heavy 8  light 6  switcher 6  holiday 0  binge 2  curing 0",
+   "met": false,
+   "forecast": "needs 1 more edge case(s) weeks in the feeding"
+  },
+  {
+   "n": 6,
+   "condition": "Logging, last 7 days",
+   "target": "decisions >= 98%, readings missing < 1%",
+   "now": "000: decisions 100%, readings missing 2%; 305: decisions 100%, readings missing 1%; 312: decisions 100%, readings missing 1%",
+   "met": false,
+   "forecast": "a full clean week"
+  },
+  {
+   "n": 7,
+   "condition": "Gate: best learner vs the better fixed mode",
+   "target": "lead >= 0 and its range's low end >= -0.10 of the fixed modes'",
+   "now": "Fitted-Q lead +0.04 over the better fixed mode; beat both fixed modes on 2 of 3 machines",
+   "met": false,
+   "forecast": "from rotate-2026-10-26-plan"
+  },
+  {
+   "n": 8,
+   "condition": "Harness ready to run a learned policy",
+   "target": "all 4 done",
+   "now": "0 of 4: mock run of a learned policy no, block schedule no, block rows written no, policy files kept no",
+   "met": false,
+   "forecast": ""
+  }
+ ],
+ "gate": {
+  "run": "rotate-2026-10-26-plan",
+  "run_time": "2026-10-26T13:47",
+  "learner": "Fitted-Q",
+  "lead": 0.044,
+  "low": -0.64,
+  "low_needed": -0.545
+ },
+ "dropped": {
+  "total": 140,
+  "per_action": {
+   "A0": 0,
+   "A1": 76,
+   "A2": 0,
+   "A3": 64,
+   "A4": 0
+  },
+  "free_per_action": {
+   "A0": 0,
+   "A1": 0,
+   "A2": 0,
+   "A3": 0,
+   "A4": 0
+  },
+  "serials": [
+   "LL01-00000000000",
+   "LL01-00000000285",
+   "LL01-00000000305",
+   "LL01-00000000312"
+  ]
+ },
+ "harness": {
+  "mock run of a learned policy": false,
+  "block schedule": false,
+  "block rows written": false,
+  "policy files kept": false
+ }
+}

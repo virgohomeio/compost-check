@@ -119,6 +119,13 @@ table.grid td.cell { text-align: center; min-width: 54px; }
 .pill.bad { background: var(--bad-soft); color: var(--bad); }
 .pill.info { background: var(--wet-soft); color: var(--wet); }
 .pill.plain { background: var(--grid); color: var(--ink); }
+ol.ready { list-style: none; margin: 0; padding: 0; display: grid; gap: 0; }
+ol.ready li { display: grid; gap: 4px; padding: 10px 0; border-bottom: 1px solid var(--line); }
+ol.ready li:last-child { border-bottom: 0; }
+ol.ready .head { display: flex; gap: 8px; align-items: baseline; justify-content: space-between; font-weight: 700; }
+ol.ready dl { margin: 0; display: grid; grid-template-columns: max-content 1fr; gap: 2px 10px; font-size: 13px; }
+ol.ready dt { color: var(--muted); }
+ol.ready dd { margin: 0; overflow-wrap: anywhere; font-variant-numeric: tabular-nums; }
 .action { font: 700 13px var(--mono); padding: 1px 7px; border-radius: 6px; background: var(--sel); color: var(--sel-ink); }
 .probs { display: flex; gap: 2px; min-width: 220px; }
 .probs > span { flex: 1; display: grid; gap: 2px; font-size: 11px; text-align: center; color: var(--muted); }
@@ -260,6 +267,13 @@ section.card details.more { border: 0; padding: 0; }
 
   <!-- ===================== Progress ===================== -->
   <p class="tab-empty" id="empty-progress" hidden></p>
+  <section class="card" data-panel="progress" hidden>
+    <h2>Ready for stage 3?</h2>
+    <p class="verdict" id="verdict-ready"></p>
+    <p class="hint">All study machines together, since the study started on 6 Oct; it does not follow the machine picker. Decisions count only when the machine received them. A learned policy starts choosing only when all 8 are met. Conditions 1 to 4 and 6 are counted live; 5, 7 and 8 come from the last readiness report.</p>
+    <ol class="ready" id="ready-table"></ol>
+    <p class="hint" id="ready-source"></p>
+  </section>
   <section class="card" data-panel="progress" hidden>
     <h2>On plan?</h2>
     <p class="verdict" id="verdict-progress"></p>
@@ -818,13 +832,110 @@ async function renderPolicy() {
 
 // ---------------------------------------------------------------- progress
 const grade = (o) => {   // the study's reward for one score (Machine_Learning/reward.py grade)
-  if (o.smell_descriptor === "sour" && o.smell_location === "material") return -2;
+  // The plan's failure smell: offensive (level 2) sour at the material (2026-10-26).
+  if (o.smell_descriptor === "sour" && o.smell_location === "material" && Number(o.smell_level) >= 2) return -2;
   const q = Number(o.squeeze); if (o.squeeze == null || Number.isNaN(q)) return null;
   return q >= 6 ? -2 : q <= 2 ? -1 : 1;
 };
 const outcomeOf = (s) => s === 1 ? "good" : s === -1 ? "dry" : s === -2 ? "wet / sour" : null;
 
+// ---------------------------------------------------------------- stage 3 readiness
+// The same 8 conditions as `python -m Machine_Learning readiness` (readiness.py,
+// targets from its ReadinessConfig via readiness.json). 1-4 and 6 are counted
+// here from Supabase, for every study machine since STUDY_START; 5, 7 and 8 need
+// training (feed-week profiles, the leave-one-machine-out gate, the harness
+// checklist), so they come from readiness.json, written by
+// `readiness --publish readiness.json` and pushed with this site.
+const STUDY_START = "2026-10-06";
+const torontoNow = (msAgo = 0) => new Date(Date.now() - msAgo).toLocaleString("sv-SE", { timeZone: "America/Toronto" }).slice(0, 19);
+const atOf = (r) => `${r.day} ${String(r.time).slice(0, 8)}`;
+const etaOf = (have, need, perDay) => have >= need ? "met" : perDay <= 0 ? "no progress in the last 7 days"
+  : "~" + new Date(Date.now() + (need - have) / perDay * 864e5).toLocaleDateString(undefined, { day: "numeric", month: "short" });
+let readyShown = 0;
+async function renderReadiness() {
+  if (Date.now() - readyShown < 60e3 && $("ready-table").innerHTML) return;   // tab switches do not recount
+  $("verdict-ready").textContent = "Counting…";
+  const rows = async (path) => (await get(path)).json();
+  try {
+    const week = torontoNow(7 * 864e5), weekDay = week.slice(0, 10), weekTime = week.slice(11);
+    const [dec, obs, rep] = await Promise.all([
+      rows(`decisions?select=machine,chamber,day,time,action,restrict_reason&day=gte.${STUDY_START}&limit=20000`),
+      rows(`scores?select=machine,day,time,squeeze,missed&day=gte.${STUDY_START}&limit=20000`),
+      fetch("../readiness.json", { cache: "no-store" }).then((r) => r.ok ? r.json() : null).catch(() => null)]);
+    const T = (rep && rep.targets) || { decisions: 750, per_setting: 125, share: 0.15, scores: 175, profile_weeks: 3, decision_log_pct: 98, readings_missing_pct: 1 };
+    const recent = (r) => atOf(r) >= week;
+    // Counted decisions are the applied ones (readiness.py): the report lists the
+    // logged decisions the machines never received (link down, harness stopped),
+    // which are taken off here. Ones dropped after the report show at its next run.
+    const drop = (rep && rep.dropped) || { total: 0, per_action: {}, free_per_action: {} };
+    const out = [];
+    // 1 decisions
+    const dWeek = dec.filter(recent).length / 7;
+    const applied = dec.length - drop.total;
+    out.push({ n: 1, c: "Decisions applied", target: `≥ ${T.decisions}`, now: `${applied} (${dec.length} logged, ${drop.total} never reached the machine)`, met: applied >= T.decisions, eta: etaOf(applied, T.decisions, dWeek) });
+    // 2 per setting, at the overall pace shared five ways (as readiness.py)
+    const per = Object.fromEntries(ACTIONS.map((a) => [a, dec.filter((d) => d.action === a).length - (drop.per_action[a] || 0)]));
+    const short = ACTIONS.filter((a) => per[a] < T.per_setting);
+    out.push({ n: 2, c: "Decisions per setting", target: `≥ ${T.per_setting} each`,
+      now: ACTIONS.map((a) => `${ACTION_NAMES[a]} ${per[a]}`).join(" · "), met: !short.length,
+      eta: short.length ? short.map((a) => `${ACTION_NAMES[a]} ${etaOf(per[a], T.per_setting, dWeek / ACTIONS.length)}`).join(" · ") : "met" });
+    // 3 balance when all five were allowed
+    const free = dec.filter((d) => d.restrict_reason === "none");
+    const freeN = Object.fromEntries(ACTIONS.map((a) => [a, free.filter((d) => d.action === a).length - (drop.free_per_action[a] || 0)]));
+    const freeAll = ACTIONS.reduce((s, a) => s + freeN[a], 0);
+    const share = Object.fromEntries(ACTIONS.map((a) => [a, freeAll ? freeN[a] / freeAll : 0]));
+    out.push({ n: 3, c: "Balance when all five allowed", target: `≥ ${Math.round(T.share * 100)}% each`,
+      now: ACTIONS.map((a) => `${ACTION_NAMES[a]} ${Math.round(share[a] * 100)}%`).join(" · ") + ` (of ${freeAll})`,
+      met: freeAll > 0 && ACTIONS.every((a) => share[a] >= T.share), eta: "evens out with more draws" });
+    // 4 scores
+    const scored = obs.filter((o) => !o.missed && o.squeeze != null);
+    out.push({ n: 4, c: "Scores", target: `≥ ${T.scores}`, now: `${scored.length}`, met: scored.length >= T.scores,
+      eta: etaOf(scored.length, T.scores, scored.filter(recent).length / 7) });
+    // 5 households: from the report
+    const r5 = rep && rep.rows.find((r) => r.n === 5);
+    out.push({ n: 5, c: "Kinds of households (chamber-weeks)", target: r5 ? r5.target : "heavy, light and 2 edge cases",
+      now: r5 ? r5.now : "no report yet", met: !!(r5 && r5.met), eta: r5 ? r5.forecast : "", fromReport: true });
+    // 6 logging over the last 7 days, machines that decided in that time
+    const machines = [...new Set(dec.filter(recent).map((d) => d.machine))].sort();
+    const since = `or=(day.gt.${weekDay},and(day.eq.${weekDay},time.gte.${weekTime}))`;
+    const counts = await Promise.all(machines.map(async (m) => {
+      const res = await get(`machine_status?select=machine&machine=eq.${m}&${since}&limit=1`, { Prefer: "count=exact" });
+      return Number((res.headers.get("Content-Range") || "").split("/")[1] || 0); }));
+    let logOk = machines.length > 0;
+    const parts = machines.map((m, i) => {
+      const decPct = 100 * dec.filter((d) => d.machine === m && recent(d)).length / (7 * 6 * 2);
+      const miss = Math.max(0, 100 * (1 - counts[i] / (7 * 86400 / 42)));
+      logOk = logOk && decPct >= T.decision_log_pct && miss <= T.readings_missing_pct;
+      return `${m.slice(-3)}: decisions ${Math.round(decPct)}%, readings missing ${miss.toFixed(1)}%`; });
+    out.push({ n: 6, c: "Logging, last 7 days", target: `decisions ≥ ${T.decision_log_pct}%, readings missing < ${T.readings_missing_pct}%`,
+      now: parts.join(" · ") || "no machine deciding", met: logOk, eta: logOk ? "met" : "a full clean week" });
+    // 7 gate, 8 harness: from the report
+    const g = rep && rep.gate;
+    out.push({ n: 7, c: "Gate: best learner vs the better fixed mode", target: g ? `lead ≥ 0 and low end ≥ ${g.low_needed.toFixed(2)}` : "lead ≥ 0",
+      now: g ? `${g.learner} lead ${g.lead >= 0 ? "+" : ""}${g.lead.toFixed(2)}, low end ${g.low.toFixed(2)} (training run ${g.run_time.replace("T", " ")})` : "no training run yet",
+      met: !!(g && g.lead >= 0 && g.low >= g.low_needed), eta: g ? "narrows with more scores" : "", fromReport: true });
+    const hk = rep ? Object.entries(rep.harness) : [];
+    out.push({ n: 8, c: "Harness ready to run a learned policy", target: `all ${hk.length || 4} done`,
+      now: hk.length ? `${hk.filter(([, v]) => v).length} of ${hk.length}: ` + hk.map(([k, v]) => `${k} ${v ? "✓" : "–"}`).join(", ") : "no report yet",
+      met: hk.length > 0 && hk.every(([, v]) => v), eta: "", fromReport: true });
+
+    if (tab !== "progress") return;
+    const met = out.filter((r) => r.met).length;
+    $("verdict-ready").textContent = met === out.length ? "All 8 conditions met: stage 3 can start."
+      : `${met} of ${out.length} conditions met.`;
+    $("ready-table").innerHTML = out.map((r) => `<li><div class="head"><span>${r.n}. ${esc(r.c)}${r.fromReport ? " <small class=\"hint\">(report)</small>" : ""}</span>` +
+      `<span class="pill ${r.met ? "ok" : "warn"}">${r.met ? "met" : "not yet"}</span></div><dl><dt>Target</dt><dd>${esc(r.target)}</dd><dt>Now</dt><dd>${esc(r.now)}</dd>` +
+      (!r.met && r.eta ? `<dt>When</dt><dd>${esc(r.eta)}</dd>` : "") + `</dl></li>`).join("");
+    $("ready-source").textContent = rep ? `Report (rows marked report): ${rep.generated.replace("T", " ")}. It is updated when a readiness report is run and pushed with this site.`
+      : "No readiness report published yet, so rows 5, 7 and 8 are empty.";
+    readyShown = Date.now();
+  } catch (e) {
+    $("verdict-ready").textContent = "Could not count the readiness conditions just now.";
+  }
+}
+
 async function renderProgress() {
+  renderReadiness();
   const dec = data.decisions, obs = data.observations;
   if (!dec.length && !obs.length) {
     const [ld, ls] = await Promise.all([lastOnRecord("decisions"), lastOnRecord("observations")]);
