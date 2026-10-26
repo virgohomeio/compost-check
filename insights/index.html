@@ -282,7 +282,7 @@ section.card details.more { border: 0; padding: 0; }
     <p class="hint" id="ready-source"></p>
   </section>
   <section class="card" data-panel="progress" hidden>
-    <h2>On plan?</h2>
+    <h2>This machine's part</h2>
     <p class="verdict" id="verdict-progress"></p>
     <div class="tiles" id="progress-tiles"></div>
   </section>
@@ -858,7 +858,7 @@ const torontoNow = (msAgo = 0) => new Date(Date.now() - msAgo).toLocaleString("s
 const atOf = (r) => `${r.day} ${String(r.time).slice(0, 8)}`;
 const etaOf = (have, need, perDay) => have >= need ? "met" : perDay <= 0 ? "no progress in the last 7 days"
   : "~" + new Date(Date.now() + (need - have) / perDay * 864e5).toLocaleDateString(undefined, { day: "numeric", month: "short" });
-let readyShown = 0;
+let readyShown = 0, readyReport = null;
 // One line per part: label, "now of target", and a bar filled to the share reached (gate lines
 // are differences, so their bar shows met or not).
 function barsHtml(bars) {
@@ -879,6 +879,7 @@ async function renderReadiness() {
       rows(`decisions?select=machine,chamber,day,time,action,restrict_reason&day=gte.${STUDY_START}&limit=20000`),
       rows(`scores?select=machine,day,time,squeeze,missed&day=gte.${STUDY_START}&limit=20000`),
       fetch("../readiness.json", { cache: "no-store" }).then((r) => r.ok ? r.json() : null).catch(() => null)]);
+    readyReport = rep;
     const T = (rep && rep.targets) || { decisions: 750, per_setting: 125, share: 0.15, scores: 175, profile_weeks: 3, decision_log_pct: 98, readings_missing_pct: 1 };
     const recent = (r) => atOf(r) >= week;
     // Counted decisions are the applied ones (readiness.py): the report lists the
@@ -1062,26 +1063,37 @@ async function renderProgress() {
   // On plan? Range counts in the tiles' big numbers, all-time counts on the bars. Last, because it asks the server.
   const tiles = $("progress-tiles");
   $("verdict-progress").textContent = "Counting\u2026";
-  const dTarget = 2 * TARGETS.stage1.decisions, sTarget = 2 * TARGETS.stage1.scores;
-  const tile = (k, inRange, allTime, target, plan) => `<div class="tile"><span class="k">${esc(k)}</span>
-    <span class="v">${inRange.L + inRange.R} <small>${esc(hours ? `in ${RANGE_WORDS()}` : "all time")} \u00b7 L ${inRange.L} \u00b7 R ${inRange.R}</small></span>
-    <div class="bar"><i style="width:${Math.min(100, pct(allTime, target))}%"></i></div>
-    <span class="hint">all time: ${allTime} of ${target} (${pct(allTime, target)} %) \u00b7 ${esc(plan)}</span></div>`;
-  const draw = (dAll, sAll) => { tiles.innerHTML =
-    tile("Decisions", { L: perCh(dec, "L"), R: perCh(dec, "R") }, dAll, dTarget, "plan: 6 a day per chamber, 210 each by week 5")
-    + tile("Scores", { L: perCh(scoredIn, "L"), R: perCh(scoredIn, "R") }, sAll, sTarget, "plan: 2 a working day per chamber, 50 each by week 5"); };
+  // This machine's part of the live-learning targets (the readiness card's,
+  // from readiness.json), next to all machines together. Decisions are counted
+  // applied only, as on the readiness card.
+  const RT = (readyReport && readyReport.targets) || { decisions: 750, scores: 175 };
+  const dTarget = RT.decisions, sTarget = RT.scores;
+  const tile = (k, inRange, mine, all, target, unit) => `<div class="tile"><span class="k">${esc(k)}</span>
+    <span class="v">${mine} <small>this machine \u00b7 ${inRange.L + inRange.R} ${esc(hours ? `in ${RANGE_WORDS()}` : "all time")} (L ${inRange.L} \u00b7 R ${inRange.R})</small></span>
+    <div class="bar"><i style="width:${Math.min(100, pct(all, target))}%"></i></div>
+    <span class="hint">all machines: ${all} of ${target} ${esc(unit)} for live learning (${pct(all, target)} %); this machine gave ${pct(mine, all)} % of them</span></div>`;
+  const draw = (dMine, sMine, dAll, sAll) => { tiles.innerHTML =
+    tile("Decisions", { L: perCh(dec, "L"), R: perCh(dec, "R") }, dMine, dAll, dTarget, "decisions")
+    + tile("Scores", { L: perCh(scoredIn, "L"), R: perCh(scoredIn, "R") }, sMine, sAll, sTarget, "scores"); };
   try {
-    const [dAll, sAll, first] = await Promise.all([
-      count(`${T("decisions")}?${S()}`),
-      count(`${T("observations")}?${S()}&missed=eq.false`),
-      rowsOf(`${T("decisions")}?select=ts_utc&${S()}&order=ts_utc.asc&limit=1`)]);
+    const since = `day=gte.${STUDY_START}`;
+    const countRaw = async (q) => Number(((await get(`${q}&limit=1`, { Prefer: "count=exact" })).headers.get("Content-Range") || "").split("/")[1] || 0);
+    let [dMine, sMine, dAll, sAll] = await Promise.all([
+      countRaw(`decisions?select=machine&machine=eq.${encodeURIComponent(serial())}&${since}`),
+      countRaw(`scores?select=machine&machine=eq.${encodeURIComponent(serial())}&${since}&missed=eq.false&squeeze=not.is.null`),
+      countRaw(`decisions?select=machine&${since}`),
+      countRaw(`scores?select=machine&${since}&missed=eq.false&squeeze=not.is.null`)]);
     if (tab !== "progress") return;
-    const day = first.length ? Math.floor((Date.now() / 1000 - sec(first[0].ts_utc)) / 86400) + 1 : null;
-    $("verdict-progress").textContent = `${day == null ? "No decision yet" : `Day ${day} of 35 in stage 1`} \u00b7 ${dAll} decisions of ${dTarget} \u00b7 ${sAll} scores of ${sTarget}, all time.`;
-    draw(dAll, sAll);
+    // Applied only, as the readiness card: take off the decisions the machines never received.
+    if (!readyReport) readyReport = await fetch("../readiness.json", { cache: "no-store" }).then((r) => r.ok ? r.json() : null).catch(() => null);
+    if (tab !== "progress") return;
+    const dr = (readyReport && readyReport.dropped) || { total: 0, per_serial: {} };
+    dMine -= (dr.per_serial || {})[serial()] || 0; dAll -= dr.total || 0;
+    $("verdict-progress").textContent = `Since ${STUDY_START.slice(8)} Oct this machine gave ${dMine} applied decisions and ${sMine} scores: ${pct(dMine, dAll)} % and ${pct(sMine, sAll)} % of all machines' ${dAll} and ${sAll}, toward live learning's ${dTarget} and ${sTarget}.`;
+    draw(dMine, sMine, dAll, sAll);
   } catch (e) {
     $("verdict-progress").textContent = "Could not count the all-time totals; the counts for this range are below.";
-    draw(0, 0);
+    draw(0, 0, 0, 0);
   }
 }
 
