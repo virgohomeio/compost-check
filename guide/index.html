@@ -427,14 +427,14 @@ python -m harness.api.certs --out harness\secrets</pre><button type="button">Cop
   <p>The two chambers share one blower. When they are on different settings, the fed chamber's setting runs the blower (<code>arbitration: fed_chamber_wins</code>); mixing and pads stay per chamber. Boost runs the blower almost half the time, so the room can smell more while it runs, and its limit (<code>max_safe_duty_pct</code>) is 45 %.</p>
 
   <h3>The guardrails: what the latest score allows</h3>
-  <p>With <code>scores_drive_decisions: true</code>, each chamber's latest score narrows the choice, and the harness draws at random, evenly, within what is left. Nobody picks a setting by hand.</p>
+  <p>With <code>scores_drive_decisions: true</code>, each chamber's latest score narrows the choice, and the harness draws at random, evenly, within what is left. Nobody picks a setting by hand. Only one smell changes a decision, as in the plan: an offensive (level 2) <b>sour</b> smell at the material. Garbage, musty, ammonia, earthy, level 1 and room smells are recorded, not acted on, and the reward counts the same sour smell as −2.</p>
   <div class="table-wrap"><table>
     <thead><tr><th>Latest score</th><th>Allowed</th><th>Why</th></tr></thead>
     <tbody>
-      <tr><td>Squeeze 3 to 5, and no strong sour or garbage smell at the material</td><td>all five</td><td>the chamber is fine; every setting teaches something</td></tr>
+      <tr><td>Squeeze 3 to 5, and no offensive (level 2) sour smell at the material</td><td>all five</td><td>the chamber is fine; every setting teaches something</td></tr>
       <tr><td>Squeeze 1 or 2 (dry)</td><td>A0 dormant, A1 light</td><td>less air, so it dries no further. It does not add water: wet food does</td></tr>
-      <tr><td>Squeeze 6 (slurry), or smell level 2, sour or garbage, at the material</td><td>A3 heavy, A4 boost</td><td>more air to dry it and clear the smell</td></tr>
-      <tr><td>Squeeze 1 or 2 <b>and</b> smell level 2, sour or garbage, at the material</td><td>A2 middle, A3 heavy</td><td>more air for the smell, but not boost, which would dry it further (since 26 Oct)</td></tr>
+      <tr><td>Squeeze 6 (slurry), or smell level 2 sour at the material</td><td>A3 heavy, A4 boost</td><td>more air to dry it and clear the smell</td></tr>
+      <tr><td>Squeeze 1 or 2 <b>and</b> smell level 2 sour at the material</td><td>A2 middle, A3 heavy</td><td>more air for the smell, but not boost, which would dry it further (since 26 Oct)</td></tr>
       <tr><td>No score in the last 30 hours</td><td>A1 light, A2 middle, A3 heavy</td><td>nothing extreme without a recent look</td></tr>
     </tbody>
   </table></div>
