@@ -126,6 +126,13 @@ ol.ready .head { display: flex; gap: 8px; align-items: baseline; justify-content
 ol.ready dl { margin: 0; display: grid; grid-template-columns: max-content 1fr; gap: 2px 10px; font-size: 13px; }
 ol.ready dt { color: var(--muted); }
 ol.ready dd { margin: 0; overflow-wrap: anywhere; font-variant-numeric: tabular-nums; }
+.rbars { display: grid; gap: 6px; margin: 2px 0 4px; }
+.rbar { display: grid; grid-template-columns: 1fr auto; gap: 2px 10px; font-size: 13px; font-variant-numeric: tabular-nums; }
+.rbar .l { color: var(--muted); }
+.rbar .n { font-weight: 700; text-align: right; }
+.rbar .bar { grid-column: 1 / -1; height: 6px; }
+.rbar .bar > i { background: var(--warn); }
+.rbar.ok .bar > i { background: var(--good); }
 .action { font: 700 13px var(--mono); padding: 1px 7px; border-radius: 6px; background: var(--sel); color: var(--sel-ink); }
 .probs { display: flex; gap: 2px; min-width: 220px; }
 .probs > span { flex: 1; display: grid; gap: 2px; font-size: 11px; text-align: center; color: var(--muted); }
@@ -852,6 +859,16 @@ const atOf = (r) => `${r.day} ${String(r.time).slice(0, 8)}`;
 const etaOf = (have, need, perDay) => have >= need ? "met" : perDay <= 0 ? "no progress in the last 7 days"
   : "~" + new Date(Date.now() + (need - have) / perDay * 864e5).toLocaleDateString(undefined, { day: "numeric", month: "short" });
 let readyShown = 0;
+// One line per part: label, "now of target", and a bar filled to the share reached (gate lines
+// are differences, so their bar shows met or not).
+function barsHtml(bars) {
+  if (!bars || !bars.length) return "";
+  return `<div class="rbars">` + bars.map((b) => {
+    const ok = b.low ? b.now <= b.target : b.now >= b.target;
+    const fill = b.target === 0 || b.target < 0 ? (ok ? 100 : 40) : b.low ? (ok ? 100 : Math.max(5, 100 * b.target / b.now)) : Math.min(100, 100 * b.now / b.target);
+    return `<div class="rbar${ok ? " ok" : ""}"><span class="l">${esc(b.label)}</span><span class="n">${esc(b.text)}</span>` +
+      `<div class="bar"><i style="width:${fill.toFixed(0)}%"></i></div></div>`; }).join("") + `</div>`;
+}
 async function renderReadiness() {
   if (Date.now() - readyShown < 60e3 && $("ready-table").innerHTML) return;   // tab switches do not recount
   $("verdict-ready").textContent = "Counting…";
@@ -919,12 +936,33 @@ async function renderReadiness() {
       now: hk.length ? `${hk.filter(([, v]) => v).length} of ${hk.length}: ` + hk.map(([k, v]) => `${k} ${v ? "✓" : "–"}`).join(", ") : "no report yet",
       met: hk.length > 0 && hk.every(([, v]) => v), eta: "", fromReport: true });
 
+
+    // Now against target, one line per measured part: { label, now, target, text, low } where low
+    // means lower is better (readings missing). The bar is the share of the target reached.
+    const B = (label, now, target, text, low = false) => ({ label, now, target, text, low });
+    const fmtPct = (v) => `${(Math.floor(v * 10) / 10).toString()}%`;   // down, so 14.96% never reads as 15%
+    out[0].bars = [B("", applied, T.decisions, `${applied} of ${T.decisions}`)];
+    out[1].bars = ACTIONS.map((a) => B(ACTION_NAMES[a], per[a], T.per_setting, `${per[a]} of ${T.per_setting}`));
+    out[2].bars = ACTIONS.map((a) => B(ACTION_NAMES[a], share[a] * 100, T.share * 100, `${fmtPct(share[a] * 100)} of ${Math.round(T.share * 100)}%`));
+    out[3].bars = [B("", scored.length, T.scores, `${scored.length} of ${T.scores}`)];
+    const weeks = Object.fromEntries([...String(r5 ? r5.now : "").matchAll(/([a-z]+) (\d+)/g)].map((m) => [m[1], Number(m[2])]));
+    out[4].bars = ["heavy", "light", "switcher", "holiday", "binge", "curing"].filter((k) => k in weeks)
+      .map((k) => B(k + (k === "heavy" || k === "light" ? "" : " (edge)"), weeks[k], T.profile_weeks, `${weeks[k]} of ${T.profile_weeks} weeks`));
+    out[5].bars = machines.flatMap((m, i) => {
+      const decPct = 100 * dec.filter((d) => d.machine === m && recent(d)).length / (7 * 6 * 2);
+      const miss = Math.max(0, 100 * (1 - counts[i] / (7 * 86400 / 42)));
+      return [B(`${m.slice(-3)} decisions`, decPct, T.decision_log_pct, `${fmtPct(decPct)} of ${T.decision_log_pct}%`),
+              B(`${m.slice(-3)} readings missing`, miss, T.readings_missing_pct, `${fmtPct(miss)}, at most ${T.readings_missing_pct}%`, true)]; });
+    if (g) out[6].bars = [B("lead", g.lead, 0, `${g.lead >= 0 ? "+" : ""}${g.lead.toFixed(2)}, needs 0 or more`),
+                          B("low end", g.low, g.low_needed, `${g.low.toFixed(2)}, needs ${g.low_needed.toFixed(2)} or more`)];
+    out[7].bars = [B("", hk.filter(([, v]) => v).length, hk.length || 4, `${hk.filter(([, v]) => v).length} of ${hk.length || 4} done`)];
     if (tab !== "progress") return;
     const met = out.filter((r) => r.met).length;
     $("verdict-ready").textContent = met === out.length ? "All 8 conditions met: stage 3 can start."
       : `${met} of ${out.length} conditions met.`;
     $("ready-table").innerHTML = out.map((r) => `<li><div class="head"><span>${r.n}. ${esc(r.c)}${r.fromReport ? " <small class=\"hint\">(report)</small>" : ""}</span>` +
-      `<span class="pill ${r.met ? "ok" : "warn"}">${r.met ? "met" : "not yet"}</span></div><dl><dt>Target</dt><dd>${esc(r.target)}</dd><dt>Now</dt><dd>${esc(r.now)}</dd>` +
+      `<span class="pill ${r.met ? "ok" : "warn"}">${r.met ? "met" : "not yet"}</span></div>` + barsHtml(r.bars) +
+      `<dl><dt>Target</dt><dd>${esc(r.target)}</dd>` + (r.n === 1 ? `<dt>Note</dt><dd>${esc(r.now.replace(/^\d+ \(|\)$/g, ""))}</dd>` : "") +
       (!r.met && r.eta ? `<dt>When</dt><dd>${esc(r.eta)}</dd>` : "") + `</dl></li>`).join("");
     $("ready-source").textContent = rep ? `Report (rows marked report): ${rep.generated.replace("T", " ")}. It is updated when a readiness report is run and pushed with this site.`
       : "No readiness report published yet, so rows 5, 7 and 8 are empty.";
