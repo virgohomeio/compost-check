@@ -282,11 +282,6 @@ section.card details.more { border: 0; padding: 0; }
     <p class="hint" id="ready-source"></p>
   </section>
   <section class="card" data-panel="progress" hidden>
-    <h2>This machine's part</h2>
-    <p class="verdict" id="verdict-progress"></p>
-    <div class="tiles" id="progress-tiles"></div>
-  </section>
-  <section class="card" data-panel="progress" hidden>
     <h2>Coverage</h2>
     <p class="verdict" id="verdict-coverage"></p>
     <p class="hint">How often each action was tried, by chamber and by whether the chamber had been fed in the last 24 hours. Learning needs every action tried in every situation; an empty cell is a gap.</p>
@@ -1059,42 +1054,6 @@ async function renderProgress() {
       series: ["L", "R"].map((c) => ({ label: `Chamber ${c}`, values: rx.map((t) => { const g = graded.find((x) => x.t === t && x.ch === c); return g ? g.s : null; }) })) });
     scatterCard(rbox, graded);
   });
-
-  // On plan? Range counts in the tiles' big numbers, all-time counts on the bars. Last, because it asks the server.
-  const tiles = $("progress-tiles");
-  $("verdict-progress").textContent = "Counting\u2026";
-  // This machine's part of the live-learning targets (the readiness card's,
-  // from readiness.json), next to all machines together. Decisions are counted
-  // applied only, as on the readiness card.
-  const RT = (readyReport && readyReport.targets) || { decisions: 750, scores: 175 };
-  const dTarget = RT.decisions, sTarget = RT.scores;
-  const tile = (k, inRange, mine, all, target, unit) => `<div class="tile"><span class="k">${esc(k)}</span>
-    <span class="v">${mine} <small>this machine \u00b7 ${inRange.L + inRange.R} ${esc(hours ? `in ${RANGE_WORDS()}` : "all time")} (L ${inRange.L} \u00b7 R ${inRange.R})</small></span>
-    <div class="bar"><i style="width:${Math.min(100, pct(all, target))}%"></i></div>
-    <span class="hint">all machines: ${all} of ${target} ${esc(unit)} for live learning (${pct(all, target)} %); this machine gave ${pct(mine, all)} % of them</span></div>`;
-  const draw = (dMine, sMine, dAll, sAll) => { tiles.innerHTML =
-    tile("Decisions", { L: perCh(dec, "L"), R: perCh(dec, "R") }, dMine, dAll, dTarget, "decisions")
-    + tile("Scores", { L: perCh(scoredIn, "L"), R: perCh(scoredIn, "R") }, sMine, sAll, sTarget, "scores"); };
-  try {
-    const since = `day=gte.${STUDY_START}`;
-    const countRaw = async (q) => Number(((await get(`${q}&limit=1`, { Prefer: "count=exact" })).headers.get("Content-Range") || "").split("/")[1] || 0);
-    let [dMine, sMine, dAll, sAll] = await Promise.all([
-      countRaw(`decisions?select=machine&machine=eq.${encodeURIComponent(serial())}&${since}`),
-      countRaw(`scores?select=machine&machine=eq.${encodeURIComponent(serial())}&${since}&missed=eq.false&squeeze=not.is.null`),
-      countRaw(`decisions?select=machine&${since}`),
-      countRaw(`scores?select=machine&${since}&missed=eq.false&squeeze=not.is.null`)]);
-    if (tab !== "progress") return;
-    // Applied only, as the readiness card: take off the decisions the machines never received.
-    if (!readyReport) readyReport = await fetch("../readiness.json", { cache: "no-store" }).then((r) => r.ok ? r.json() : null).catch(() => null);
-    if (tab !== "progress") return;
-    const dr = (readyReport && readyReport.dropped) || { total: 0, per_serial: {} };
-    dMine -= (dr.per_serial || {})[serial()] || 0; dAll -= dr.total || 0;
-    $("verdict-progress").textContent = `Since ${STUDY_START.slice(8)} Oct this machine gave ${dMine} applied decisions and ${sMine} scores: ${pct(dMine, dAll)} % and ${pct(sMine, sAll)} % of all machines' ${dAll} and ${sAll}, toward live learning's ${dTarget} and ${sTarget}.`;
-    draw(dMine, sMine, dAll, sAll);
-  } catch (e) {
-    $("verdict-progress").textContent = "Could not count the all-time totals; the counts for this range are below.";
-    draw(0, 0, 0, 0);
-  }
 }
 
 function scatterCard(box, graded) {
