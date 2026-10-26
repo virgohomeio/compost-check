@@ -977,7 +977,7 @@ async function renderReadiness() {
       : `${met} of ${out.length} conditions met.`;
     $("ready-table").innerHTML = out.map((r) => `<li><div class="head"><span>${r.n}. ${esc(r.c)}${r.fromReport ? " <small class=\"hint\">(report)</small>" : ""}</span>` +
       `<span class="pill ${r.met ? "ok" : "warn"}">${r.met ? "met" : "not yet"}</span></div>` + barsHtml(r.bars) +
-      `<dl><dt>Target</dt><dd>${esc(r.target)}</dd>` + (r.n === 1 ? `<dt>Note</dt><dd>${esc(r.now.replace(/^\d+ \(|\)$/g, ""))}</dd>` : "") +
+      `<dl><dt>Target</dt><dd>${esc(r.target)}</dd>` + "" +
       (!r.met && r.eta ? `<dt>When</dt><dd>${esc(r.eta)}</dd>` : "") + `</dl></li>`).join("");
     $("ready-source").textContent = rep ? `Report (rows marked report): ${rep.generated.replace("T", " ")}. It is updated when a readiness report is run and pushed with this site.`
       : "No readiness report published yet, so rows 5, 7 and 8 are empty.";
