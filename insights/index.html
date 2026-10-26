@@ -963,7 +963,13 @@ async function renderReadiness() {
         .concat(["heavy", "light"].filter((p) => gd[p]).map((p) => B(`${p}: no worse than matched − ${g.tolerance}`,
           (gd[p].candidate ?? -9) - (gd[p].matched ?? 0), -g.tolerance, `${sg(gd[p].candidate)} vs ${sg(gd[p].matched)}`)));
     }
-    out[7].bars = [B("", hk.filter(([, v]) => v).length, hk.length || 4, `${hk.filter(([, v]) => v).length} of ${hk.length || 4} done`)];
+    // One line per harness item, with what it is for (readiness.py harness_done).
+    const HK_WHAT = {
+      "mock run of a learned policy": "the harness runs an exported policy file on a simulated machine",
+      "block schedule": "the 2-day learned / matched blocks per chamber, switching Mon, Wed, Fri at 09:45",
+      "block rows written": "each block logged to Supabase, for the learned vs matched comparison",
+      "policy files kept": "every frozen policy version saved, so each decision traces to its file" };
+    out[7].bars = hk.map(([k, v]) => B(`${k}: ${HK_WHAT[k] || ""}`, v ? 1 : 0, 1, v ? "done" : "not yet"));
     if (tab !== "progress") return;
     const met = out.filter((r) => r.met).length;
     $("verdict-ready").textContent = met === out.length ? "All 8 conditions met: live learning (stage 3) can start."
