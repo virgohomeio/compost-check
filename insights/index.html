@@ -275,9 +275,9 @@ section.card details.more { border: 0; padding: 0; }
   <!-- ===================== Progress ===================== -->
   <p class="tab-empty" id="empty-progress" hidden></p>
   <section class="card" data-panel="progress" hidden>
-    <h2>Ready for stage 3?</h2>
+    <h2>Ready for live learning (stage 3)?</h2>
     <p class="verdict" id="verdict-ready"></p>
-    <p class="hint">All study machines together, since the study started on 6 Oct; it does not follow the machine picker. Decisions count only when the machine received them. A learned policy starts choosing only when all 8 are met. Conditions 1 to 4 and 6 are counted live; 5, 7 and 8 come from the last readiness report.</p>
+    <p class="hint">All study machines together, since the study started on 6 Oct; it does not follow the machine picker. Decisions count only when the machine received them. Live learning, where a learned policy starts choosing, begins only when all 8 are met. Conditions 1 to 4 and 6 are counted live; 5, 7 and 8 come from the last readiness report.</p>
     <ol class="ready" id="ready-table"></ol>
     <p class="hint" id="ready-source"></p>
   </section>
@@ -966,7 +966,7 @@ async function renderReadiness() {
     out[7].bars = [B("", hk.filter(([, v]) => v).length, hk.length || 4, `${hk.filter(([, v]) => v).length} of ${hk.length || 4} done`)];
     if (tab !== "progress") return;
     const met = out.filter((r) => r.met).length;
-    $("verdict-ready").textContent = met === out.length ? "All 8 conditions met: stage 3 can start."
+    $("verdict-ready").textContent = met === out.length ? "All 8 conditions met: live learning (stage 3) can start."
       : `${met} of ${out.length} conditions met.`;
     $("ready-table").innerHTML = out.map((r) => `<li><div class="head"><span>${r.n}. ${esc(r.c)}${r.fromReport ? " <small class=\"hint\">(report)</small>" : ""}</span>` +
       `<span class="pill ${r.met ? "ok" : "warn"}">${r.met ? "met" : "not yet"}</span></div>` + barsHtml(r.bars) +
