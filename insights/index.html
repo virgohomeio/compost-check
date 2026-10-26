@@ -928,9 +928,12 @@ async function renderReadiness() {
       now: parts.join(" · ") || "no machine deciding", met: logOk, eta: logOk ? "met" : "a full clean week" });
     // 7 gate, 8 harness: from the report
     const g = rep && rep.gate;
-    out.push({ n: 7, c: "Gate: best learner vs the better fixed mode", target: g ? `lead ≥ 0 and low end ≥ ${g.low_needed.toFixed(2)}` : "lead ≥ 0",
-      now: g ? `${g.learner} lead ${g.lead >= 0 ? "+" : ""}${g.lead.toFixed(2)}, low end ${g.low.toFixed(2)} (training run ${g.run_time.replace("T", " ")})` : "no training run yet",
-      met: !!(g && g.lead >= 0 && g.low >= g.low_needed), eta: g ? "narrows with more scores" : "", fromReport: true });
+    // The plan's stage 2 gate (Machine_Learning/gate.py), from the last rotation.
+    const sg = (v) => v == null ? "–" : `${v >= 0 ? "+" : ""}${v.toFixed(2)}`;
+    out.push({ n: 7, c: "Gate: learned policy vs matched mode (the plan)",
+      target: g && g.plan ? `at least matched overall; better on ${g.need_edge_wins} edge profiles; heavy and light within ${g.tolerance}` : "the plan's gate",
+      now: g && g.plan ? `${g.learner} ${sg(g.overall.candidate)} vs matched ${sg(g.overall.matched)} (training run ${g.run_time.replace("T", " ")})` : "no training run with the plan's gate yet",
+      met: !!(g && g.plan && g.passed), eta: g && g.plan ? "rechecked at each training run" : "", fromReport: true });
     const hk = rep ? Object.entries(rep.harness) : [];
     out.push({ n: 8, c: "Harness ready to run a learned policy", target: `all ${hk.length || 4} done`,
       now: hk.length ? `${hk.filter(([, v]) => v).length} of ${hk.length}: ` + hk.map(([k, v]) => `${k} ${v ? "✓" : "–"}`).join(", ") : "no report yet",
@@ -953,8 +956,13 @@ async function renderReadiness() {
       const miss = Math.max(0, 100 * (1 - counts[i] / (7 * 86400 / 42)));
       return [B(`${m.slice(-3)} decisions`, decPct, T.decision_log_pct, `${fmtPct(decPct)} of ${T.decision_log_pct}%`),
               B(`${m.slice(-3)} readings missing`, miss, T.readings_missing_pct, `${fmtPct(miss)}, at most ${T.readings_missing_pct}%`, true)]; });
-    if (g) out[6].bars = [B("lead", g.lead, 0, `${g.lead >= 0 ? "+" : ""}${g.lead.toFixed(2)}, needs 0 or more`),
-                          B("low end", g.low, g.low_needed, `${g.low.toFixed(2)}, needs ${g.low_needed.toFixed(2)} or more`)];
+    if (g && g.plan) {
+      const o = g.overall, gd = g.guard || {};
+      out[6].bars = [B("overall vs matched", o.candidate - o.matched, 0, `${sg(o.candidate)} vs ${sg(o.matched)}`),
+        B(`better on edge profiles${g.edge_wins.length ? " (" + g.edge_wins.join(", ") + ")" : ""}`, g.edge_wins.length, g.need_edge_wins, `${g.edge_wins.length} of ${g.need_edge_wins}`)]
+        .concat(["heavy", "light"].filter((p) => gd[p]).map((p) => B(`${p}: no worse than matched − ${g.tolerance}`,
+          (gd[p].candidate ?? -9) - (gd[p].matched ?? 0), -g.tolerance, `${sg(gd[p].candidate)} vs ${sg(gd[p].matched)}`)));
+    }
     out[7].bars = [B("", hk.filter(([, v]) => v).length, hk.length || 4, `${hk.filter(([, v]) => v).length} of ${hk.length || 4} done`)];
     if (tab !== "progress") return;
     const met = out.filter((r) => r.met).length;

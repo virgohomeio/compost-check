@@ -1,5 +1,5 @@
 {
- "generated": "2026-10-26T15:14",
+ "generated": "2026-10-26T18:30",
  "targets": {
   "decisions": 750,
   "per_setting": 125,
@@ -14,7 +14,7 @@
    "n": 1,
    "condition": "Decisions applied, all settings",
    "target": ">= 750",
-   "now": "475",
+   "now": "481",
    "met": false,
    "forecast": "~03 Nov"
   },
@@ -22,15 +22,15 @@
    "n": 2,
    "condition": "Decisions per setting",
    "target": ">= 125 each",
-   "now": "dormant 30  light 214  middle 39  heavy 167  boost 25",
+   "now": "dormant 32  light 217  middle 40  heavy 167  boost 25",
    "met": false,
-   "forecast": "dormant ~09 Nov; middle ~07 Nov; boost ~09 Nov"
+   "forecast": "dormant ~09 Nov; middle ~07 Nov; boost ~10 Nov"
   },
   {
    "n": 3,
    "condition": "Settings balance (when all five allowed)",
    "target": ">= 15% each",
-   "now": "dormant 25%  light 15%  middle 32%  heavy 7%  boost 22%  (of 60)",
+   "now": "dormant 26%  light 15%  middle 32%  heavy 6%  boost 21%  (of 62)",
    "met": false,
    "forecast": ""
   },
@@ -40,15 +40,15 @@
    "target": ">= 175",
    "now": "97",
    "met": false,
-   "forecast": "~04 Nov"
+   "forecast": "~05 Nov"
   },
   {
    "n": 5,
    "condition": "Different users (chamber-weeks)",
-   "target": "heavy, light and 2 edge cases, >= 3 weeks each",
+   "target": "every profile card on >= 3 chamber-weeks",
    "now": "heavy 8  light 6  switcher 6  holiday 0  binge 2  curing 0",
    "met": false,
-   "forecast": "needs 1 more edge case(s) weeks in the feeding"
+   "forecast": "needs 3 more holiday weeks, 1 more binge week"
   },
   {
    "n": 6,
@@ -60,11 +60,11 @@
   },
   {
    "n": 7,
-   "condition": "Gate: best learner vs the better fixed mode",
-   "target": "lead >= 0 and its range's low end >= -0.10 of the fixed modes'",
-   "now": "Fitted-Q lead +0.04 over the better fixed mode; beat both fixed modes on 2 of 3 machines",
-   "met": false,
-   "forecast": "from rotate-2026-10-26-plan"
+   "condition": "Gate: learned policy vs matched mode (the plan's stage 2 gate)",
+   "target": "overall >= matched; better on >= 2 edge profiles; heavy and light within 0.05 of matched",
+   "now": "Fitted-Q -0.18 vs matched -0.57; better on 2 edge profile(s) ['switcher', 'binge']; heavy ok, light ok",
+   "met": true,
+   "forecast": "from rotate-2026-10-26-plangate"
   },
   {
    "n": 8,
@@ -76,12 +76,51 @@
   }
  ],
  "gate": {
-  "run": "rotate-2026-10-26-plan",
-  "run_time": "2026-10-26T13:47",
+  "run": "rotate-2026-10-26-plangate",
+  "run_time": "2026-10-26T18:25",
+  "plan": true,
+  "passed": true,
   "learner": "Fitted-Q",
-  "lead": 0.044,
-  "low": -0.64,
-  "low_needed": -0.545
+  "overall": {
+   "candidate": -0.1839607629100168,
+   "matched": -0.5693422497800474
+  },
+  "edge_wins": [
+   "switcher",
+   "binge"
+  ],
+  "edge": {
+   "binge": {
+    "candidate": -1.1943697535626674,
+    "matched": -1.8092689052737423
+   },
+   "curing": {
+    "candidate": null,
+    "matched": null
+   },
+   "holiday": {
+    "candidate": null,
+    "matched": null
+   },
+   "switcher": {
+    "candidate": -0.31321551935704905,
+    "matched": -0.5939242039869539
+   }
+  },
+  "guard": {
+   "heavy": {
+    "candidate": 0.02704229507109133,
+    "matched": -0.39529819266551963,
+    "ok": true
+   },
+   "light": {
+    "candidate": -0.5527221959055784,
+    "matched": -1.043073544013181,
+    "ok": true
+   }
+  },
+  "need_edge_wins": 2,
+  "tolerance": 0.05
  },
  "dropped": {
   "total": 140,
