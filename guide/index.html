@@ -191,7 +191,7 @@ firmware_modes_only: false</pre><button type="button">Copy</button></div>
           <tr><td><code>firmware_modes_only</code></td><td><code>false</code>: decisions use all five settings, A0 to A4 (<code>true</code> would limit them to A1 light and A3 heavy)</td><td>only when the study says so</td></tr>
           <tr><td><code>scores_drive_decisions</code></td><td><code>true</code>: the latest score narrows which settings a decision may draw (the guardrails, under <a href="#the-five-actions">The five actions</a>)</td><td>only when the study says so</td></tr>
           <tr><td><code>link_retry_s</code> under <code>safety:</code></td><td>how soon the harness tries the machine again after the USB link is lost</td><td>never, for now</td></tr>
-          <tr><td><code>usb_reset</code> inside <code>uart:</code> (optional)</td><td>the automatic USB reset is on without it, first try after 30 s of lost link. A machine whose link drops often can start sooner, for example <code>uart: {port: COM5, baud: 115200, timeout_s: 0.5, usb_reset: {after_s: 5}}</code> (305 uses this)</td><td>only for a machine with frequent drops</td></tr>
+          <tr><td><code>usb_reset</code> inside <code>uart:</code> (optional)</td><td>the automatic USB reset is on without it: first try after 5 s of lost link, so a stalled link is back in about 13 s. Only to change that, e.g. <code>uart: {port: COM5, baud: 115200, timeout_s: 0.5, usb_reset: {after_s: 5}}</code></td><td>never, for now</td></tr>
           <tr><td><code>gas_saturation_ohm</code>, <code>ptc_guard_c</code>, <code>stage</code>, <code>policy</code></td><td>the study's current values</td><td>only when the study says so</td></tr>
         </tbody>
       </table></div>
