@@ -274,7 +274,7 @@ section.card details.more { border: 0; padding: 0; }
 
   <!-- ===================== Progress ===================== -->
   <p class="tab-empty" id="empty-progress" hidden></p>
-  <section class="card" data-panel="progress" hidden>
+  <section class="card" data-panel="progress" id="ready-card" hidden>
     <h2>Ready for live learning (stage 3)?</h2>
     <p class="verdict" id="verdict-ready"></p>
     <p class="hint">All study machines together, since the study started on 6 Oct; it does not follow the machine picker. Decisions count only when the machine received them. Live learning, where a learned policy starts choosing, begins only when all 8 are met. Conditions 1 to 4 and 6 are counted live; 5, 7 and 8 come from the last readiness report.</p>
@@ -989,6 +989,7 @@ async function renderProgress() {
     const [ld, ls] = await Promise.all([lastOnRecord("decisions"), lastOnRecord("observations")]);
     if (tab !== "progress") return;
     emptyState("progress", `No decisions and no scores for <b>${esc(serial())}</b> in ${RANGE_WORDS()}. Decisions are made only while the harness controls the machine; scores come from the Compost Control pages. Last decision on record: ${onRecord(ld)}; last score on record: ${dot(onRecord(ls))}`);
+    $("ready-card").hidden = false;     // readiness is study-wide: shown whatever the range
     return;
   }
   clearEmpty("progress");
