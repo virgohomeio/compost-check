@@ -1,5 +1,5 @@
 {
- "generated": "2026-10-26T19:20",
+ "generated": "2026-10-27T10:42",
  "targets": {
   "decisions": 750,
   "per_setting": 125,
@@ -14,7 +14,7 @@
    "n": 1,
    "condition": "Decisions applied, all settings",
    "target": ">= 750",
-   "now": "481",
+   "now": "505",
    "met": false,
    "forecast": "~03 Nov"
   },
@@ -22,7 +22,7 @@
    "n": 2,
    "condition": "Decisions per setting",
    "target": ">= 125 each",
-   "now": "dormant 32  light 217  middle 40  heavy 167  boost 25",
+   "now": "dormant 36  light 226  middle 45  heavy 171  boost 27",
    "met": false,
    "forecast": "dormant ~09 Nov; middle ~07 Nov; boost ~10 Nov"
   },
@@ -30,7 +30,7 @@
    "n": 3,
    "condition": "Settings balance (when all five allowed)",
    "target": ">= 15% each",
-   "now": "dormant 26%  light 15%  middle 32%  heavy 6%  boost 21%  (of 62)",
+   "now": "dormant 23%  light 15%  middle 32%  heavy 10%  boost 19%  (of 78)",
    "met": false,
    "forecast": ""
   },
@@ -38,9 +38,9 @@
    "n": 4,
    "condition": "Scores",
    "target": ">= 175",
-   "now": "97",
+   "now": "109",
    "met": false,
-   "forecast": "~05 Nov"
+   "forecast": "~03 Nov"
   },
   {
    "n": 5,
@@ -70,8 +70,8 @@
    "n": 8,
    "condition": "Harness ready to run a learned policy",
    "target": "all 4 done",
-   "now": "0 of 4: mock run of a learned policy no, block schedule no, block rows written no, policy files kept no",
-   "met": false,
+   "now": "4 of 4: mock run of a learned policy yes, block schedule yes, block rows written yes, policy files kept yes",
+   "met": true,
    "forecast": ""
   }
  ],
@@ -152,9 +152,9 @@
   }
  },
  "harness": {
-  "mock run of a learned policy": false,
-  "block schedule": false,
-  "block rows written": false,
-  "policy files kept": false
+  "mock run of a learned policy": true,
+  "block schedule": true,
+  "block rows written": true,
+  "policy files kept": true
  }
 }
