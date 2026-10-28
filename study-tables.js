@@ -351,6 +351,40 @@
     };
   }
 
+
+  // "Scored right after a mix", ticked from the machine's own log: when the
+  // chamber's last mix ended within AFTER_MIX_H hours before the score's
+  // time, the box is ticked and says when; otherwise it is left unticked.
+  // The person can still change it. opts: {url, key, machine(), chamber(),
+  // at() -> ISO time or null for now, box}. Returns {refresh()}.
+  const AFTER_MIX_H = 2;
+  function afterMixAuto(opts) {
+    const note = document.createElement("span");
+    note.className = "hint"; note.style.marginLeft = "6px";
+    opts.box.parentElement.appendChild(note);
+    let ask = 0;
+    async function refresh() {
+      const m = opts.machine(), ch = opts.chamber(), mine = ++ask;
+      note.textContent = "";
+      if (!m || !ch) return;
+      try {
+        const res = await fetch(`${opts.url}/rest/v1/events?select=day,time,utc_offset&machine=eq.${encodeURIComponent(m)}` +
+          `&chamber=eq.${ch}&event=eq.mix_stop&order=day.desc,time.desc&limit=1`,
+          { headers: { apikey: opts.key, Authorization: `Bearer ${opts.key}` }, cache: "no-store" });
+        const rows = res.ok ? await res.json() : [];
+        if (mine !== ask) return;                    // a newer chamber or machine was picked
+        const at = Date.parse((opts.at && opts.at()) || new Date().toISOString());
+        const stop = rows.length ? Date.parse(utcOf(rows[0].day, rows[0].time, rows[0].utc_offset)) : NaN;
+        const ago = (at - stop) / 3600000;
+        const recent = ago >= 0 && ago <= AFTER_MIX_H;
+        opts.box.checked = recent;
+        note.textContent = rows.length ? (recent ? `(ticked: chamber ${ch} finished a mix at ${String(rows[0].time).slice(0, 5)})`
+          : `(last mix ended ${String(rows[0].time).slice(0, 5)} ${rows[0].day.slice(5)}, more than ${AFTER_MIX_H} h before)`) : "";
+      } catch (e) { /* offline: leave the box as it is */ }
+    }
+    return { refresh };
+  }
+
   window.StudyTables = { OUT_OF_SERVICE, when, utcOf, toTable, fromTable, translate, fetchRows, fillMachines, logAdds,
-    whenField, tables: BY_NAME };
+    whenField, afterMixAuto, tables: BY_NAME };
 })();

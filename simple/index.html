@@ -336,6 +336,12 @@ $("missed").addEventListener("change", () => {
 });
 $("observer").value = store("p150-observer") || "";
 const whenPick = StudyTables.whenField($("when-field"), { url: SUPABASE_URL, key: SUPABASE_KEY, machine: () => serial() });
+// "after mix" ticks itself from the machine's log (study-tables.js afterMixAuto)
+const afterMix = StudyTables.afterMixAuto({ url: SUPABASE_URL, key: SUPABASE_KEY, machine: () => serial(),
+  chamber: () => state.chamber, at: () => whenPick.iso(), box: $("after_mix") });
+document.querySelector('[data-group="chamber"]').addEventListener("click", () => setTimeout(afterMix.refresh));
+["serial", "serial-other"].forEach((id) => $(id).addEventListener("change", () => afterMix.refresh()));
+
 
 // ---- tabs
 let tab = "score";
@@ -474,6 +480,7 @@ function resetScore() {
   $("smell-detail").hidden = true;
   ["after_mix", "fresh_food_seen", "missed"].forEach((id) => { $(id).checked = false; });
   $("miss_reason").value = ""; $("miss-box").hidden = true; $("score-box").hidden = false;
+  afterMix.refresh();
 }
 function resetFeed() {
   state.feed_size = state.feed_wet = undefined;
