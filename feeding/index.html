@@ -1,0 +1,132 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Feeding Sheet</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Archivo+Narrow:wght@500;600;700&family=Public+Sans:ital,wght@0,400;0,600;0,700;1,400&family=JetBrains+Mono:wght@400;600&display=swap">
+<style>
+/* A weekly feeding sheet: one block per machine, the week's days as a table; prints one week on paper. */
+:root {
+  --paper: #f3f5f2; --sheet: #ffffff; --ink: #1d2420; --ink-2: #4a554e; --rule: #d5dcd6;
+  --moss: #3f6b4a; --moss-soft: #e3ece4; --warn: #8a5a00; --warn-soft: #fbefd6;
+  --cure: #1f5fbf; --cure-soft: #e3edfb;
+  --f-display: "Archivo Narrow", "Arial Narrow", system-ui, sans-serif;
+  --f-body: "Public Sans", system-ui, -apple-system, "Segoe UI", sans-serif;
+  --f-mono: "JetBrains Mono", ui-monospace, Consolas, monospace;
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    color-scheme: dark;
+    --paper: #141916; --sheet: #1b211d; --ink: #e3e9e4; --ink-2: #a5b0a8; --rule: #2f3832;
+    --moss: #8cc29a; --moss-soft: #22322a; --warn: #e8b85a; --warn-soft: #33290f; --cure: #8ab4f8; --cure-soft: #17263d;
+  }
+}
+:root[data-theme="dark"] {
+  color-scheme: dark;
+  --paper: #141916; --sheet: #1b211d; --ink: #e3e9e4; --ink-2: #a5b0a8; --rule: #2f3832;
+  --moss: #8cc29a; --moss-soft: #22322a; --warn: #e8b85a; --warn-soft: #33290f; --cure: #8ab4f8; --cure-soft: #17263d;
+}
+body { margin: 0; background: var(--paper); color: var(--ink); font: 15.5px/1.55 var(--f-body); padding-inline: 16px; }
+.wrap { max-width: 860px; margin: 0 auto; padding-block: 28px 64px; display: grid; gap: 24px; }
+h1, h2 { font-family: var(--f-display); margin: 0; line-height: 1.15; text-wrap: balance; }
+h1 { font-size: 2.1rem; } h2 { font-size: 1.3rem; }
+p { margin: 0; }
+.lede { color: var(--ink-2); max-width: 66ch; }
+.eyebrow { font: 600 .74rem/1 var(--f-mono); letter-spacing: .12em; text-transform: uppercase; color: var(--moss); }
+nav.pages { max-width: 860px; margin: 0 auto; padding-top: 16px; display: flex; flex-wrap: wrap; gap: 4px; font: 14px var(--f-body); }
+nav.pages a { padding: 5px 11px; border-radius: 999px; color: var(--ink-2); text-decoration: none; border: 1px solid transparent; }
+nav.pages a:hover { color: var(--ink); border-color: var(--rule); }
+nav.pages a[aria-current="page"] { background: var(--moss); color: var(--sheet); font-weight: 600; }
+.weeks { display: flex; flex-wrap: wrap; gap: 6px; }
+.weeks button { font: 600 13px var(--f-body); padding: 6px 12px; border-radius: 999px; border: 1px solid var(--rule);
+  background: var(--sheet); color: var(--ink); cursor: pointer; }
+.weeks button[aria-pressed="true"] { background: var(--moss); color: var(--sheet); border-color: var(--moss); }
+.weeks button:focus-visible { outline: 2px solid var(--moss); outline-offset: 2px; }
+.machine { background: var(--sheet); border: 1px solid var(--rule); border-radius: 8px; padding: 16px; display: grid; gap: 12px; break-inside: avoid; }
+.roles { display: flex; flex-wrap: wrap; gap: 8px; }
+.pill { font: 600 13px var(--f-body); padding: 3px 10px; border-radius: 999px; }
+.pill.fed { background: var(--moss-soft); color: var(--moss); }
+.pill.cure { background: var(--cure-soft); color: var(--cure); }
+.note { border-left: 3px solid var(--warn); background: var(--warn-soft); padding: 8px 12px; border-radius: 0 6px 6px 0; font-size: 14px; }
+.card { color: var(--ink-2); font-size: 14px; }
+.days { display: grid; grid-template-columns: repeat(5, minmax(0, 1fr)); gap: 8px; }
+.day { border: 1px solid var(--rule); border-radius: 6px; padding: 8px; min-height: 64px; display: grid; align-content: start; gap: 4px; }
+.day h3 { margin: 0; font: 600 .72rem/1.2 var(--f-mono); letter-spacing: .08em; text-transform: uppercase; color: var(--ink-2); }
+.feed { font-size: 13.5px; line-height: 1.3; }
+.feed b { font-variant-numeric: tabular-nums; }
+.none { color: var(--ink-2); font-size: 13px; font-style: italic; }
+.wet { color: var(--cure); }
+footer { color: var(--ink-2); font-size: 13.5px; display: grid; gap: 6px; }
+@media (max-width: 620px) { .days { grid-template-columns: 1fr 1fr; } h1 { font-size: 1.8rem; } }
+@media print {
+  nav.pages, .weeks, .noprint { display: none !important; }
+  body { background: #fff; padding: 0; font-size: 12px; }
+  .wrap { padding: 0; gap: 12px; }
+  .machine { border-color: #999; }
+}
+</style>
+</head>
+<body>
+<nav class="pages" aria-label="Pages"><a href="../">Home</a><a href="../simple/">Quick score</a><a href="../score/">Full check</a><a href="../feeding/" aria-current="page">Feeding</a><a href="../insights/">Insights</a><a href="../guide/">Guide</a></nav>
+<div class="wrap">
+  <header style="display:grid;gap:8px">
+    <span class="eyebrow">Compost study · feeding sheet</span>
+    <h1 id="title">Feeding sheet</h1>
+    <p class="lede">The plan's weekly feeding: on each machine one chamber is fed by its card, the other cures with no food at all. Weekdays only. Log every feed on Quick score with the same band and wetness; never enter the card anywhere.</p>
+  </header>
+  <div class="weeks noprint" id="weeks" role="group" aria-label="Week"></div>
+  <div id="sheet" style="display:grid;gap:16px"><p class="lede">Loading…</p></div>
+  <footer>
+    <p><b>Bands:</b> small = under 250 g (a quarter caddy or less), medium = 250–500 g, large = over 500 g. <b>Wetness:</b> wet = mostly water or water added; normal = mixed kitchen waste.</p>
+    <p><b>Times</b> are suggestions between the morning score and the 15:00 mix, so no score finds fresh food. Close to the time is fine.</p>
+    <p class="noprint">Made by <code>python -m harness.tools.feed_schedule</code> from a fixed seed, as the plan asks. Print with Ctrl+P: one week per sheet.</p>
+  </footer>
+</div>
+<script>
+const $ = (id) => document.getElementById(id);
+const esc = (s) => String(s ?? "").replace(/[&<>"]/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[c]));
+const fmtDay = (iso) => new Date(iso + "T12:00:00").toLocaleDateString(undefined, { day: "numeric", month: "short" });
+const todayIso = new Date().toLocaleString("sv-SE", { timeZone: "America/Toronto" }).slice(0, 10);
+let data = null, shown = null;
+
+function pickDefault() {
+  // this week if it is on the schedule (Saturday and Sunday show the coming week), else the first upcoming
+  const weeks = data.weeks.map((w) => w.monday);
+  const sat = new Date(todayIso + "T12:00:00"); const wd = (sat.getDay() + 6) % 7;
+  const monday = new Date(sat - wd * 864e5).toISOString().slice(0, 10);
+  const target = wd >= 5 ? new Date(Date.parse(monday) + 7 * 864e5).toISOString().slice(0, 10) : monday;
+  return weeks.includes(target) ? target : (weeks.find((m) => m >= target) || weeks[weeks.length - 1]);
+}
+
+function render() {
+  const wk = data.weeks.find((w) => w.monday === shown);
+  $("title").textContent = `Feeding sheet · week of ${fmtDay(wk.monday)}`;
+  [...$("weeks").children].forEach((b) => b.setAttribute("aria-pressed", String(b.dataset.m === shown)));
+  $("sheet").innerHTML = wk.rows.map((r) => `
+    <section class="machine">
+      <h2>${esc(r.machine)}</h2>
+      <div class="roles"><span class="pill fed">Feed ${esc(r.fed)}: ${esc(r.card)} card</span>
+        <span class="pill cure">${esc(r.curing)} cures: no food all week</span></div>
+      ${r.unload_monday ? `<p class="note"><b>Monday 09:45, before the first feed:</b> unload chamber ${esc(r.fed)} (it cured last week). Take out about 80 %, leave the rest as a starter, and log it as an unload on Full check.</p>` : ""}
+      <p class="card"><b>${esc(r.card)}:</b> ${esc(data.cards[r.card])}</p>
+      <div class="days">${r.days.map((d) => `
+        <div class="day"><h3>${esc(d.day)} ${esc(fmtDay(d.date))}</h3>
+          ${d.feeds.length ? d.feeds.map((f) => `<div class="feed"><b>${esc(f.time)}</b> ${esc(f.band)}, <span class="${f.wetness === "wet" ? "wet" : ""}">${esc(f.wetness)}</span></div>`).join("")
+            : `<span class="none">no feed</span>`}
+        </div>`).join("")}</div>
+    </section>`).join("");
+}
+
+fetch("../feeding.json", { cache: "no-store" }).then((r) => r.json()).then((d) => {
+  data = d;
+  $("weeks").innerHTML = d.weeks.map((w) => `<button type="button" data-m="${w.monday}">${esc(fmtDay(w.monday))}</button>`).join("");
+  $("weeks").addEventListener("click", (e) => { const b = e.target.closest("button"); if (b) { shown = b.dataset.m; render(); } });
+  shown = pickDefault();
+  render();
+}).catch(() => { $("sheet").innerHTML = `<p class="lede">The feeding schedule could not be loaded.</p>`; });
+</script>
+</body>
+</html>
