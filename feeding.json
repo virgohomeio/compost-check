@@ -16,6 +16,7 @@
  "weeks": [
   {
    "monday": "2026-11-02",
+   "stage": "Before live learning (stage 1-2 data)",
    "rows": [
     {
      "machine": "000",
@@ -207,6 +208,7 @@
   },
   {
    "monday": "2026-11-09",
+   "stage": "Stage 3: live learning (learned policy and matched mode in 2-day blocks)",
    "rows": [
     {
      "machine": "000",
@@ -441,6 +443,7 @@
   },
   {
    "monday": "2026-11-16",
+   "stage": "Stage 3: live learning (learned policy and matched mode in 2-day blocks)",
    "rows": [
     {
      "machine": "000",
@@ -733,6 +736,7 @@
   },
   {
    "monday": "2026-11-23",
+   "stage": "Stage 3: live learning (learned policy and matched mode in 2-day blocks)",
    "rows": [
     {
      "machine": "000",
@@ -967,6 +971,7 @@
   },
   {
    "monday": "2026-11-30",
+   "stage": "Stage 3: live learning (learned policy and matched mode in 2-day blocks)",
    "rows": [
     {
      "machine": "000",
@@ -1223,6 +1228,7 @@
   },
   {
    "monday": "2026-12-07",
+   "stage": "Stage 3: live learning (learned policy and matched mode in 2-day blocks)",
    "rows": [
     {
      "machine": "000",
@@ -1476,6 +1482,238 @@
          "time": "14:15",
          "band": "large",
          "wetness": "wet"
+        }
+       ]
+      }
+     ]
+    }
+   ]
+  },
+  {
+   "monday": "2026-12-14",
+   "stage": "Stage 4: confirm (the final policy runs alone)",
+   "rows": [
+    {
+     "machine": "000",
+     "fed": "R",
+     "curing": "L",
+     "card": "light",
+     "unload_monday": true,
+     "days": [
+      {
+       "day": "Mon",
+       "date": "2026-12-14",
+       "feeds": [
+        {
+         "time": "13:45",
+         "band": "small",
+         "wetness": "normal"
+        }
+       ]
+      },
+      {
+       "day": "Tue",
+       "date": "2026-12-15",
+       "feeds": []
+      },
+      {
+       "day": "Wed",
+       "date": "2026-12-16",
+       "feeds": [
+        {
+         "time": "12:15",
+         "band": "small",
+         "wetness": "normal"
+        }
+       ]
+      },
+      {
+       "day": "Thu",
+       "date": "2026-12-17",
+       "feeds": [
+        {
+         "time": "11:30",
+         "band": "small",
+         "wetness": "normal"
+        }
+       ]
+      },
+      {
+       "day": "Fri",
+       "date": "2026-12-18",
+       "feeds": [
+        {
+         "time": "14:15",
+         "band": "small",
+         "wetness": "normal"
+        }
+       ]
+      }
+     ]
+    },
+    {
+     "machine": "305",
+     "fed": "L",
+     "curing": "R",
+     "card": "heavy",
+     "unload_monday": true,
+     "days": [
+      {
+       "day": "Mon",
+       "date": "2026-12-14",
+       "feeds": [
+        {
+         "time": "11:30",
+         "band": "large",
+         "wetness": "wet"
+        },
+        {
+         "time": "13:45",
+         "band": "large",
+         "wetness": "wet"
+        }
+       ]
+      },
+      {
+       "day": "Tue",
+       "date": "2026-12-15",
+       "feeds": [
+        {
+         "time": "11:30",
+         "band": "large",
+         "wetness": "wet"
+        },
+        {
+         "time": "12:15",
+         "band": "medium",
+         "wetness": "wet"
+        }
+       ]
+      },
+      {
+       "day": "Wed",
+       "date": "2026-12-16",
+       "feeds": [
+        {
+         "time": "10:45",
+         "band": "large",
+         "wetness": "wet"
+        },
+        {
+         "time": "11:30",
+         "band": "large",
+         "wetness": "wet"
+        },
+        {
+         "time": "13:00",
+         "band": "medium",
+         "wetness": "wet"
+        }
+       ]
+      },
+      {
+       "day": "Thu",
+       "date": "2026-12-17",
+       "feeds": [
+        {
+         "time": "10:45",
+         "band": "large",
+         "wetness": "wet"
+        },
+        {
+         "time": "11:30",
+         "band": "large",
+         "wetness": "wet"
+        },
+        {
+         "time": "12:15",
+         "band": "medium",
+         "wetness": "wet"
+        },
+        {
+         "time": "13:00",
+         "band": "large",
+         "wetness": "wet"
+        }
+       ]
+      },
+      {
+       "day": "Fri",
+       "date": "2026-12-18",
+       "feeds": [
+        {
+         "time": "11:30",
+         "band": "large",
+         "wetness": "wet"
+        },
+        {
+         "time": "14:15",
+         "band": "large",
+         "wetness": "wet"
+        }
+       ]
+      }
+     ]
+    },
+    {
+     "machine": "312",
+     "fed": "L",
+     "curing": "R",
+     "card": "binge",
+     "unload_monday": true,
+     "days": [
+      {
+       "day": "Mon",
+       "date": "2026-12-14",
+       "feeds": [
+        {
+         "time": "13:00",
+         "band": "large",
+         "wetness": "wet"
+        }
+       ]
+      },
+      {
+       "day": "Tue",
+       "date": "2026-12-15",
+       "feeds": [
+        {
+         "time": "11:30",
+         "band": "small",
+         "wetness": "normal"
+        }
+       ]
+      },
+      {
+       "day": "Wed",
+       "date": "2026-12-16",
+       "feeds": [
+        {
+         "time": "13:00",
+         "band": "large",
+         "wetness": "wet"
+        }
+       ]
+      },
+      {
+       "day": "Thu",
+       "date": "2026-12-17",
+       "feeds": [
+        {
+         "time": "11:30",
+         "band": "small",
+         "wetness": "normal"
+        }
+       ]
+      },
+      {
+       "day": "Fri",
+       "date": "2026-12-18",
+       "feeds": [
+        {
+         "time": "11:30",
+         "band": "small",
+         "wetness": "normal"
         }
        ]
       }
