@@ -119,7 +119,7 @@ function render() {
       <h2>${esc(r.machine)}</h2>
       <div class="roles"><span class="pill fed">Feed ${esc(r.fed)}: ${esc(r.card)} card</span>
         <span class="pill cure">${esc(r.curing)} cures: no food all week</span></div>
-      ${r.unload_monday ? `<p class="note"><b>Monday 09:45, before the first feed:</b> unload chamber ${esc(r.fed)} (it cured last week). Take out about 80 %, leave the rest as a starter, and log it as an unload on Full check.</p>` : ""}
+      ${r.unload_monday ? `<p class="note"><b>Monday, before the first feed (09:45 from 9 Nov):</b> unload chamber ${esc(r.fed)} (it has cured). Take out about 80 %, leave the rest as a starter, and log it as an unload on Full check.</p>` : ""}
       <p class="card"><b>${esc(r.card)}:</b> ${esc(data.cards[r.card])}</p>
       <div class="days">${r.days.map((d) => `
         <div class="day"><h3>${esc(d.day)} ${esc(fmtDay(d.date))}</h3>

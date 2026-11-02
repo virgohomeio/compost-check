@@ -23,7 +23,7 @@
      "fed": "R",
      "curing": "L",
      "card": "binge",
-     "unload_monday": false,
+     "unload_monday": true,
      "days": [
       {
        "day": "Mon",
@@ -32,7 +32,7 @@
         {
          "time": "13:45",
          "band": "small",
-         "wetness": "normal",
+         "wetness": "wet",
          "grams": 150,
          "range": "under 250 g"
         }
@@ -45,7 +45,7 @@
         {
          "time": "10:45",
          "band": "small",
-         "wetness": "normal",
+         "wetness": "wet",
          "grams": 150,
          "range": "under 250 g"
         }
@@ -71,7 +71,7 @@
         {
          "time": "14:15",
          "band": "small",
-         "wetness": "normal",
+         "wetness": "wet",
          "grams": 150,
          "range": "under 250 g"
         }
@@ -97,7 +97,7 @@
      "fed": "L",
      "curing": "R",
      "card": "light",
-     "unload_monday": false,
+     "unload_monday": true,
      "days": [
       {
        "day": "Mon",
@@ -106,7 +106,7 @@
         {
          "time": "12:15",
          "band": "small",
-         "wetness": "normal",
+         "wetness": "wet",
          "grams": 150,
          "range": "under 250 g"
         }
@@ -119,7 +119,7 @@
         {
          "time": "13:45",
          "band": "small",
-         "wetness": "normal",
+         "wetness": "wet",
          "grams": 150,
          "range": "under 250 g"
         }
@@ -137,7 +137,7 @@
         {
          "time": "14:15",
          "band": "small",
-         "wetness": "normal",
+         "wetness": "wet",
          "grams": 150,
          "range": "under 250 g"
         }
@@ -150,7 +150,7 @@
         {
          "time": "10:45",
          "band": "small",
-         "wetness": "normal",
+         "wetness": "wet",
          "grams": 150,
          "range": "under 250 g"
         }
@@ -163,7 +163,7 @@
      "fed": "L",
      "curing": "R",
      "card": "binge",
-     "unload_monday": false,
+     "unload_monday": true,
      "days": [
       {
        "day": "Mon",
@@ -172,7 +172,7 @@
         {
          "time": "13:45",
          "band": "small",
-         "wetness": "normal",
+         "wetness": "wet",
          "grams": 150,
          "range": "under 250 g"
         }
@@ -198,7 +198,7 @@
         {
          "time": "13:45",
          "band": "small",
-         "wetness": "normal",
+         "wetness": "wet",
          "grams": 150,
          "range": "under 250 g"
         }
@@ -211,7 +211,7 @@
         {
          "time": "13:00",
          "band": "small",
-         "wetness": "normal",
+         "wetness": "wet",
          "grams": 150,
          "range": "under 250 g"
         }
