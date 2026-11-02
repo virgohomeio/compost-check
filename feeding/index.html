@@ -63,6 +63,8 @@ nav.pages a[aria-current="page"] { background: var(--moss); color: var(--sheet);
 .feed b { font-variant-numeric: tabular-nums; }
 .none { color: var(--ink-2); font-size: 13px; font-style: italic; }
 .wet { color: var(--cure); }
+.late { font: 600 12px var(--f-body); color: var(--warn); }
+.alldone { color: var(--moss); font-weight: 600; }
 footer { color: var(--ink-2); font-size: 13.5px; display: grid; gap: 6px; }
 @media (max-width: 620px) { .days { grid-template-columns: 1fr 1fr; } h1 { font-size: 1.8rem; } }
 @media print {
@@ -97,17 +99,56 @@ const esc = (s) => String(s ?? "").replace(/[&<>"]/g, (c) => ({ "&": "&amp;", "<
 const fmtDay = (iso) => new Date(iso + "T12:00:00").toLocaleDateString(undefined, { day: "numeric", month: "short" });
 const todayIso = new Date().toLocaleString("sv-SE", { timeZone: "America/Toronto" }).slice(0, 10);
 let data = null, shown = null;
+// What is already done, from the logs in Supabase: feeds logged per machine,
+// chamber and day, and unloads. A logged feed takes the day's next planned
+// feed off the sheet; a day goes once all its feeds are logged; a week goes
+// once its Friday has passed. A past day with a feed not logged stays, marked.
+const SUPABASE_URL = "https://apmncybxykyvacpwccyx.supabase.co";
+const SUPABASE_KEY = "sb_publishable_A31poHKFHwYld6Fy2zjPRQ_-GfIeIWA";
+let fedLog = {}, unloadLog = new Set();
+const keyOf = (m, ch, day) => `${m}|${ch}|${day}`;
+const addDays = (iso, n) => new Date(Date.parse(iso + "T12:00:00Z") + n * 864e5).toISOString().slice(0, 10);
+const openWeeks = () => data.weeks.filter((w) => addDays(w.monday, 4) >= todayIso);
+async function loadLogs() {
+  const first = data.weeks[0].monday, last = addDays(data.weeks[data.weeks.length - 1].monday, 4);
+  try {
+    const res = await fetch(`${SUPABASE_URL}/rest/v1/events?select=machine,chamber,day,event&event=in.(feed_tap,unload)` +
+      `&day=gte.${first}&day=lte.${last}&limit=5000`, { headers: { apikey: SUPABASE_KEY, Authorization: `Bearer ${SUPABASE_KEY}` }, cache: "no-store" });
+    const rows = res.ok ? await res.json() : [];
+    fedLog = {}; unloadLog = new Set();
+    rows.forEach((e) => {
+      const k = keyOf(String(e.machine).slice(-3), e.chamber, e.day);
+      if (e.event === "feed_tap") fedLog[k] = (fedLog[k] || 0) + 1; else unloadLog.add(k);
+    });
+  } catch (e) { /* offline: show the full sheet */ }
+}
 
 function pickDefault() {
   // this week if it is on the schedule (Saturday and Sunday show the coming week), else the first upcoming
-  const weeks = data.weeks.map((w) => w.monday);
+  const weeks = openWeeks().map((w) => w.monday);
+  if (!weeks.length) return null;
   const sat = new Date(todayIso + "T12:00:00"); const wd = (sat.getDay() + 6) % 7;
   const monday = new Date(sat - wd * 864e5).toISOString().slice(0, 10);
   const target = wd >= 5 ? new Date(Date.parse(monday) + 7 * 864e5).toISOString().slice(0, 10) : monday;
   return weeks.includes(target) ? target : (weeks.find((m) => m >= target) || weeks[weeks.length - 1]);
 }
 
+function dayHtml(r, d) {
+  const n = fedLog[keyOf(r.machine, r.fed, d.date)] || 0;
+  const left = d.feeds.slice(n);
+  const past = d.date < todayIso;
+  if (!left.length && (d.feeds.length || past)) return "";       // done, or a past day with nothing planned
+  const warn = past && left.length ? `<span class="late">not logged yet</span>` : "";
+  return `<div class="day"><h3>${esc(d.day)} ${esc(fmtDay(d.date))}</h3>${warn}
+    ${left.length ? left.map((f) => `<div class="feed"><b>${esc(f.time)}</b> · <b>${esc(f.range || "")}</b><br>${esc(f.band)}, <span class="${f.wetness === "wet" ? "wet" : ""}">${esc(f.wetness)}</span></div>`).join("")
+      : `<span class="none">no feed</span>`}</div>`;
+}
+
 function render() {
+  if (!shown) {
+    $("title").textContent = "Feeding sheet"; $("stage").textContent = ""; $("weeks").innerHTML = "";
+    $("sheet").innerHTML = `<p class="lede">Every week on the schedule is done.</p>`; return;
+  }
   const wk = data.weeks.find((w) => w.monday === shown);
   $("title").textContent = `Feeding sheet · week of ${fmtDay(wk.monday)}`;
   const st = wk.stage || "";
@@ -119,23 +160,31 @@ function render() {
       <h2>${esc(r.machine)}</h2>
       <div class="roles"><span class="pill fed">Feed ${esc(r.fed)}: ${esc(r.card)} card</span>
         <span class="pill cure">${esc(r.curing)} cures: no food all week</span></div>
-      ${r.unload_monday ? `<p class="note"><b>Monday, before the first feed (09:45 from 9 Nov):</b> unload chamber ${esc(r.fed)} (it has cured). Take out about 80 %, leave the rest as a starter, and log it as an unload on Full check.</p>` : ""}
+      ${r.unload_monday && !unloadLog.has(keyOf(r.machine, r.fed, wk.monday)) ? `<p class="note"><b>Monday, before the first feed (09:45 from 9 Nov):</b> unload chamber ${esc(r.fed)} (it has cured). Take out about 80 %, leave the rest as a starter, and log it as an unload on Full check.</p>` : ""}
       <p class="card"><b>${esc(r.card)}:</b> ${esc(data.cards[r.card])}</p>
-      <div class="days">${r.days.map((d) => `
-        <div class="day"><h3>${esc(d.day)} ${esc(fmtDay(d.date))}</h3>
-          ${d.feeds.length ? d.feeds.map((f) => `<div class="feed"><b>${esc(f.time)}</b> · <b>${esc(f.range || "")}</b><br>${esc(f.band)}, <span class="${f.wetness === "wet" ? "wet" : ""}">${esc(f.wetness)}</span></div>`).join("")
-            : `<span class="none">no feed</span>`}
-        </div>`).join("")}</div>
+      ${(() => { const days = r.days.map((d) => dayHtml(r, d)).join("");
+        return days ? `<div class="days">${days}</div>` : `<p class="alldone">All of this week's feeds for ${esc(r.machine)} ${esc(r.fed)} are logged ✓</p>`; })()}
     </section>`).join("");
 }
 
-fetch("../feeding.json", { cache: "no-store" }).then((r) => r.json()).then((d) => {
-  data = d;
+function drawWeeks() {
   const tag = (st) => (st || "").startsWith("Stage 4") ? "confirm" : (st || "").startsWith("Stage 3") ? "live learning" : "before";
-  $("weeks").innerHTML = d.weeks.map((w) => `<button type="button" data-m="${w.monday}">${esc(fmtDay(w.monday))}<small>${tag(w.stage)}</small></button>`).join("");
+  $("weeks").innerHTML = openWeeks().map((w) => `<button type="button" data-m="${w.monday}">${esc(fmtDay(w.monday))}<small>${tag(w.stage)}</small></button>`).join("");
+}
+async function refresh() {
+  await loadLogs();
+  if (!openWeeks().some((w) => w.monday === shown)) shown = pickDefault();
+  drawWeeks(); render();
+}
+fetch("../feeding.json", { cache: "no-store" }).then((r) => r.json()).then(async (d) => {
+  data = d;
+  await loadLogs();
+  drawWeeks();
   $("weeks").addEventListener("click", (e) => { const b = e.target.closest("button"); if (b) { shown = b.dataset.m; render(); } });
   shown = pickDefault();
   render();
+  setInterval(refresh, 120000);                                   // logs from the forms show within 2 minutes
+  document.addEventListener("visibilitychange", () => { if (!document.hidden) refresh(); });
 }).catch(() => { $("sheet").innerHTML = `<p class="lede">The feeding schedule could not be loaded.</p>`; });
 </script>
 </body>
