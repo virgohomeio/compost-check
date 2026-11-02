@@ -32,7 +32,8 @@
         {
          "time": "13:45",
          "band": "small",
-         "wetness": "normal"
+         "wetness": "normal",
+         "grams": 150
         }
        ]
       },
@@ -43,7 +44,8 @@
         {
          "time": "10:45",
          "band": "small",
-         "wetness": "normal"
+         "wetness": "normal",
+         "grams": 150
         }
        ]
       },
@@ -54,7 +56,8 @@
         {
          "time": "12:15",
          "band": "large",
-         "wetness": "wet"
+         "wetness": "wet",
+         "grams": 750
         }
        ]
       },
@@ -65,7 +68,8 @@
         {
          "time": "14:15",
          "band": "small",
-         "wetness": "normal"
+         "wetness": "normal",
+         "grams": 150
         }
        ]
       },
@@ -76,7 +80,8 @@
         {
          "time": "12:15",
          "band": "large",
-         "wetness": "wet"
+         "wetness": "wet",
+         "grams": 750
         }
        ]
       }
@@ -96,7 +101,8 @@
         {
          "time": "12:15",
          "band": "small",
-         "wetness": "normal"
+         "wetness": "normal",
+         "grams": 150
         }
        ]
       },
@@ -107,7 +113,8 @@
         {
          "time": "13:45",
          "band": "small",
-         "wetness": "normal"
+         "wetness": "normal",
+         "grams": 150
         }
        ]
       },
@@ -123,7 +130,8 @@
         {
          "time": "14:15",
          "band": "small",
-         "wetness": "normal"
+         "wetness": "normal",
+         "grams": 150
         }
        ]
       },
@@ -134,7 +142,8 @@
         {
          "time": "10:45",
          "band": "small",
-         "wetness": "normal"
+         "wetness": "normal",
+         "grams": 150
         }
        ]
       }
@@ -154,7 +163,8 @@
         {
          "time": "13:45",
          "band": "small",
-         "wetness": "normal"
+         "wetness": "normal",
+         "grams": 150
         }
        ]
       },
@@ -165,7 +175,8 @@
         {
          "time": "13:00",
          "band": "large",
-         "wetness": "wet"
+         "wetness": "wet",
+         "grams": 750
         }
        ]
       },
@@ -176,7 +187,8 @@
         {
          "time": "13:45",
          "band": "small",
-         "wetness": "normal"
+         "wetness": "normal",
+         "grams": 150
         }
        ]
       },
@@ -187,7 +199,8 @@
         {
          "time": "13:00",
          "band": "small",
-         "wetness": "normal"
+         "wetness": "normal",
+         "grams": 150
         }
        ]
       },
@@ -198,7 +211,8 @@
         {
          "time": "13:00",
          "band": "large",
-         "wetness": "wet"
+         "wetness": "wet",
+         "grams": 750
         }
        ]
       }
@@ -224,12 +238,14 @@
         {
          "time": "10:45",
          "band": "medium",
-         "wetness": "wet"
+         "wetness": "wet",
+         "grams": 375
         },
         {
          "time": "12:15",
          "band": "medium",
-         "wetness": "wet"
+         "wetness": "wet",
+         "grams": 375
         }
        ]
       },
@@ -240,12 +256,14 @@
         {
          "time": "11:30",
          "band": "medium",
-         "wetness": "wet"
+         "wetness": "wet",
+         "grams": 375
         },
         {
          "time": "12:15",
          "band": "large",
-         "wetness": "wet"
+         "wetness": "wet",
+         "grams": 750
         }
        ]
       },
@@ -256,12 +274,14 @@
         {
          "time": "11:30",
          "band": "medium",
-         "wetness": "wet"
+         "wetness": "wet",
+         "grams": 375
         },
         {
          "time": "14:15",
          "band": "medium",
-         "wetness": "wet"
+         "wetness": "wet",
+         "grams": 375
         }
        ]
       },
@@ -272,7 +292,8 @@
         {
          "time": "13:00",
          "band": "small",
-         "wetness": "normal"
+         "wetness": "normal",
+         "grams": 150
         }
        ]
       },
@@ -283,7 +304,8 @@
         {
          "time": "13:00",
          "band": "small",
-         "wetness": "normal"
+         "wetness": "normal",
+         "grams": 150
         }
        ]
       }
@@ -303,12 +325,14 @@
         {
          "time": "13:45",
          "band": "medium",
-         "wetness": "wet"
+         "wetness": "wet",
+         "grams": 375
         },
         {
          "time": "14:15",
          "band": "medium",
-         "wetness": "wet"
+         "wetness": "wet",
+         "grams": 375
         }
        ]
       },
@@ -319,22 +343,26 @@
         {
          "time": "11:30",
          "band": "medium",
-         "wetness": "wet"
+         "wetness": "wet",
+         "grams": 375
         },
         {
          "time": "12:15",
          "band": "medium",
-         "wetness": "wet"
+         "wetness": "wet",
+         "grams": 375
         },
         {
          "time": "13:45",
          "band": "medium",
-         "wetness": "wet"
+         "wetness": "wet",
+         "grams": 375
         },
         {
          "time": "14:15",
          "band": "large",
-         "wetness": "wet"
+         "wetness": "wet",
+         "grams": 750
         }
        ]
       },
@@ -345,22 +373,26 @@
         {
          "time": "10:45",
          "band": "medium",
-         "wetness": "wet"
+         "wetness": "wet",
+         "grams": 375
         },
         {
          "time": "11:30",
          "band": "medium",
-         "wetness": "wet"
+         "wetness": "wet",
+         "grams": 375
         },
         {
          "time": "12:15",
          "band": "large",
-         "wetness": "wet"
+         "wetness": "wet",
+         "grams": 750
         },
         {
          "time": "13:45",
          "band": "medium",
-         "wetness": "wet"
+         "wetness": "wet",
+         "grams": 375
         }
        ]
       },
@@ -371,7 +403,8 @@
         {
          "time": "12:15",
          "band": "small",
-         "wetness": "normal"
+         "wetness": "normal",
+         "grams": 150
         }
        ]
       },
@@ -382,7 +415,8 @@
         {
          "time": "14:15",
          "band": "small",
-         "wetness": "normal"
+         "wetness": "normal",
+         "grams": 150
         }
        ]
       }
@@ -402,12 +436,14 @@
         {
          "time": "11:30",
          "band": "medium",
-         "wetness": "normal"
+         "wetness": "normal",
+         "grams": 375
         },
         {
          "time": "13:00",
          "band": "medium",
-         "wetness": "normal"
+         "wetness": "normal",
+         "grams": 375
         }
        ]
       },
@@ -433,7 +469,8 @@
         {
          "time": "12:15",
          "band": "large",
-         "wetness": "wet"
+         "wetness": "wet",
+         "grams": 750
         }
        ]
       }
@@ -459,7 +496,8 @@
         {
          "time": "12:15",
          "band": "small",
-         "wetness": "normal"
+         "wetness": "normal",
+         "grams": 150
         }
        ]
       },
@@ -470,7 +508,8 @@
         {
          "time": "13:00",
          "band": "small",
-         "wetness": "normal"
+         "wetness": "normal",
+         "grams": 150
         }
        ]
       },
@@ -481,7 +520,8 @@
         {
          "time": "11:30",
          "band": "small",
-         "wetness": "normal"
+         "wetness": "normal",
+         "grams": 150
         }
        ]
       },
@@ -492,22 +532,26 @@
         {
          "time": "10:45",
          "band": "medium",
-         "wetness": "wet"
+         "wetness": "wet",
+         "grams": 375
         },
         {
          "time": "12:15",
          "band": "large",
-         "wetness": "wet"
+         "wetness": "wet",
+         "grams": 750
         },
         {
          "time": "13:00",
          "band": "medium",
-         "wetness": "wet"
+         "wetness": "wet",
+         "grams": 375
         },
         {
          "time": "13:45",
          "band": "medium",
-         "wetness": "wet"
+         "wetness": "wet",
+         "grams": 375
         }
        ]
       },
@@ -518,17 +562,20 @@
         {
          "time": "10:45",
          "band": "medium",
-         "wetness": "wet"
+         "wetness": "wet",
+         "grams": 375
         },
         {
          "time": "13:00",
          "band": "medium",
-         "wetness": "wet"
+         "wetness": "wet",
+         "grams": 375
         },
         {
          "time": "13:45",
          "band": "large",
-         "wetness": "wet"
+         "wetness": "wet",
+         "grams": 750
         }
        ]
       }
@@ -548,12 +595,14 @@
         {
          "time": "11:30",
          "band": "medium",
-         "wetness": "wet"
+         "wetness": "wet",
+         "grams": 375
         },
         {
          "time": "14:15",
          "band": "large",
-         "wetness": "wet"
+         "wetness": "wet",
+         "grams": 750
         }
        ]
       },
@@ -564,12 +613,14 @@
         {
          "time": "10:45",
          "band": "large",
-         "wetness": "wet"
+         "wetness": "wet",
+         "grams": 750
         },
         {
          "time": "13:00",
          "band": "medium",
-         "wetness": "wet"
+         "wetness": "wet",
+         "grams": 375
         }
        ]
       },
@@ -580,17 +631,20 @@
         {
          "time": "10:45",
          "band": "medium",
-         "wetness": "wet"
+         "wetness": "wet",
+         "grams": 375
         },
         {
          "time": "12:15",
          "band": "large",
-         "wetness": "wet"
+         "wetness": "wet",
+         "grams": 750
         },
         {
          "time": "14:15",
          "band": "large",
-         "wetness": "wet"
+         "wetness": "wet",
+         "grams": 750
         }
        ]
       },
@@ -601,7 +655,8 @@
         {
          "time": "12:15",
          "band": "small",
-         "wetness": "normal"
+         "wetness": "normal",
+         "grams": 150
         }
        ]
       },
@@ -612,7 +667,8 @@
         {
          "time": "10:45",
          "band": "small",
-         "wetness": "normal"
+         "wetness": "normal",
+         "grams": 150
         }
        ]
       }
@@ -632,17 +688,20 @@
         {
          "time": "10:45",
          "band": "medium",
-         "wetness": "wet"
+         "wetness": "wet",
+         "grams": 375
         },
         {
          "time": "13:00",
          "band": "medium",
-         "wetness": "wet"
+         "wetness": "wet",
+         "grams": 375
         },
         {
          "time": "14:15",
          "band": "large",
-         "wetness": "wet"
+         "wetness": "wet",
+         "grams": 750
         }
        ]
       },
@@ -653,22 +712,26 @@
         {
          "time": "10:45",
          "band": "large",
-         "wetness": "wet"
+         "wetness": "wet",
+         "grams": 750
         },
         {
          "time": "11:30",
          "band": "large",
-         "wetness": "wet"
+         "wetness": "wet",
+         "grams": 750
         },
         {
          "time": "13:00",
          "band": "large",
-         "wetness": "wet"
+         "wetness": "wet",
+         "grams": 750
         },
         {
          "time": "14:15",
          "band": "medium",
-         "wetness": "wet"
+         "wetness": "wet",
+         "grams": 375
         }
        ]
       },
@@ -679,17 +742,20 @@
         {
          "time": "11:30",
          "band": "medium",
-         "wetness": "wet"
+         "wetness": "wet",
+         "grams": 375
         },
         {
          "time": "12:15",
          "band": "medium",
-         "wetness": "wet"
+         "wetness": "wet",
+         "grams": 375
         },
         {
          "time": "14:15",
          "band": "medium",
-         "wetness": "wet"
+         "wetness": "wet",
+         "grams": 375
         }
        ]
       },
@@ -700,12 +766,14 @@
         {
          "time": "13:00",
          "band": "large",
-         "wetness": "wet"
+         "wetness": "wet",
+         "grams": 750
         },
         {
          "time": "13:45",
          "band": "large",
-         "wetness": "wet"
+         "wetness": "wet",
+         "grams": 750
         }
        ]
       },
@@ -716,17 +784,20 @@
         {
          "time": "12:15",
          "band": "large",
-         "wetness": "wet"
+         "wetness": "wet",
+         "grams": 750
         },
         {
          "time": "13:00",
          "band": "medium",
-         "wetness": "wet"
+         "wetness": "wet",
+         "grams": 375
         },
         {
          "time": "14:15",
          "band": "large",
-         "wetness": "wet"
+         "wetness": "wet",
+         "grams": 750
         }
        ]
       }
@@ -752,7 +823,8 @@
         {
          "time": "13:00",
          "band": "large",
-         "wetness": "wet"
+         "wetness": "wet",
+         "grams": 750
         }
        ]
       },
@@ -763,7 +835,8 @@
         {
          "time": "10:45",
          "band": "small",
-         "wetness": "normal"
+         "wetness": "normal",
+         "grams": 150
         }
        ]
       },
@@ -774,7 +847,8 @@
         {
          "time": "13:00",
          "band": "large",
-         "wetness": "wet"
+         "wetness": "wet",
+         "grams": 750
         }
        ]
       },
@@ -785,7 +859,8 @@
         {
          "time": "12:15",
          "band": "small",
-         "wetness": "normal"
+         "wetness": "normal",
+         "grams": 150
         }
        ]
       },
@@ -796,7 +871,8 @@
         {
          "time": "14:15",
          "band": "small",
-         "wetness": "normal"
+         "wetness": "normal",
+         "grams": 150
         }
        ]
       }
@@ -816,17 +892,20 @@
         {
          "time": "10:45",
          "band": "medium",
-         "wetness": "wet"
+         "wetness": "wet",
+         "grams": 375
         },
         {
          "time": "11:30",
          "band": "large",
-         "wetness": "wet"
+         "wetness": "wet",
+         "grams": 750
         },
         {
          "time": "14:15",
          "band": "medium",
-         "wetness": "wet"
+         "wetness": "wet",
+         "grams": 375
         }
        ]
       },
@@ -837,17 +916,20 @@
         {
          "time": "13:00",
          "band": "large",
-         "wetness": "wet"
+         "wetness": "wet",
+         "grams": 750
         },
         {
          "time": "13:45",
          "band": "medium",
-         "wetness": "wet"
+         "wetness": "wet",
+         "grams": 375
         },
         {
          "time": "14:15",
          "band": "large",
-         "wetness": "wet"
+         "wetness": "wet",
+         "grams": 750
         }
        ]
       },
@@ -858,17 +940,20 @@
         {
          "time": "11:30",
          "band": "large",
-         "wetness": "wet"
+         "wetness": "wet",
+         "grams": 750
         },
         {
          "time": "13:00",
          "band": "medium",
-         "wetness": "wet"
+         "wetness": "wet",
+         "grams": 375
         },
         {
          "time": "14:15",
          "band": "medium",
-         "wetness": "wet"
+         "wetness": "wet",
+         "grams": 375
         }
        ]
       },
@@ -879,17 +964,20 @@
         {
          "time": "10:45",
          "band": "medium",
-         "wetness": "wet"
+         "wetness": "wet",
+         "grams": 375
         },
         {
          "time": "11:30",
          "band": "medium",
-         "wetness": "wet"
+         "wetness": "wet",
+         "grams": 375
         },
         {
          "time": "13:00",
          "band": "medium",
-         "wetness": "wet"
+         "wetness": "wet",
+         "grams": 375
         }
        ]
       },
@@ -900,17 +988,20 @@
         {
          "time": "12:15",
          "band": "medium",
-         "wetness": "wet"
+         "wetness": "wet",
+         "grams": 375
         },
         {
          "time": "13:00",
          "band": "large",
-         "wetness": "wet"
+         "wetness": "wet",
+         "grams": 750
         },
         {
          "time": "13:45",
          "band": "large",
-         "wetness": "wet"
+         "wetness": "wet",
+         "grams": 750
         }
        ]
       }
@@ -930,12 +1021,14 @@
         {
          "time": "10:45",
          "band": "medium",
-         "wetness": "normal"
+         "wetness": "normal",
+         "grams": 375
         },
         {
          "time": "14:15",
          "band": "medium",
-         "wetness": "normal"
+         "wetness": "normal",
+         "grams": 375
         }
        ]
       },
@@ -961,7 +1054,8 @@
         {
          "time": "12:15",
          "band": "large",
-         "wetness": "wet"
+         "wetness": "wet",
+         "grams": 750
         }
        ]
       }
@@ -987,7 +1081,8 @@
         {
          "time": "12:15",
          "band": "small",
-         "wetness": "normal"
+         "wetness": "normal",
+         "grams": 150
         }
        ]
       },
@@ -1003,7 +1098,8 @@
         {
          "time": "11:30",
          "band": "small",
-         "wetness": "normal"
+         "wetness": "normal",
+         "grams": 150
         }
        ]
       },
@@ -1014,7 +1110,8 @@
         {
          "time": "12:15",
          "band": "small",
-         "wetness": "normal"
+         "wetness": "normal",
+         "grams": 150
         }
        ]
       },
@@ -1025,7 +1122,8 @@
         {
          "time": "10:45",
          "band": "small",
-         "wetness": "normal"
+         "wetness": "normal",
+         "grams": 150
         }
        ]
       }
@@ -1045,22 +1143,26 @@
         {
          "time": "10:45",
          "band": "medium",
-         "wetness": "wet"
+         "wetness": "wet",
+         "grams": 375
         },
         {
          "time": "11:30",
          "band": "medium",
-         "wetness": "wet"
+         "wetness": "wet",
+         "grams": 375
         },
         {
          "time": "13:45",
          "band": "large",
-         "wetness": "wet"
+         "wetness": "wet",
+         "grams": 750
         },
         {
          "time": "14:15",
          "band": "medium",
-         "wetness": "wet"
+         "wetness": "wet",
+         "grams": 375
         }
        ]
       },
@@ -1071,12 +1173,14 @@
         {
          "time": "11:30",
          "band": "large",
-         "wetness": "wet"
+         "wetness": "wet",
+         "grams": 750
         },
         {
          "time": "13:45",
          "band": "large",
-         "wetness": "wet"
+         "wetness": "wet",
+         "grams": 750
         }
        ]
       },
@@ -1087,12 +1191,14 @@
         {
          "time": "10:45",
          "band": "large",
-         "wetness": "wet"
+         "wetness": "wet",
+         "grams": 750
         },
         {
          "time": "13:45",
          "band": "medium",
-         "wetness": "wet"
+         "wetness": "wet",
+         "grams": 375
         }
        ]
       },
@@ -1103,17 +1209,20 @@
         {
          "time": "11:30",
          "band": "medium",
-         "wetness": "wet"
+         "wetness": "wet",
+         "grams": 375
         },
         {
          "time": "13:00",
          "band": "large",
-         "wetness": "wet"
+         "wetness": "wet",
+         "grams": 750
         },
         {
          "time": "14:15",
          "band": "medium",
-         "wetness": "wet"
+         "wetness": "wet",
+         "grams": 375
         }
        ]
       },
@@ -1124,17 +1233,20 @@
         {
          "time": "10:45",
          "band": "large",
-         "wetness": "wet"
+         "wetness": "wet",
+         "grams": 750
         },
         {
          "time": "13:00",
          "band": "medium",
-         "wetness": "wet"
+         "wetness": "wet",
+         "grams": 375
         },
         {
          "time": "13:45",
          "band": "large",
-         "wetness": "wet"
+         "wetness": "wet",
+         "grams": 750
         }
        ]
       }
@@ -1154,7 +1266,8 @@
         {
          "time": "13:00",
          "band": "small",
-         "wetness": "normal"
+         "wetness": "normal",
+         "grams": 150
         }
        ]
       },
@@ -1165,7 +1278,8 @@
         {
          "time": "10:45",
          "band": "small",
-         "wetness": "normal"
+         "wetness": "normal",
+         "grams": 150
         }
        ]
       },
@@ -1176,7 +1290,8 @@
         {
          "time": "14:15",
          "band": "small",
-         "wetness": "normal"
+         "wetness": "normal",
+         "grams": 150
         }
        ]
       },
@@ -1187,12 +1302,14 @@
         {
          "time": "13:00",
          "band": "medium",
-         "wetness": "wet"
+         "wetness": "wet",
+         "grams": 375
         },
         {
          "time": "13:45",
          "band": "medium",
-         "wetness": "wet"
+         "wetness": "wet",
+         "grams": 375
         }
        ]
       },
@@ -1203,22 +1320,26 @@
         {
          "time": "10:45",
          "band": "large",
-         "wetness": "wet"
+         "wetness": "wet",
+         "grams": 750
         },
         {
          "time": "11:30",
          "band": "large",
-         "wetness": "wet"
+         "wetness": "wet",
+         "grams": 750
         },
         {
          "time": "13:00",
          "band": "large",
-         "wetness": "wet"
+         "wetness": "wet",
+         "grams": 750
         },
         {
          "time": "14:15",
          "band": "large",
-         "wetness": "wet"
+         "wetness": "wet",
+         "grams": 750
         }
        ]
       }
@@ -1244,7 +1365,8 @@
         {
          "time": "13:45",
          "band": "small",
-         "wetness": "normal"
+         "wetness": "normal",
+         "grams": 150
         }
        ]
       },
@@ -1255,7 +1377,8 @@
         {
          "time": "12:15",
          "band": "large",
-         "wetness": "wet"
+         "wetness": "wet",
+         "grams": 750
         }
        ]
       },
@@ -1266,7 +1389,8 @@
         {
          "time": "14:15",
          "band": "small",
-         "wetness": "normal"
+         "wetness": "normal",
+         "grams": 150
         }
        ]
       },
@@ -1277,7 +1401,8 @@
         {
          "time": "11:30",
          "band": "large",
-         "wetness": "wet"
+         "wetness": "wet",
+         "grams": 750
         }
        ]
       },
@@ -1288,7 +1413,8 @@
         {
          "time": "14:15",
          "band": "small",
-         "wetness": "normal"
+         "wetness": "normal",
+         "grams": 150
         }
        ]
       }
@@ -1308,7 +1434,8 @@
         {
          "time": "10:45",
          "band": "small",
-         "wetness": "normal"
+         "wetness": "normal",
+         "grams": 150
         }
        ]
       },
@@ -1319,7 +1446,8 @@
         {
          "time": "10:45",
          "band": "small",
-         "wetness": "normal"
+         "wetness": "normal",
+         "grams": 150
         }
        ]
       },
@@ -1330,7 +1458,8 @@
         {
          "time": "10:45",
          "band": "small",
-         "wetness": "normal"
+         "wetness": "normal",
+         "grams": 150
         }
        ]
       },
@@ -1341,22 +1470,26 @@
         {
          "time": "10:45",
          "band": "large",
-         "wetness": "wet"
+         "wetness": "wet",
+         "grams": 750
         },
         {
          "time": "11:30",
          "band": "large",
-         "wetness": "wet"
+         "wetness": "wet",
+         "grams": 750
         },
         {
          "time": "12:15",
          "band": "medium",
-         "wetness": "wet"
+         "wetness": "wet",
+         "grams": 375
         },
         {
          "time": "14:15",
          "band": "medium",
-         "wetness": "wet"
+         "wetness": "wet",
+         "grams": 375
         }
        ]
       },
@@ -1367,22 +1500,26 @@
         {
          "time": "10:45",
          "band": "medium",
-         "wetness": "wet"
+         "wetness": "wet",
+         "grams": 375
         },
         {
          "time": "11:30",
          "band": "medium",
-         "wetness": "wet"
+         "wetness": "wet",
+         "grams": 375
         },
         {
          "time": "12:15",
          "band": "medium",
-         "wetness": "wet"
+         "wetness": "wet",
+         "grams": 375
         },
         {
          "time": "14:15",
          "band": "medium",
-         "wetness": "wet"
+         "wetness": "wet",
+         "grams": 375
         }
        ]
       }
@@ -1402,12 +1539,14 @@
         {
          "time": "10:45",
          "band": "large",
-         "wetness": "wet"
+         "wetness": "wet",
+         "grams": 750
         },
         {
          "time": "14:15",
          "band": "large",
-         "wetness": "wet"
+         "wetness": "wet",
+         "grams": 750
         }
        ]
       },
@@ -1418,22 +1557,26 @@
         {
          "time": "10:45",
          "band": "large",
-         "wetness": "wet"
+         "wetness": "wet",
+         "grams": 750
         },
         {
          "time": "11:30",
          "band": "large",
-         "wetness": "wet"
+         "wetness": "wet",
+         "grams": 750
         },
         {
          "time": "12:15",
          "band": "medium",
-         "wetness": "wet"
+         "wetness": "wet",
+         "grams": 375
         },
         {
          "time": "14:15",
          "band": "medium",
-         "wetness": "wet"
+         "wetness": "wet",
+         "grams": 375
         }
        ]
       },
@@ -1444,12 +1587,14 @@
         {
          "time": "12:15",
          "band": "large",
-         "wetness": "wet"
+         "wetness": "wet",
+         "grams": 750
         },
         {
          "time": "13:00",
          "band": "medium",
-         "wetness": "wet"
+         "wetness": "wet",
+         "grams": 375
         }
        ]
       },
@@ -1460,12 +1605,14 @@
         {
          "time": "10:45",
          "band": "medium",
-         "wetness": "wet"
+         "wetness": "wet",
+         "grams": 375
         },
         {
          "time": "14:15",
          "band": "large",
-         "wetness": "wet"
+         "wetness": "wet",
+         "grams": 750
         }
        ]
       },
@@ -1476,12 +1623,14 @@
         {
          "time": "10:45",
          "band": "large",
-         "wetness": "wet"
+         "wetness": "wet",
+         "grams": 750
         },
         {
          "time": "14:15",
          "band": "large",
-         "wetness": "wet"
+         "wetness": "wet",
+         "grams": 750
         }
        ]
       }
@@ -1507,7 +1656,8 @@
         {
          "time": "13:45",
          "band": "small",
-         "wetness": "normal"
+         "wetness": "normal",
+         "grams": 150
         }
        ]
       },
@@ -1523,7 +1673,8 @@
         {
          "time": "12:15",
          "band": "small",
-         "wetness": "normal"
+         "wetness": "normal",
+         "grams": 150
         }
        ]
       },
@@ -1534,7 +1685,8 @@
         {
          "time": "11:30",
          "band": "small",
-         "wetness": "normal"
+         "wetness": "normal",
+         "grams": 150
         }
        ]
       },
@@ -1545,7 +1697,8 @@
         {
          "time": "14:15",
          "band": "small",
-         "wetness": "normal"
+         "wetness": "normal",
+         "grams": 150
         }
        ]
       }
@@ -1565,12 +1718,14 @@
         {
          "time": "11:30",
          "band": "large",
-         "wetness": "wet"
+         "wetness": "wet",
+         "grams": 750
         },
         {
          "time": "13:45",
          "band": "large",
-         "wetness": "wet"
+         "wetness": "wet",
+         "grams": 750
         }
        ]
       },
@@ -1581,12 +1736,14 @@
         {
          "time": "11:30",
          "band": "large",
-         "wetness": "wet"
+         "wetness": "wet",
+         "grams": 750
         },
         {
          "time": "12:15",
          "band": "medium",
-         "wetness": "wet"
+         "wetness": "wet",
+         "grams": 375
         }
        ]
       },
@@ -1597,17 +1754,20 @@
         {
          "time": "10:45",
          "band": "large",
-         "wetness": "wet"
+         "wetness": "wet",
+         "grams": 750
         },
         {
          "time": "11:30",
          "band": "large",
-         "wetness": "wet"
+         "wetness": "wet",
+         "grams": 750
         },
         {
          "time": "13:00",
          "band": "medium",
-         "wetness": "wet"
+         "wetness": "wet",
+         "grams": 375
         }
        ]
       },
@@ -1618,22 +1778,26 @@
         {
          "time": "10:45",
          "band": "large",
-         "wetness": "wet"
+         "wetness": "wet",
+         "grams": 750
         },
         {
          "time": "11:30",
          "band": "large",
-         "wetness": "wet"
+         "wetness": "wet",
+         "grams": 750
         },
         {
          "time": "12:15",
          "band": "medium",
-         "wetness": "wet"
+         "wetness": "wet",
+         "grams": 375
         },
         {
          "time": "13:00",
          "band": "large",
-         "wetness": "wet"
+         "wetness": "wet",
+         "grams": 750
         }
        ]
       },
@@ -1644,12 +1808,14 @@
         {
          "time": "11:30",
          "band": "large",
-         "wetness": "wet"
+         "wetness": "wet",
+         "grams": 750
         },
         {
          "time": "14:15",
          "band": "large",
-         "wetness": "wet"
+         "wetness": "wet",
+         "grams": 750
         }
        ]
       }
@@ -1669,7 +1835,8 @@
         {
          "time": "13:00",
          "band": "large",
-         "wetness": "wet"
+         "wetness": "wet",
+         "grams": 750
         }
        ]
       },
@@ -1680,7 +1847,8 @@
         {
          "time": "11:30",
          "band": "small",
-         "wetness": "normal"
+         "wetness": "normal",
+         "grams": 150
         }
        ]
       },
@@ -1691,7 +1859,8 @@
         {
          "time": "13:00",
          "band": "large",
-         "wetness": "wet"
+         "wetness": "wet",
+         "grams": 750
         }
        ]
       },
@@ -1702,7 +1871,8 @@
         {
          "time": "11:30",
          "band": "small",
-         "wetness": "normal"
+         "wetness": "normal",
+         "grams": 150
         }
        ]
       },
@@ -1713,7 +1883,8 @@
         {
          "time": "11:30",
          "band": "small",
-         "wetness": "normal"
+         "wetness": "normal",
+         "grams": 150
         }
        ]
       }
