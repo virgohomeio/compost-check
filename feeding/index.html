@@ -85,8 +85,8 @@ footer { color: var(--ink-2); font-size: 13.5px; display: grid; gap: 6px; }
   <p class="stage" id="stage"></p>
   <div id="sheet" style="display:grid;gap:16px"><p class="lede">Loading…</p></div>
   <footer>
-    <p><b>How much:</b> weigh each feed to the grams shown: small 150 g, medium 375 g, large 750 g. Food and any water together count (1 mL of water = 1 g). <b>Wet</b> means mostly watery food (vegetables, fruit, cooked leftovers) or water added; <b>normal</b> means mixed kitchen waste.</p>
-    <p><b>Record each feed on Quick score → Feed:</b> the chamber, the <b>load</b> band (small / medium / large), the <b>wetness</b> (dry / normal / wet) and the <b>grams</b> you put in. If you were a little off, enter what you actually fed.</p>
+    <p><b>How much:</b> the ranges are the feed form's bands: small under 250 g, medium 250–500 g, large over 500 g. A binge or holiday card's big feed is 700–900 g. Food and any water together count (1 mL of water = 1 g). <b>Wet</b> means mostly watery food (vegetables, fruit, cooked leftovers) or water added; <b>normal</b> means mixed kitchen waste.</p>
+    <p><b>Record each feed on Quick score → Feed:</b> the chamber, the <b>load</b> band (small / medium / large), the <b>wetness</b> (dry / normal / wet), and the grams if you weighed it. Pick the band of what you actually fed.</p>
     <p><b>Times</b> are suggestions between the morning score and the 15:00 mix, so no score finds fresh food. Close to the time is fine.</p>
     <p class="noprint">Made by <code>python -m harness.tools.feed_schedule</code> from a fixed seed, as the plan asks. Print with Ctrl+P: one week per sheet.</p>
   </footer>
@@ -123,7 +123,7 @@ function render() {
       <p class="card"><b>${esc(r.card)}:</b> ${esc(data.cards[r.card])}</p>
       <div class="days">${r.days.map((d) => `
         <div class="day"><h3>${esc(d.day)} ${esc(fmtDay(d.date))}</h3>
-          ${d.feeds.length ? d.feeds.map((f) => `<div class="feed"><b>${esc(f.time)}</b> · <b>${esc(f.grams ?? "")} g</b><br>${esc(f.band)}, <span class="${f.wetness === "wet" ? "wet" : ""}">${esc(f.wetness)}</span></div>`).join("")
+          ${d.feeds.length ? d.feeds.map((f) => `<div class="feed"><b>${esc(f.time)}</b> · <b>${esc(f.range || "")}</b><br>${esc(f.band)}, <span class="${f.wetness === "wet" ? "wet" : ""}">${esc(f.wetness)}</span></div>`).join("")
             : `<span class="none">no feed</span>`}
         </div>`).join("")}</div>
     </section>`).join("");
