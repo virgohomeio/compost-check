@@ -1,5 +1,5 @@
 {
- "generated": "2026-11-02T10:51",
+ "generated": "2026-11-06T08:54",
  "targets": {
   "decisions": 750,
   "per_setting": 125,
@@ -14,57 +14,57 @@
    "n": 1,
    "condition": "Decisions applied, all settings",
    "target": ">= 750",
-   "now": "719",
-   "met": false,
-   "forecast": "~03 Nov"
+   "now": "855",
+   "met": true,
+   "forecast": "met"
   },
   {
    "n": 2,
    "condition": "Decisions per setting",
    "target": ">= 125 each",
-   "now": "dormant 63  light 291  middle 102  heavy 219  boost 44",
+   "now": "dormant 99  light 333  middle 116  heavy 242  boost 65",
    "met": false,
-   "forecast": "dormant ~11 Nov; middle ~05 Nov; boost ~13 Nov"
+   "forecast": "dormant ~10 Nov; middle ~07 Nov; boost ~14 Nov"
   },
   {
    "n": 3,
    "condition": "Settings balance (when all five allowed)",
    "target": ">= 15% each",
-   "now": "dormant 24%  light 19%  middle 26%  heavy 14%  boost 18%  (of 178)",
-   "met": false,
+   "now": "dormant 23%  light 19%  middle 24%  heavy 15%  boost 19%  (of 227)",
+   "met": true,
    "forecast": ""
   },
   {
    "n": 4,
    "condition": "Scores",
    "target": ">= 175",
-   "now": "145",
-   "met": false,
-   "forecast": "~06 Nov"
+   "now": "175",
+   "met": true,
+   "forecast": "met"
   },
   {
    "n": 5,
    "condition": "Different users (chamber-weeks)",
    "target": "every profile card on >= 3 chamber-weeks",
-   "now": "heavy 8  light 0  switcher 6  holiday 6  binge 2  curing 6",
+   "now": "heavy 8  light 1  switcher 6  holiday 6  binge 4  curing 3",
    "met": false,
-   "forecast": "needs 3 more light weeks, 1 more binge week"
+   "forecast": "needs 2 more light weeks"
   },
   {
    "n": 6,
    "condition": "Logging, last 7 days",
    "target": "decisions >= 98%, readings missing < 1%",
-   "now": "000: decisions 100%, readings missing 1%; 305: decisions 100%, readings missing 0%; 312: decisions 100%, readings missing 0%",
-   "met": true,
-   "forecast": "met"
+   "now": "000: decisions 98%, readings missing 1%; 305: decisions 98%, readings missing 0%; 312: decisions 98%, readings missing 0%",
+   "met": false,
+   "forecast": "a full clean week"
   },
   {
    "n": 7,
    "condition": "Gate: learned policy vs matched mode (the plan's stage 2 gate)",
    "target": "overall >= matched; better on >= 2 edge profiles; heavy and light within 0.05 of matched",
-   "now": "Fitted-Q -0.18 vs matched -0.57; better on 2 edge profile(s) ['switcher', 'binge']; heavy ok, light ok",
-   "met": true,
-   "forecast": "from rotate-2026-10-26-plangate"
+   "now": "Fitted-Q -0.22 vs matched -0.45; better on 3 edge profile(s) ['switcher', 'binge', 'curing']; heavy ok, light not ok",
+   "met": false,
+   "forecast": "from rotate-2026-11-06"
   },
   {
    "n": 8,
@@ -76,57 +76,58 @@
   }
  ],
  "gate": {
-  "run": "rotate-2026-10-26-plangate",
-  "run_time": "2026-10-26T18:25",
+  "run": "rotate-2026-11-06",
+  "run_time": "2026-11-06T08:47",
   "plan": true,
-  "passed": true,
+  "passed": false,
   "learner": "Fitted-Q",
   "overall": {
-   "candidate": -0.1839607629100168,
-   "matched": -0.5693422497800474
+   "candidate": -0.22240290654827344,
+   "matched": -0.44837358783995507
   },
   "edge_wins": [
    "switcher",
-   "binge"
+   "binge",
+   "curing"
   ],
   "edge": {
    "binge": {
-    "candidate": -1.1943697535626674,
-    "matched": -1.8092689052737423
+    "candidate": -0.888089747855675,
+    "matched": -1.22512623087128
    },
    "curing": {
-    "candidate": null,
-    "matched": null
+    "candidate": -0.10852996721600378,
+    "matched": -0.15192554892063515
    },
    "holiday": {
-    "candidate": null,
-    "matched": null
+    "candidate": -0.32889407627290496,
+    "matched": -0.1873512285319412
    },
    "switcher": {
-    "candidate": -0.31321551935704905,
-    "matched": -0.5939242039869539
+    "candidate": -0.1809265576181512,
+    "matched": -0.6235205001991614
    }
   },
   "guard": {
    "heavy": {
-    "candidate": 0.02704229507109133,
-    "matched": -0.39529819266551963,
+    "candidate": 0.08701743750050993,
+    "matched": -0.3940089276994519,
     "ok": true
    },
    "light": {
-    "candidate": -0.5527221959055784,
-    "matched": -1.043073544013181,
-    "ok": true
+    "candidate": -1.3436823949647627,
+    "matched": -0.8743455651287203,
+    "ok": false
    }
   },
   "need_edge_wins": 2,
   "tolerance": 0.05
  },
  "dropped": {
-  "total": 142,
+  "total": 144,
   "per_action": {
-   "A0": 0,
-   "A1": 76,
+   "A0": 1,
+   "A1": 77,
    "A2": 1,
    "A3": 64,
    "A4": 1
@@ -147,7 +148,7 @@
   "per_serial": {
    "LL01-00000000305": 80,
    "LL01-00000000312": 52,
-   "LL01-00000000000": 8,
+   "LL01-00000000000": 10,
    "LL01-00000000285": 2
   }
  },
