@@ -292,14 +292,14 @@
         {
          "time": "11:30",
          "band": "medium",
-         "wetness": "wet",
+         "wetness": "normal",
          "grams": 375,
          "range": "250-500 g"
         },
         {
          "time": "14:15",
          "band": "medium",
-         "wetness": "wet",
+         "wetness": "normal",
          "grams": 375,
          "range": "250-500 g"
         }
@@ -401,28 +401,28 @@
         {
          "time": "10:45",
          "band": "medium",
-         "wetness": "wet",
+         "wetness": "normal",
          "grams": 375,
          "range": "250-500 g"
         },
         {
          "time": "11:30",
          "band": "medium",
-         "wetness": "wet",
+         "wetness": "normal",
          "grams": 375,
          "range": "250-500 g"
         },
         {
          "time": "12:15",
-         "band": "large",
-         "wetness": "wet",
-         "grams": 750,
-         "range": "over 500 g"
+         "band": "medium",
+         "wetness": "normal",
+         "grams": 375,
+         "range": "250-500 g"
         },
         {
          "time": "13:45",
          "band": "medium",
-         "wetness": "wet",
+         "wetness": "normal",
          "grams": 375,
          "range": "250-500 g"
         }
