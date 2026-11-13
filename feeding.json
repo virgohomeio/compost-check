@@ -236,7 +236,7 @@
   },
   {
    "monday": "2026-11-09",
-   "stage": "Stage 3: live learning (learned policy and matched mode in 2-day blocks)",
+   "stage": "Stage 3: paused from Wed 11 Nov 11:00. No feeding or scoring until Mon 23 Nov.",
    "rows": [
     {
      "machine": "000",
@@ -308,28 +308,12 @@
       {
        "day": "Thu",
        "date": "2026-11-12",
-       "feeds": [
-        {
-         "time": "13:00",
-         "band": "small",
-         "wetness": "normal",
-         "grams": 150,
-         "range": "under 250 g"
-        }
-       ]
+       "feeds": []
       },
       {
        "day": "Fri",
        "date": "2026-11-13",
-       "feeds": [
-        {
-         "time": "13:00",
-         "band": "small",
-         "wetness": "normal",
-         "grams": 150,
-         "range": "under 250 g"
-        }
-       ]
+       "feeds": []
       }
      ]
     },
@@ -431,28 +415,12 @@
       {
        "day": "Thu",
        "date": "2026-11-12",
-       "feeds": [
-        {
-         "time": "12:15",
-         "band": "small",
-         "wetness": "normal",
-         "grams": 150,
-         "range": "under 250 g"
-        }
-       ]
+       "feeds": []
       },
       {
        "day": "Fri",
        "date": "2026-11-13",
-       "feeds": [
-        {
-         "time": "14:15",
-         "band": "small",
-         "wetness": "normal",
-         "grams": 150,
-         "range": "under 250 g"
-        }
-       ]
+       "feeds": []
       }
      ]
     },
@@ -501,15 +469,7 @@
       {
        "day": "Fri",
        "date": "2026-11-13",
-       "feeds": [
-        {
-         "time": "12:15",
-         "band": "large",
-         "wetness": "wet",
-         "grams": 750,
-         "range": "700-900 g"
-        }
-       ]
+       "feeds": []
       }
      ]
     }
@@ -517,364 +477,8 @@
   },
   {
    "monday": "2026-11-16",
-   "stage": "Stage 3: live learning (learned policy and matched mode in 2-day blocks)",
-   "rows": [
-    {
-     "machine": "000",
-     "fed": "R",
-     "curing": "L",
-     "card": "switcher",
-     "unload_monday": true,
-     "days": [
-      {
-       "day": "Mon",
-       "date": "2026-11-16",
-       "feeds": [
-        {
-         "time": "12:15",
-         "band": "small",
-         "wetness": "normal",
-         "grams": 150,
-         "range": "under 250 g"
-        }
-       ]
-      },
-      {
-       "day": "Tue",
-       "date": "2026-11-17",
-       "feeds": [
-        {
-         "time": "13:00",
-         "band": "small",
-         "wetness": "normal",
-         "grams": 150,
-         "range": "under 250 g"
-        }
-       ]
-      },
-      {
-       "day": "Wed",
-       "date": "2026-11-18",
-       "feeds": [
-        {
-         "time": "11:30",
-         "band": "small",
-         "wetness": "normal",
-         "grams": 150,
-         "range": "under 250 g"
-        }
-       ]
-      },
-      {
-       "day": "Thu",
-       "date": "2026-11-19",
-       "feeds": [
-        {
-         "time": "10:45",
-         "band": "medium",
-         "wetness": "wet",
-         "grams": 375,
-         "range": "250-500 g"
-        },
-        {
-         "time": "12:15",
-         "band": "large",
-         "wetness": "wet",
-         "grams": 750,
-         "range": "over 500 g"
-        },
-        {
-         "time": "13:00",
-         "band": "medium",
-         "wetness": "wet",
-         "grams": 375,
-         "range": "250-500 g"
-        },
-        {
-         "time": "13:45",
-         "band": "medium",
-         "wetness": "wet",
-         "grams": 375,
-         "range": "250-500 g"
-        }
-       ]
-      },
-      {
-       "day": "Fri",
-       "date": "2026-11-20",
-       "feeds": [
-        {
-         "time": "10:45",
-         "band": "medium",
-         "wetness": "wet",
-         "grams": 375,
-         "range": "250-500 g"
-        },
-        {
-         "time": "13:00",
-         "band": "medium",
-         "wetness": "wet",
-         "grams": 375,
-         "range": "250-500 g"
-        },
-        {
-         "time": "13:45",
-         "band": "large",
-         "wetness": "wet",
-         "grams": 750,
-         "range": "over 500 g"
-        }
-       ]
-      }
-     ]
-    },
-    {
-     "machine": "305",
-     "fed": "L",
-     "curing": "R",
-     "card": "switcher",
-     "unload_monday": true,
-     "days": [
-      {
-       "day": "Mon",
-       "date": "2026-11-16",
-       "feeds": [
-        {
-         "time": "11:30",
-         "band": "medium",
-         "wetness": "wet",
-         "grams": 375,
-         "range": "250-500 g"
-        },
-        {
-         "time": "14:15",
-         "band": "large",
-         "wetness": "wet",
-         "grams": 750,
-         "range": "over 500 g"
-        }
-       ]
-      },
-      {
-       "day": "Tue",
-       "date": "2026-11-17",
-       "feeds": [
-        {
-         "time": "10:45",
-         "band": "large",
-         "wetness": "wet",
-         "grams": 750,
-         "range": "over 500 g"
-        },
-        {
-         "time": "13:00",
-         "band": "medium",
-         "wetness": "wet",
-         "grams": 375,
-         "range": "250-500 g"
-        }
-       ]
-      },
-      {
-       "day": "Wed",
-       "date": "2026-11-18",
-       "feeds": [
-        {
-         "time": "10:45",
-         "band": "medium",
-         "wetness": "wet",
-         "grams": 375,
-         "range": "250-500 g"
-        },
-        {
-         "time": "12:15",
-         "band": "large",
-         "wetness": "wet",
-         "grams": 750,
-         "range": "over 500 g"
-        },
-        {
-         "time": "14:15",
-         "band": "large",
-         "wetness": "wet",
-         "grams": 750,
-         "range": "over 500 g"
-        }
-       ]
-      },
-      {
-       "day": "Thu",
-       "date": "2026-11-19",
-       "feeds": [
-        {
-         "time": "12:15",
-         "band": "small",
-         "wetness": "normal",
-         "grams": 150,
-         "range": "under 250 g"
-        }
-       ]
-      },
-      {
-       "day": "Fri",
-       "date": "2026-11-20",
-       "feeds": [
-        {
-         "time": "10:45",
-         "band": "small",
-         "wetness": "normal",
-         "grams": 150,
-         "range": "under 250 g"
-        }
-       ]
-      }
-     ]
-    },
-    {
-     "machine": "312",
-     "fed": "L",
-     "curing": "R",
-     "card": "heavy",
-     "unload_monday": true,
-     "days": [
-      {
-       "day": "Mon",
-       "date": "2026-11-16",
-       "feeds": [
-        {
-         "time": "10:45",
-         "band": "medium",
-         "wetness": "wet",
-         "grams": 375,
-         "range": "250-500 g"
-        },
-        {
-         "time": "13:00",
-         "band": "medium",
-         "wetness": "wet",
-         "grams": 375,
-         "range": "250-500 g"
-        },
-        {
-         "time": "14:15",
-         "band": "large",
-         "wetness": "wet",
-         "grams": 750,
-         "range": "over 500 g"
-        }
-       ]
-      },
-      {
-       "day": "Tue",
-       "date": "2026-11-17",
-       "feeds": [
-        {
-         "time": "10:45",
-         "band": "large",
-         "wetness": "wet",
-         "grams": 750,
-         "range": "over 500 g"
-        },
-        {
-         "time": "11:30",
-         "band": "large",
-         "wetness": "wet",
-         "grams": 750,
-         "range": "over 500 g"
-        },
-        {
-         "time": "13:00",
-         "band": "large",
-         "wetness": "wet",
-         "grams": 750,
-         "range": "over 500 g"
-        },
-        {
-         "time": "14:15",
-         "band": "medium",
-         "wetness": "wet",
-         "grams": 375,
-         "range": "250-500 g"
-        }
-       ]
-      },
-      {
-       "day": "Wed",
-       "date": "2026-11-18",
-       "feeds": [
-        {
-         "time": "11:30",
-         "band": "medium",
-         "wetness": "wet",
-         "grams": 375,
-         "range": "250-500 g"
-        },
-        {
-         "time": "12:15",
-         "band": "medium",
-         "wetness": "wet",
-         "grams": 375,
-         "range": "250-500 g"
-        },
-        {
-         "time": "14:15",
-         "band": "medium",
-         "wetness": "wet",
-         "grams": 375,
-         "range": "250-500 g"
-        }
-       ]
-      },
-      {
-       "day": "Thu",
-       "date": "2026-11-19",
-       "feeds": [
-        {
-         "time": "13:00",
-         "band": "large",
-         "wetness": "wet",
-         "grams": 750,
-         "range": "over 500 g"
-        },
-        {
-         "time": "13:45",
-         "band": "large",
-         "wetness": "wet",
-         "grams": 750,
-         "range": "over 500 g"
-        }
-       ]
-      },
-      {
-       "day": "Fri",
-       "date": "2026-11-20",
-       "feeds": [
-        {
-         "time": "12:15",
-         "band": "large",
-         "wetness": "wet",
-         "grams": 750,
-         "range": "over 500 g"
-        },
-        {
-         "time": "13:00",
-         "band": "medium",
-         "wetness": "wet",
-         "grams": 375,
-         "range": "250-500 g"
-        },
-        {
-         "time": "14:15",
-         "band": "large",
-         "wetness": "wet",
-         "grams": 750,
-         "range": "over 500 g"
-        }
-       ]
-      }
-     ]
-    }
-   ]
+   "stage": "Stage 3: paused this week. No feeding, scoring or running. Live learning restarts Mon 23 Nov at 09:45.",
+   "rows": []
   },
   {
    "monday": "2026-11-23",
@@ -882,9 +486,9 @@
    "rows": [
     {
      "machine": "000",
-     "fed": "L",
-     "curing": "R",
-     "card": "binge",
+     "fed": "R",
+     "curing": "L",
+     "card": "switcher",
      "unload_monday": true,
      "days": [
       {
@@ -892,11 +496,11 @@
        "date": "2026-11-23",
        "feeds": [
         {
-         "time": "13:00",
-         "band": "large",
-         "wetness": "wet",
-         "grams": 750,
-         "range": "700-900 g"
+         "time": "12:15",
+         "band": "small",
+         "wetness": "normal",
+         "grams": 150,
+         "range": "under 250 g"
         }
        ]
       },
@@ -905,7 +509,7 @@
        "date": "2026-11-24",
        "feeds": [
         {
-         "time": "10:45",
+         "time": "13:00",
          "band": "small",
          "wetness": "normal",
          "grams": 150,
@@ -918,11 +522,148 @@
        "date": "2026-11-25",
        "feeds": [
         {
-         "time": "13:00",
+         "time": "11:30",
+         "band": "small",
+         "wetness": "normal",
+         "grams": 150,
+         "range": "under 250 g"
+        }
+       ]
+      },
+      {
+       "day": "Thu",
+       "date": "2026-11-26",
+       "feeds": [
+        {
+         "time": "10:45",
+         "band": "medium",
+         "wetness": "wet",
+         "grams": 375,
+         "range": "250-500 g"
+        },
+        {
+         "time": "12:15",
          "band": "large",
          "wetness": "wet",
          "grams": 750,
-         "range": "700-900 g"
+         "range": "over 500 g"
+        },
+        {
+         "time": "13:00",
+         "band": "medium",
+         "wetness": "wet",
+         "grams": 375,
+         "range": "250-500 g"
+        },
+        {
+         "time": "13:45",
+         "band": "medium",
+         "wetness": "wet",
+         "grams": 375,
+         "range": "250-500 g"
+        }
+       ]
+      },
+      {
+       "day": "Fri",
+       "date": "2026-11-27",
+       "feeds": [
+        {
+         "time": "10:45",
+         "band": "medium",
+         "wetness": "wet",
+         "grams": 375,
+         "range": "250-500 g"
+        },
+        {
+         "time": "13:00",
+         "band": "medium",
+         "wetness": "wet",
+         "grams": 375,
+         "range": "250-500 g"
+        },
+        {
+         "time": "13:45",
+         "band": "large",
+         "wetness": "wet",
+         "grams": 750,
+         "range": "over 500 g"
+        }
+       ]
+      }
+     ]
+    },
+    {
+     "machine": "305",
+     "fed": "L",
+     "curing": "R",
+     "card": "switcher",
+     "unload_monday": true,
+     "days": [
+      {
+       "day": "Mon",
+       "date": "2026-11-23",
+       "feeds": [
+        {
+         "time": "11:30",
+         "band": "medium",
+         "wetness": "wet",
+         "grams": 375,
+         "range": "250-500 g"
+        },
+        {
+         "time": "14:15",
+         "band": "large",
+         "wetness": "wet",
+         "grams": 750,
+         "range": "over 500 g"
+        }
+       ]
+      },
+      {
+       "day": "Tue",
+       "date": "2026-11-24",
+       "feeds": [
+        {
+         "time": "10:45",
+         "band": "large",
+         "wetness": "wet",
+         "grams": 750,
+         "range": "over 500 g"
+        },
+        {
+         "time": "13:00",
+         "band": "medium",
+         "wetness": "wet",
+         "grams": 375,
+         "range": "250-500 g"
+        }
+       ]
+      },
+      {
+       "day": "Wed",
+       "date": "2026-11-25",
+       "feeds": [
+        {
+         "time": "10:45",
+         "band": "medium",
+         "wetness": "wet",
+         "grams": 375,
+         "range": "250-500 g"
+        },
+        {
+         "time": "12:15",
+         "band": "large",
+         "wetness": "wet",
+         "grams": 750,
+         "range": "over 500 g"
+        },
+        {
+         "time": "14:15",
+         "band": "large",
+         "wetness": "wet",
+         "grams": 750,
+         "range": "over 500 g"
         }
        ]
       },
@@ -944,7 +685,7 @@
        "date": "2026-11-27",
        "feeds": [
         {
-         "time": "14:15",
+         "time": "10:45",
          "band": "small",
          "wetness": "normal",
          "grams": 150,
@@ -955,9 +696,9 @@
      ]
     },
     {
-     "machine": "305",
-     "fed": "R",
-     "curing": "L",
+     "machine": "312",
+     "fed": "L",
+     "curing": "R",
      "card": "heavy",
      "unload_monday": true,
      "days": [
@@ -973,18 +714,18 @@
          "range": "250-500 g"
         },
         {
-         "time": "11:30",
-         "band": "large",
-         "wetness": "wet",
-         "grams": 750,
-         "range": "over 500 g"
-        },
-        {
-         "time": "14:15",
+         "time": "13:00",
          "band": "medium",
          "wetness": "wet",
          "grams": 375,
          "range": "250-500 g"
+        },
+        {
+         "time": "14:15",
+         "band": "large",
+         "wetness": "wet",
+         "grams": 750,
+         "range": "over 500 g"
         }
        ]
       },
@@ -993,6 +734,20 @@
        "date": "2026-11-24",
        "feeds": [
         {
+         "time": "10:45",
+         "band": "large",
+         "wetness": "wet",
+         "grams": 750,
+         "range": "over 500 g"
+        },
+        {
+         "time": "11:30",
+         "band": "large",
+         "wetness": "wet",
+         "grams": 750,
+         "range": "over 500 g"
+        },
+        {
          "time": "13:00",
          "band": "large",
          "wetness": "wet",
@@ -1000,18 +755,11 @@
          "range": "over 500 g"
         },
         {
-         "time": "13:45",
+         "time": "14:15",
          "band": "medium",
          "wetness": "wet",
          "grams": 375,
          "range": "250-500 g"
-        },
-        {
-         "time": "14:15",
-         "band": "large",
-         "wetness": "wet",
-         "grams": 750,
-         "range": "over 500 g"
         }
        ]
       },
@@ -1021,13 +769,13 @@
        "feeds": [
         {
          "time": "11:30",
-         "band": "large",
+         "band": "medium",
          "wetness": "wet",
-         "grams": 750,
-         "range": "over 500 g"
+         "grams": 375,
+         "range": "250-500 g"
         },
         {
-         "time": "13:00",
+         "time": "12:15",
          "band": "medium",
          "wetness": "wet",
          "grams": 375,
@@ -1047,40 +795,6 @@
        "date": "2026-11-26",
        "feeds": [
         {
-         "time": "10:45",
-         "band": "medium",
-         "wetness": "wet",
-         "grams": 375,
-         "range": "250-500 g"
-        },
-        {
-         "time": "11:30",
-         "band": "medium",
-         "wetness": "wet",
-         "grams": 375,
-         "range": "250-500 g"
-        },
-        {
-         "time": "13:00",
-         "band": "medium",
-         "wetness": "wet",
-         "grams": 375,
-         "range": "250-500 g"
-        }
-       ]
-      },
-      {
-       "day": "Fri",
-       "date": "2026-11-27",
-       "feeds": [
-        {
-         "time": "12:15",
-         "band": "medium",
-         "wetness": "wet",
-         "grams": 375,
-         "range": "250-500 g"
-        },
-        {
          "time": "13:00",
          "band": "large",
          "wetness": "wet",
@@ -1095,50 +809,6 @@
          "range": "over 500 g"
         }
        ]
-      }
-     ]
-    },
-    {
-     "machine": "312",
-     "fed": "R",
-     "curing": "L",
-     "card": "holiday",
-     "unload_monday": true,
-     "days": [
-      {
-       "day": "Mon",
-       "date": "2026-11-23",
-       "feeds": [
-        {
-         "time": "10:45",
-         "band": "medium",
-         "wetness": "normal",
-         "grams": 375,
-         "range": "250-500 g"
-        },
-        {
-         "time": "14:15",
-         "band": "medium",
-         "wetness": "normal",
-         "grams": 375,
-         "range": "250-500 g"
-        }
-       ]
-      },
-      {
-       "day": "Tue",
-       "date": "2026-11-24",
-       "feeds": []
-      },
-      {
-       "day": "Wed",
-       "date": "2026-11-25",
-       "feeds": []
-      },
-      {
-       "day": "Thu",
-       "date": "2026-11-26",
-       "feeds": []
       },
       {
        "day": "Fri",
@@ -1149,7 +819,21 @@
          "band": "large",
          "wetness": "wet",
          "grams": 750,
-         "range": "700-900 g"
+         "range": "over 500 g"
+        },
+        {
+         "time": "13:00",
+         "band": "medium",
+         "wetness": "wet",
+         "grams": 375,
+         "range": "250-500 g"
+        },
+        {
+         "time": "14:15",
+         "band": "large",
+         "wetness": "wet",
+         "grams": 750,
+         "range": "over 500 g"
         }
        ]
       }
@@ -1163,9 +847,9 @@
    "rows": [
     {
      "machine": "000",
-     "fed": "R",
-     "curing": "L",
-     "card": "light",
+     "fed": "L",
+     "curing": "R",
+     "card": "binge",
      "unload_monday": true,
      "days": [
       {
@@ -1173,7 +857,20 @@
        "date": "2026-11-30",
        "feeds": [
         {
-         "time": "12:15",
+         "time": "13:00",
+         "band": "large",
+         "wetness": "wet",
+         "grams": 750,
+         "range": "700-900 g"
+        }
+       ]
+      },
+      {
+       "day": "Tue",
+       "date": "2026-12-01",
+       "feeds": [
+        {
+         "time": "10:45",
          "band": "small",
          "wetness": "normal",
          "grams": 150,
@@ -1182,20 +879,15 @@
        ]
       },
       {
-       "day": "Tue",
-       "date": "2026-12-01",
-       "feeds": []
-      },
-      {
        "day": "Wed",
        "date": "2026-12-02",
        "feeds": [
         {
-         "time": "11:30",
-         "band": "small",
-         "wetness": "normal",
-         "grams": 150,
-         "range": "under 250 g"
+         "time": "13:00",
+         "band": "large",
+         "wetness": "wet",
+         "grams": 750,
+         "range": "700-900 g"
         }
        ]
       },
@@ -1217,7 +909,7 @@
        "date": "2026-12-04",
        "feeds": [
         {
-         "time": "10:45",
+         "time": "14:15",
          "band": "small",
          "wetness": "normal",
          "grams": 150,
@@ -1229,8 +921,8 @@
     },
     {
      "machine": "305",
-     "fed": "L",
-     "curing": "R",
+     "fed": "R",
+     "curing": "L",
      "card": "heavy",
      "unload_monday": true,
      "days": [
@@ -1247,13 +939,6 @@
         },
         {
          "time": "11:30",
-         "band": "medium",
-         "wetness": "wet",
-         "grams": 375,
-         "range": "250-500 g"
-        },
-        {
-         "time": "13:45",
          "band": "large",
          "wetness": "wet",
          "grams": 750,
@@ -1273,7 +958,7 @@
        "date": "2026-12-01",
        "feeds": [
         {
-         "time": "11:30",
+         "time": "13:00",
          "band": "large",
          "wetness": "wet",
          "grams": 750,
@@ -1281,6 +966,13 @@
         },
         {
          "time": "13:45",
+         "band": "medium",
+         "wetness": "wet",
+         "grams": 375,
+         "range": "250-500 g"
+        },
+        {
+         "time": "14:15",
          "band": "large",
          "wetness": "wet",
          "grams": 750,
@@ -1293,14 +985,21 @@
        "date": "2026-12-02",
        "feeds": [
         {
-         "time": "10:45",
+         "time": "11:30",
          "band": "large",
          "wetness": "wet",
          "grams": 750,
          "range": "over 500 g"
         },
         {
-         "time": "13:45",
+         "time": "13:00",
+         "band": "medium",
+         "wetness": "wet",
+         "grams": 375,
+         "range": "250-500 g"
+        },
+        {
+         "time": "14:15",
          "band": "medium",
          "wetness": "wet",
          "grams": 375,
@@ -1313,6 +1012,13 @@
        "date": "2026-12-03",
        "feeds": [
         {
+         "time": "10:45",
+         "band": "medium",
+         "wetness": "wet",
+         "grams": 375,
+         "range": "250-500 g"
+        },
+        {
          "time": "11:30",
          "band": "medium",
          "wetness": "wet",
@@ -1321,13 +1027,6 @@
         },
         {
          "time": "13:00",
-         "band": "large",
-         "wetness": "wet",
-         "grams": 750,
-         "range": "over 500 g"
-        },
-        {
-         "time": "14:15",
          "band": "medium",
          "wetness": "wet",
          "grams": 375,
@@ -1340,18 +1039,18 @@
        "date": "2026-12-04",
        "feeds": [
         {
-         "time": "10:45",
-         "band": "large",
-         "wetness": "wet",
-         "grams": 750,
-         "range": "over 500 g"
-        },
-        {
-         "time": "13:00",
+         "time": "12:15",
          "band": "medium",
          "wetness": "wet",
          "grams": 375,
          "range": "250-500 g"
+        },
+        {
+         "time": "13:00",
+         "band": "large",
+         "wetness": "wet",
+         "grams": 750,
+         "range": "over 500 g"
         },
         {
          "time": "13:45",
@@ -1366,9 +1065,9 @@
     },
     {
      "machine": "312",
-     "fed": "L",
-     "curing": "R",
-     "card": "switcher",
+     "fed": "R",
+     "curing": "L",
+     "card": "holiday",
      "unload_monday": true,
      "days": [
       {
@@ -1376,91 +1075,46 @@
        "date": "2026-11-30",
        "feeds": [
         {
-         "time": "13:00",
-         "band": "small",
+         "time": "10:45",
+         "band": "medium",
          "wetness": "normal",
-         "grams": 150,
-         "range": "under 250 g"
+         "grams": 375,
+         "range": "250-500 g"
+        },
+        {
+         "time": "14:15",
+         "band": "medium",
+         "wetness": "normal",
+         "grams": 375,
+         "range": "250-500 g"
         }
        ]
       },
       {
        "day": "Tue",
        "date": "2026-12-01",
-       "feeds": [
-        {
-         "time": "10:45",
-         "band": "small",
-         "wetness": "normal",
-         "grams": 150,
-         "range": "under 250 g"
-        }
-       ]
+       "feeds": []
       },
       {
        "day": "Wed",
        "date": "2026-12-02",
-       "feeds": [
-        {
-         "time": "14:15",
-         "band": "small",
-         "wetness": "normal",
-         "grams": 150,
-         "range": "under 250 g"
-        }
-       ]
+       "feeds": []
       },
       {
        "day": "Thu",
        "date": "2026-12-03",
-       "feeds": [
-        {
-         "time": "13:00",
-         "band": "medium",
-         "wetness": "wet",
-         "grams": 375,
-         "range": "250-500 g"
-        },
-        {
-         "time": "13:45",
-         "band": "medium",
-         "wetness": "wet",
-         "grams": 375,
-         "range": "250-500 g"
-        }
-       ]
+       "feeds": []
       },
       {
        "day": "Fri",
        "date": "2026-12-04",
        "feeds": [
         {
-         "time": "10:45",
+         "time": "12:15",
          "band": "large",
          "wetness": "wet",
          "grams": 750,
-         "range": "over 500 g"
-        },
-        {
-         "time": "11:30",
-         "band": "large",
-         "wetness": "wet",
-         "grams": 750,
-         "range": "over 500 g"
-        },
-        {
-         "time": "13:00",
-         "band": "large",
-         "wetness": "wet",
-         "grams": 750,
-         "range": "over 500 g"
-        },
-        {
-         "time": "14:15",
-         "band": "large",
-         "wetness": "wet",
-         "grams": 750,
-         "range": "over 500 g"
+         "range": "700-900 g"
         }
        ]
       }
@@ -1474,9 +1128,9 @@
    "rows": [
     {
      "machine": "000",
-     "fed": "L",
-     "curing": "R",
-     "card": "binge",
+     "fed": "R",
+     "curing": "L",
+     "card": "light",
      "unload_monday": true,
      "days": [
       {
@@ -1484,7 +1138,7 @@
        "date": "2026-12-07",
        "feeds": [
         {
-         "time": "13:45",
+         "time": "12:15",
          "band": "small",
          "wetness": "normal",
          "grams": 150,
@@ -1495,22 +1149,14 @@
       {
        "day": "Tue",
        "date": "2026-12-08",
-       "feeds": [
-        {
-         "time": "12:15",
-         "band": "large",
-         "wetness": "wet",
-         "grams": 750,
-         "range": "700-900 g"
-        }
-       ]
+       "feeds": []
       },
       {
        "day": "Wed",
        "date": "2026-12-09",
        "feeds": [
         {
-         "time": "14:15",
+         "time": "11:30",
          "band": "small",
          "wetness": "normal",
          "grams": 150,
@@ -1523,11 +1169,11 @@
        "date": "2026-12-10",
        "feeds": [
         {
-         "time": "11:30",
-         "band": "large",
-         "wetness": "wet",
-         "grams": 750,
-         "range": "700-900 g"
+         "time": "12:15",
+         "band": "small",
+         "wetness": "normal",
+         "grams": 150,
+         "range": "under 250 g"
         }
        ]
       },
@@ -1536,7 +1182,7 @@
        "date": "2026-12-11",
        "feeds": [
         {
-         "time": "14:15",
+         "time": "10:45",
          "band": "small",
          "wetness": "normal",
          "grams": 150,
@@ -1548,9 +1194,9 @@
     },
     {
      "machine": "305",
-     "fed": "R",
-     "curing": "L",
-     "card": "switcher",
+     "fed": "L",
+     "curing": "R",
+     "card": "heavy",
      "unload_monday": true,
      "days": [
       {
@@ -1559,10 +1205,31 @@
        "feeds": [
         {
          "time": "10:45",
-         "band": "small",
-         "wetness": "normal",
-         "grams": 150,
-         "range": "under 250 g"
+         "band": "medium",
+         "wetness": "wet",
+         "grams": 375,
+         "range": "250-500 g"
+        },
+        {
+         "time": "11:30",
+         "band": "medium",
+         "wetness": "wet",
+         "grams": 375,
+         "range": "250-500 g"
+        },
+        {
+         "time": "13:45",
+         "band": "large",
+         "wetness": "wet",
+         "grams": 750,
+         "range": "over 500 g"
+        },
+        {
+         "time": "14:15",
+         "band": "medium",
+         "wetness": "wet",
+         "grams": 375,
+         "range": "250-500 g"
         }
        ]
       },
@@ -1571,11 +1238,18 @@
        "date": "2026-12-08",
        "feeds": [
         {
-         "time": "10:45",
-         "band": "small",
-         "wetness": "normal",
-         "grams": 150,
-         "range": "under 250 g"
+         "time": "11:30",
+         "band": "large",
+         "wetness": "wet",
+         "grams": 750,
+         "range": "over 500 g"
+        },
+        {
+         "time": "13:45",
+         "band": "large",
+         "wetness": "wet",
+         "grams": 750,
+         "range": "over 500 g"
         }
        ]
       },
@@ -1585,10 +1259,17 @@
        "feeds": [
         {
          "time": "10:45",
-         "band": "small",
-         "wetness": "normal",
-         "grams": 150,
-         "range": "under 250 g"
+         "band": "large",
+         "wetness": "wet",
+         "grams": 750,
+         "range": "over 500 g"
+        },
+        {
+         "time": "13:45",
+         "band": "medium",
+         "wetness": "wet",
+         "grams": 375,
+         "range": "250-500 g"
         }
        ]
       },
@@ -1597,25 +1278,18 @@
        "date": "2026-12-10",
        "feeds": [
         {
-         "time": "10:45",
-         "band": "large",
-         "wetness": "wet",
-         "grams": 750,
-         "range": "over 500 g"
-        },
-        {
          "time": "11:30",
-         "band": "large",
-         "wetness": "wet",
-         "grams": 750,
-         "range": "over 500 g"
-        },
-        {
-         "time": "12:15",
          "band": "medium",
          "wetness": "wet",
          "grams": 375,
          "range": "250-500 g"
+        },
+        {
+         "time": "13:00",
+         "band": "large",
+         "wetness": "wet",
+         "grams": 750,
+         "range": "over 500 g"
         },
         {
          "time": "14:15",
@@ -1632,103 +1306,6 @@
        "feeds": [
         {
          "time": "10:45",
-         "band": "medium",
-         "wetness": "wet",
-         "grams": 375,
-         "range": "250-500 g"
-        },
-        {
-         "time": "11:30",
-         "band": "medium",
-         "wetness": "wet",
-         "grams": 375,
-         "range": "250-500 g"
-        },
-        {
-         "time": "12:15",
-         "band": "medium",
-         "wetness": "wet",
-         "grams": 375,
-         "range": "250-500 g"
-        },
-        {
-         "time": "14:15",
-         "band": "medium",
-         "wetness": "wet",
-         "grams": 375,
-         "range": "250-500 g"
-        }
-       ]
-      }
-     ]
-    },
-    {
-     "machine": "312",
-     "fed": "R",
-     "curing": "L",
-     "card": "heavy",
-     "unload_monday": true,
-     "days": [
-      {
-       "day": "Mon",
-       "date": "2026-12-07",
-       "feeds": [
-        {
-         "time": "10:45",
-         "band": "large",
-         "wetness": "wet",
-         "grams": 750,
-         "range": "over 500 g"
-        },
-        {
-         "time": "14:15",
-         "band": "large",
-         "wetness": "wet",
-         "grams": 750,
-         "range": "over 500 g"
-        }
-       ]
-      },
-      {
-       "day": "Tue",
-       "date": "2026-12-08",
-       "feeds": [
-        {
-         "time": "10:45",
-         "band": "large",
-         "wetness": "wet",
-         "grams": 750,
-         "range": "over 500 g"
-        },
-        {
-         "time": "11:30",
-         "band": "large",
-         "wetness": "wet",
-         "grams": 750,
-         "range": "over 500 g"
-        },
-        {
-         "time": "12:15",
-         "band": "medium",
-         "wetness": "wet",
-         "grams": 375,
-         "range": "250-500 g"
-        },
-        {
-         "time": "14:15",
-         "band": "medium",
-         "wetness": "wet",
-         "grams": 375,
-         "range": "250-500 g"
-        }
-       ]
-      },
-      {
-       "day": "Wed",
-       "date": "2026-12-09",
-       "feeds": [
-        {
-         "time": "12:15",
          "band": "large",
          "wetness": "wet",
          "grams": 750,
@@ -1740,6 +1317,61 @@
          "wetness": "wet",
          "grams": 375,
          "range": "250-500 g"
+        },
+        {
+         "time": "13:45",
+         "band": "large",
+         "wetness": "wet",
+         "grams": 750,
+         "range": "over 500 g"
+        }
+       ]
+      }
+     ]
+    },
+    {
+     "machine": "312",
+     "fed": "L",
+     "curing": "R",
+     "card": "switcher",
+     "unload_monday": true,
+     "days": [
+      {
+       "day": "Mon",
+       "date": "2026-12-07",
+       "feeds": [
+        {
+         "time": "13:00",
+         "band": "small",
+         "wetness": "normal",
+         "grams": 150,
+         "range": "under 250 g"
+        }
+       ]
+      },
+      {
+       "day": "Tue",
+       "date": "2026-12-08",
+       "feeds": [
+        {
+         "time": "10:45",
+         "band": "small",
+         "wetness": "normal",
+         "grams": 150,
+         "range": "under 250 g"
+        }
+       ]
+      },
+      {
+       "day": "Wed",
+       "date": "2026-12-09",
+       "feeds": [
+        {
+         "time": "14:15",
+         "band": "small",
+         "wetness": "normal",
+         "grams": 150,
+         "range": "under 250 g"
         }
        ]
       },
@@ -1748,18 +1380,18 @@
        "date": "2026-12-10",
        "feeds": [
         {
-         "time": "10:45",
+         "time": "13:00",
          "band": "medium",
          "wetness": "wet",
          "grams": 375,
          "range": "250-500 g"
         },
         {
-         "time": "14:15",
-         "band": "large",
+         "time": "13:45",
+         "band": "medium",
          "wetness": "wet",
-         "grams": 750,
-         "range": "over 500 g"
+         "grams": 375,
+         "range": "250-500 g"
         }
        ]
       },
@@ -1769,6 +1401,20 @@
        "feeds": [
         {
          "time": "10:45",
+         "band": "large",
+         "wetness": "wet",
+         "grams": 750,
+         "range": "over 500 g"
+        },
+        {
+         "time": "11:30",
+         "band": "large",
+         "wetness": "wet",
+         "grams": 750,
+         "range": "over 500 g"
+        },
+        {
+         "time": "13:00",
          "band": "large",
          "wetness": "wet",
          "grams": 750,
@@ -1789,13 +1435,13 @@
   },
   {
    "monday": "2026-12-14",
-   "stage": "Stage 4: confirm (the final policy runs alone)",
+   "stage": "Stage 3: live learning (learned policy and matched mode in 2-day blocks)",
    "rows": [
     {
      "machine": "000",
-     "fed": "R",
-     "curing": "L",
-     "card": "light",
+     "fed": "L",
+     "curing": "R",
+     "card": "binge",
      "unload_monday": true,
      "days": [
       {
@@ -1814,14 +1460,22 @@
       {
        "day": "Tue",
        "date": "2026-12-15",
-       "feeds": []
+       "feeds": [
+        {
+         "time": "12:15",
+         "band": "large",
+         "wetness": "wet",
+         "grams": 750,
+         "range": "700-900 g"
+        }
+       ]
       },
       {
        "day": "Wed",
        "date": "2026-12-16",
        "feeds": [
         {
-         "time": "12:15",
+         "time": "14:15",
          "band": "small",
          "wetness": "normal",
          "grams": 150,
@@ -1835,6 +1489,317 @@
        "feeds": [
         {
          "time": "11:30",
+         "band": "large",
+         "wetness": "wet",
+         "grams": 750,
+         "range": "700-900 g"
+        }
+       ]
+      },
+      {
+       "day": "Fri",
+       "date": "2026-12-18",
+       "feeds": [
+        {
+         "time": "14:15",
+         "band": "small",
+         "wetness": "normal",
+         "grams": 150,
+         "range": "under 250 g"
+        }
+       ]
+      }
+     ]
+    },
+    {
+     "machine": "305",
+     "fed": "R",
+     "curing": "L",
+     "card": "switcher",
+     "unload_monday": true,
+     "days": [
+      {
+       "day": "Mon",
+       "date": "2026-12-14",
+       "feeds": [
+        {
+         "time": "10:45",
+         "band": "small",
+         "wetness": "normal",
+         "grams": 150,
+         "range": "under 250 g"
+        }
+       ]
+      },
+      {
+       "day": "Tue",
+       "date": "2026-12-15",
+       "feeds": [
+        {
+         "time": "10:45",
+         "band": "small",
+         "wetness": "normal",
+         "grams": 150,
+         "range": "under 250 g"
+        }
+       ]
+      },
+      {
+       "day": "Wed",
+       "date": "2026-12-16",
+       "feeds": [
+        {
+         "time": "10:45",
+         "band": "small",
+         "wetness": "normal",
+         "grams": 150,
+         "range": "under 250 g"
+        }
+       ]
+      },
+      {
+       "day": "Thu",
+       "date": "2026-12-17",
+       "feeds": [
+        {
+         "time": "10:45",
+         "band": "large",
+         "wetness": "wet",
+         "grams": 750,
+         "range": "over 500 g"
+        },
+        {
+         "time": "11:30",
+         "band": "large",
+         "wetness": "wet",
+         "grams": 750,
+         "range": "over 500 g"
+        },
+        {
+         "time": "12:15",
+         "band": "medium",
+         "wetness": "wet",
+         "grams": 375,
+         "range": "250-500 g"
+        },
+        {
+         "time": "14:15",
+         "band": "medium",
+         "wetness": "wet",
+         "grams": 375,
+         "range": "250-500 g"
+        }
+       ]
+      },
+      {
+       "day": "Fri",
+       "date": "2026-12-18",
+       "feeds": [
+        {
+         "time": "10:45",
+         "band": "medium",
+         "wetness": "wet",
+         "grams": 375,
+         "range": "250-500 g"
+        },
+        {
+         "time": "11:30",
+         "band": "medium",
+         "wetness": "wet",
+         "grams": 375,
+         "range": "250-500 g"
+        },
+        {
+         "time": "12:15",
+         "band": "medium",
+         "wetness": "wet",
+         "grams": 375,
+         "range": "250-500 g"
+        },
+        {
+         "time": "14:15",
+         "band": "medium",
+         "wetness": "wet",
+         "grams": 375,
+         "range": "250-500 g"
+        }
+       ]
+      }
+     ]
+    },
+    {
+     "machine": "312",
+     "fed": "R",
+     "curing": "L",
+     "card": "heavy",
+     "unload_monday": true,
+     "days": [
+      {
+       "day": "Mon",
+       "date": "2026-12-14",
+       "feeds": [
+        {
+         "time": "10:45",
+         "band": "large",
+         "wetness": "wet",
+         "grams": 750,
+         "range": "over 500 g"
+        },
+        {
+         "time": "14:15",
+         "band": "large",
+         "wetness": "wet",
+         "grams": 750,
+         "range": "over 500 g"
+        }
+       ]
+      },
+      {
+       "day": "Tue",
+       "date": "2026-12-15",
+       "feeds": [
+        {
+         "time": "10:45",
+         "band": "large",
+         "wetness": "wet",
+         "grams": 750,
+         "range": "over 500 g"
+        },
+        {
+         "time": "11:30",
+         "band": "large",
+         "wetness": "wet",
+         "grams": 750,
+         "range": "over 500 g"
+        },
+        {
+         "time": "12:15",
+         "band": "medium",
+         "wetness": "wet",
+         "grams": 375,
+         "range": "250-500 g"
+        },
+        {
+         "time": "14:15",
+         "band": "medium",
+         "wetness": "wet",
+         "grams": 375,
+         "range": "250-500 g"
+        }
+       ]
+      },
+      {
+       "day": "Wed",
+       "date": "2026-12-16",
+       "feeds": [
+        {
+         "time": "12:15",
+         "band": "large",
+         "wetness": "wet",
+         "grams": 750,
+         "range": "over 500 g"
+        },
+        {
+         "time": "13:00",
+         "band": "medium",
+         "wetness": "wet",
+         "grams": 375,
+         "range": "250-500 g"
+        }
+       ]
+      },
+      {
+       "day": "Thu",
+       "date": "2026-12-17",
+       "feeds": [
+        {
+         "time": "10:45",
+         "band": "medium",
+         "wetness": "wet",
+         "grams": 375,
+         "range": "250-500 g"
+        },
+        {
+         "time": "14:15",
+         "band": "large",
+         "wetness": "wet",
+         "grams": 750,
+         "range": "over 500 g"
+        }
+       ]
+      },
+      {
+       "day": "Fri",
+       "date": "2026-12-18",
+       "feeds": [
+        {
+         "time": "10:45",
+         "band": "large",
+         "wetness": "wet",
+         "grams": 750,
+         "range": "over 500 g"
+        },
+        {
+         "time": "14:15",
+         "band": "large",
+         "wetness": "wet",
+         "grams": 750,
+         "range": "over 500 g"
+        }
+       ]
+      }
+     ]
+    }
+   ]
+  },
+  {
+   "monday": "2026-12-21",
+   "stage": "Stage 4: confirm (the final policy runs alone)",
+   "rows": [
+    {
+     "machine": "000",
+     "fed": "R",
+     "curing": "L",
+     "card": "light",
+     "unload_monday": true,
+     "days": [
+      {
+       "day": "Mon",
+       "date": "2026-12-21",
+       "feeds": [
+        {
+         "time": "13:45",
+         "band": "small",
+         "wetness": "normal",
+         "grams": 150,
+         "range": "under 250 g"
+        }
+       ]
+      },
+      {
+       "day": "Tue",
+       "date": "2026-12-22",
+       "feeds": []
+      },
+      {
+       "day": "Wed",
+       "date": "2026-12-23",
+       "feeds": [
+        {
+         "time": "12:15",
+         "band": "small",
+         "wetness": "normal",
+         "grams": 150,
+         "range": "under 250 g"
+        }
+       ]
+      },
+      {
+       "day": "Thu",
+       "date": "2026-12-24",
+       "feeds": [
+        {
+         "time": "11:30",
          "band": "small",
          "wetness": "normal",
          "grams": 150,
@@ -1844,7 +1809,7 @@
       },
       {
        "day": "Fri",
-       "date": "2026-12-18",
+       "date": "2026-12-25",
        "feeds": [
         {
          "time": "14:15",
@@ -1866,7 +1831,7 @@
      "days": [
       {
        "day": "Mon",
-       "date": "2026-12-14",
+       "date": "2026-12-21",
        "feeds": [
         {
          "time": "11:30",
@@ -1886,7 +1851,7 @@
       },
       {
        "day": "Tue",
-       "date": "2026-12-15",
+       "date": "2026-12-22",
        "feeds": [
         {
          "time": "11:30",
@@ -1906,7 +1871,7 @@
       },
       {
        "day": "Wed",
-       "date": "2026-12-16",
+       "date": "2026-12-23",
        "feeds": [
         {
          "time": "10:45",
@@ -1933,7 +1898,7 @@
       },
       {
        "day": "Thu",
-       "date": "2026-12-17",
+       "date": "2026-12-24",
        "feeds": [
         {
          "time": "10:45",
@@ -1967,7 +1932,7 @@
       },
       {
        "day": "Fri",
-       "date": "2026-12-18",
+       "date": "2026-12-25",
        "feeds": [
         {
          "time": "11:30",
@@ -1996,7 +1961,7 @@
      "days": [
       {
        "day": "Mon",
-       "date": "2026-12-14",
+       "date": "2026-12-21",
        "feeds": [
         {
          "time": "13:00",
@@ -2009,7 +1974,7 @@
       },
       {
        "day": "Tue",
-       "date": "2026-12-15",
+       "date": "2026-12-22",
        "feeds": [
         {
          "time": "11:30",
@@ -2022,7 +1987,7 @@
       },
       {
        "day": "Wed",
-       "date": "2026-12-16",
+       "date": "2026-12-23",
        "feeds": [
         {
          "time": "13:00",
@@ -2035,7 +2000,7 @@
       },
       {
        "day": "Thu",
-       "date": "2026-12-17",
+       "date": "2026-12-24",
        "feeds": [
         {
          "time": "11:30",
@@ -2048,7 +2013,7 @@
       },
       {
        "day": "Fri",
-       "date": "2026-12-18",
+       "date": "2026-12-25",
        "feeds": [
         {
          "time": "11:30",
