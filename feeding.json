@@ -11,7 +11,8 @@
   "light": "at most 1 feed a day, a quarter caddy or less",
   "switcher": "heavy for 3 days, then light (or the reverse)",
   "holiday": "a normal start, then 3 days of nothing, then one big feed",
-  "binge": "light most days, with two very large, wet feeds"
+  "binge": "light most days, with two very large, wet feeds",
+  "warm-up": "a fresh start from empty: one medium feed a day"
  },
  "weeks": [
   {
@@ -236,7 +237,7 @@
   },
   {
    "monday": "2026-11-09",
-   "stage": "Stage 3: paused from Wed 11 Nov 11:00. No feeding or scoring until Mon 23 Nov.",
+   "stage": "Stage 3: paused from Wed 11 Nov 11:00. No feeding or scoring until Wed 18 Nov.",
    "rows": [
     {
      "machine": "000",
@@ -477,8 +478,183 @@
   },
   {
    "monday": "2026-11-16",
-   "stage": "Stage 3: paused this week. No feeding, scoring or running. Live learning restarts Mon 23 Nov at 09:45.",
-   "rows": []
+   "stage": "Stage 3 restart, Wed 18 Nov: warm-up from empty chambers. One medium feed a day into the fed side; the other side stays empty.",
+   "rows": [
+    {
+     "machine": "000",
+     "fed": "R",
+     "curing": "L",
+     "card": "warm-up",
+     "unload_monday": false,
+     "days": [
+      {
+       "day": "Mon",
+       "date": "2026-11-16",
+       "feeds": []
+      },
+      {
+       "day": "Tue",
+       "date": "2026-11-17",
+       "feeds": []
+      },
+      {
+       "day": "Wed",
+       "date": "2026-11-18",
+       "feeds": [
+        {
+         "time": "12:15",
+         "band": "medium",
+         "wetness": "normal",
+         "grams": 375,
+         "range": "250-500 g"
+        }
+       ]
+      },
+      {
+       "day": "Thu",
+       "date": "2026-11-19",
+       "feeds": [
+        {
+         "time": "12:15",
+         "band": "medium",
+         "wetness": "normal",
+         "grams": 375,
+         "range": "250-500 g"
+        }
+       ]
+      },
+      {
+       "day": "Fri",
+       "date": "2026-11-20",
+       "feeds": [
+        {
+         "time": "12:15",
+         "band": "medium",
+         "wetness": "normal",
+         "grams": 375,
+         "range": "250-500 g"
+        }
+       ]
+      }
+     ]
+    },
+    {
+     "machine": "305",
+     "fed": "R",
+     "curing": "L",
+     "card": "warm-up",
+     "unload_monday": false,
+     "days": [
+      {
+       "day": "Mon",
+       "date": "2026-11-16",
+       "feeds": []
+      },
+      {
+       "day": "Tue",
+       "date": "2026-11-17",
+       "feeds": []
+      },
+      {
+       "day": "Wed",
+       "date": "2026-11-18",
+       "feeds": [
+        {
+         "time": "12:15",
+         "band": "medium",
+         "wetness": "normal",
+         "grams": 375,
+         "range": "250-500 g"
+        }
+       ]
+      },
+      {
+       "day": "Thu",
+       "date": "2026-11-19",
+       "feeds": [
+        {
+         "time": "12:15",
+         "band": "medium",
+         "wetness": "normal",
+         "grams": 375,
+         "range": "250-500 g"
+        }
+       ]
+      },
+      {
+       "day": "Fri",
+       "date": "2026-11-20",
+       "feeds": [
+        {
+         "time": "12:15",
+         "band": "medium",
+         "wetness": "normal",
+         "grams": 375,
+         "range": "250-500 g"
+        }
+       ]
+      }
+     ]
+    },
+    {
+     "machine": "312",
+     "fed": "L",
+     "curing": "R",
+     "card": "warm-up",
+     "unload_monday": false,
+     "days": [
+      {
+       "day": "Mon",
+       "date": "2026-11-16",
+       "feeds": []
+      },
+      {
+       "day": "Tue",
+       "date": "2026-11-17",
+       "feeds": []
+      },
+      {
+       "day": "Wed",
+       "date": "2026-11-18",
+       "feeds": [
+        {
+         "time": "12:15",
+         "band": "medium",
+         "wetness": "normal",
+         "grams": 375,
+         "range": "250-500 g"
+        }
+       ]
+      },
+      {
+       "day": "Thu",
+       "date": "2026-11-19",
+       "feeds": [
+        {
+         "time": "12:15",
+         "band": "medium",
+         "wetness": "normal",
+         "grams": 375,
+         "range": "250-500 g"
+        }
+       ]
+      },
+      {
+       "day": "Fri",
+       "date": "2026-11-20",
+       "feeds": [
+        {
+         "time": "12:15",
+         "band": "medium",
+         "wetness": "normal",
+         "grams": 375,
+         "range": "250-500 g"
+        }
+       ]
+      }
+     ]
+    }
+   ]
   },
   {
    "monday": "2026-11-23",
@@ -486,10 +662,10 @@
    "rows": [
     {
      "machine": "000",
-     "fed": "R",
-     "curing": "L",
+     "fed": "L",
+     "curing": "R",
      "card": "switcher",
-     "unload_monday": true,
+     "unload_monday": false,
      "days": [
       {
        "day": "Mon",
@@ -598,7 +774,7 @@
      "fed": "L",
      "curing": "R",
      "card": "switcher",
-     "unload_monday": true,
+     "unload_monday": false,
      "days": [
       {
        "day": "Mon",
@@ -697,10 +873,10 @@
     },
     {
      "machine": "312",
-     "fed": "L",
-     "curing": "R",
+     "fed": "R",
+     "curing": "L",
      "card": "heavy",
-     "unload_monday": true,
+     "unload_monday": false,
      "days": [
       {
        "day": "Mon",
@@ -847,8 +1023,8 @@
    "rows": [
     {
      "machine": "000",
-     "fed": "L",
-     "curing": "R",
+     "fed": "R",
+     "curing": "L",
      "card": "binge",
      "unload_monday": true,
      "days": [
@@ -1065,8 +1241,8 @@
     },
     {
      "machine": "312",
-     "fed": "R",
-     "curing": "L",
+     "fed": "L",
+     "curing": "R",
      "card": "holiday",
      "unload_monday": true,
      "days": [
@@ -1128,8 +1304,8 @@
    "rows": [
     {
      "machine": "000",
-     "fed": "R",
-     "curing": "L",
+     "fed": "L",
+     "curing": "R",
      "card": "light",
      "unload_monday": true,
      "days": [
@@ -1331,8 +1507,8 @@
     },
     {
      "machine": "312",
-     "fed": "L",
-     "curing": "R",
+     "fed": "R",
+     "curing": "L",
      "card": "switcher",
      "unload_monday": true,
      "days": [
@@ -1439,8 +1615,8 @@
    "rows": [
     {
      "machine": "000",
-     "fed": "L",
-     "curing": "R",
+     "fed": "R",
+     "curing": "L",
      "card": "binge",
      "unload_monday": true,
      "days": [
@@ -1629,8 +1805,8 @@
     },
     {
      "machine": "312",
-     "fed": "R",
-     "curing": "L",
+     "fed": "L",
+     "curing": "R",
      "card": "heavy",
      "unload_monday": true,
      "days": [
@@ -1758,8 +1934,8 @@
    "rows": [
     {
      "machine": "000",
-     "fed": "R",
-     "curing": "L",
+     "fed": "L",
+     "curing": "R",
      "card": "light",
      "unload_monday": true,
      "days": [
@@ -1954,8 +2130,8 @@
     },
     {
      "machine": "312",
-     "fed": "L",
-     "curing": "R",
+     "fed": "R",
+     "curing": "L",
      "card": "binge",
      "unload_monday": true,
      "days": [
